@@ -1,0 +1,65 @@
+#!/bin/zsh
+# $1: Date / verbose
+# $2: Date / Description
+# $3: Description
+
+alias tils="timew summary :ids"
+
+calculate_time() {
+    if [[ -n "$2" ]]; then
+        TASK_DESC="$2"
+    else
+        TASK_DESC="Sleep"
+    fi
+
+    INITIAL_SLEEP=$(tils 10h before "$1" "$TASK_DESC" | tail -n 2 | tr -d ' ')
+
+    FINAL_SLEEP=$(tils "$1" for 10h "$TASK_DESC" | tail -n 2 | tr -d ' ')
+
+    IFS=":" read -r h1 m1 s1 <<< "$INITIAL_SLEEP"
+    IFS=":" read -r h2 m2 s2 <<< "$FINAL_SLEEP"
+    INITIAL_SECS=$((h1*3600 + m1*60 + s1))
+    FINAL_SECS=$((h2*3600 + m2*60 + s2))
+
+    # Some os segundos
+    TOTAL_SECS=$((FINAL_SECS + INITIAL_SECS))
+
+    # Converta os segundos de volta para horas, minutos e segundos
+    HOURS=$((TOTAL_SECS / 3600))
+    MINUTES=$(( (TOTAL_SECS % 3600) / 60 ))
+    SECONDS=$((TOTAL_SECS % 60))
+
+    printf "Total Sleep: %02d:%02d:%02d (%02dm)\n" \
+        "$HOURS" "$MINUTES" "$SECONDS" $((TOTAL_SECS / 60))
+    
+    echo -n "Calculate with sleepc? (y/n): "
+    read answer
+
+    if [[ "$answer" == "y" ]] || [[ "$answer" == "Y" ]]; then
+        sleepc.mjs
+    fi
+}
+
+if [[ -z "$1" ]]; then
+    if [[ "${@#}" -gt 1 ]]; then
+        calculate_time today ${@:2}
+    else
+        calculate_time today
+    fi
+elif [[ "$1" == "-v" ]]; then
+    if [[ -n "$3" ]]; then
+        TASK_DESC="$3"
+    else
+        TASK_DESC="Sleep"
+    fi
+    if [[ -n "$2" ]]; then
+        TASK_DAY="$2"
+    else
+        TASK_DAY="today"
+    fi
+
+    tils 10h before "$TASK_DAY" "$TASK_DESC"
+    tils "$TASK_DAY" for 10h "$TASK_DESC"
+else
+    calculate_time "$1" "$2"
+fi

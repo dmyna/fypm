@@ -1,0 +1,6 @@
+#!/bin/zsh
+BASE_FILTER='(age.after:today or 
+(end.before:today and end.after:tomorrow)) 
+and status:pending'
+
+task "$BASE_FILTER" "${@:2}" _ids "$1"

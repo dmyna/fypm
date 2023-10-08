@@ -1,0 +1,71 @@
+#!/bin/zsh
+
+LAST_TASK_PATH=/tmp/.last_task
+
+get_tasks=$(task +ACTIVE export)
+active_tasks=$(echo "$get_tasks" | jq -r 'length')
+
+schedule_if_needed () {
+    local GET_WORKTIME
+    GET_WORKTIME=$(task "$1" export | jq -r '.[0].WT')
+
+    if [[ "$GET_WORKTIME" != "$WORKTIME" ]] && [[ "$GET_WORKTIME" != "Quantify" ]]; then
+        yes no | tsched "$1"
+    fi
+}
+verify_state() {
+    local GET_STATE
+    GET_STATE=$(task "$1" export | jq -r '.[0].STATE')
+
+    if [[ "$GET_STATE" != "Time" ]]; then
+        echo "You are trying to start a task that is not in Time state!"
+        echo "Verify and try again."
+
+        return 1
+    fi
+
+    return 0
+}
+
+# Verify if task is not in Time state
+if [[ "$1" != "last" ]]; then
+    verify_state "$1"
+    if [[ "$?" -eq 1 ]]; then
+        exit 1
+    fi
+fi
+
+# Verify if task has a script
+if [[ -n "$(task $1 export | jq --arg str 'WithScript' '.[0].tags | index($str)')" ]]; then
+    tascripts $1
+else
+    # Reset apps volume if necessary
+    pulseaudio --set-volume 75
+    cvol spotify 100
+fi
+
+# Stop Active Task
+if [[ "$active_tasks" -gt 1 ]]; then
+    echo "Há mais de uma task em execução!"
+    exit 1
+else
+    ACTIVE_ID="$(echo "$get_tasks" | jq '.[0].id')"
+    ACTIVE_UUID="$(task "$ACTIVE_ID" export | jq -r '.[0].uuid' | sed 's/-.*//')"
+
+    task "$ACTIVE_ID" stop;
+fi
+
+# Init Task
+if [[ "$1" == "last" ]]; then
+    tastart "$(cat "$LAST_TASK_PATH")"
+else
+    task "$1" start;
+fi
+
+if [[ "$2" != "--no-wt" ]]; then
+    schedule_if_needed "$1"
+fi
+
+# Log Last Task
+echo "$ACTIVE_UUID" > "$LAST_TASK_PATH"
+echo "last: $ACTIVE_UUID"

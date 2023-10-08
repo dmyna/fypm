@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if [[ "$WORKTIME" != "PreWork" ]] && [[ "$WORKTIME" != "PostWork" ]]; then
+    if [[ ${#@} -eq 0 ]]; then
+        task '-Sequence and STYLE.not:Dionysian and TYPE.not:Continuous' blist
+    else
+        task "${@}" or '-Sequence and STYLE.not:Dionysian and TYPE.not:Continuous' blist
+    fi
+else
+    task "${@}" blist
+fi

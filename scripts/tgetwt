@@ -1,0 +1,12 @@
+#!/bin/bash
+
+get_worktime=$(cat /var/tmp/current_work_time)
+toremove=" ->"
+
+
+worktime=$(\
+    echo "$get_worktime" | \
+    awk -v substring="$toremove" '{sub(substring".*", "")}1'
+)
+
+echo "$worktime"

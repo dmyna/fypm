@@ -1,0 +1,26 @@
+#!/bin/bash
+
+case "$1" in
+    "t")
+        tastart "$(tgetid "Time without specific use" WT:Quantify)"
+        ;;
+    "l")
+        tastart "$(tgetid "Tempo perdido" WT:Quantify)"
+        ;;
+    "d")
+        tastart "$(tgetid "Descanso e Pausas" WT:Quantify)"
+        ;;
+    "h")
+        tastart "$(tgetid "Higiene e Cuidado" WT:Quantify)"
+        ;;
+    "c")
+        tastart "$(tgetid "Cantar" WT:Quantify)"
+        ;;
+    "p")
+        tastart "$(tgetid "Pensamento Ativo" WT:Quantify)"
+        ;;
+    *)
+        echo "Avaiable keys: t, l, d, h, c, p"
+        exit 1
+        ;;
+esac

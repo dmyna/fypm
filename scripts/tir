@@ -1,0 +1,21 @@
+#!/bin/bash
+
+verify_value() {
+    read -r input;
+
+    if [ -z "$input" ]; then
+        echo ''
+    else
+        echo "$input"
+    fi
+}
+
+UUID="$(task "$1" export | jq -r '.[0].uuid' | verify_value)"
+DESCRIPTION="$(task "$1" export | jq -r ".[0].description" | verify_value)"
+PROJECT="$(task "$1" export | jq -r '.[0].project' | verify_value)"
+STYLE="$(task "$1" export | jq -r '.[0].STYLE' | verify_value)"
+TYPE="$(task "$1" export | jq -r '.[0].TYPE' | verify_value)"
+WT="$(task "$1" export | jq -r '.[0].WT' | verify_value)"
+TAGS=("$(task "$1" export | jq -r '.[0].tags[]')")
+
+timew track "$2" - "$3" "$UUID" "$DESCRIPTION" "$PROJECT" "$STYLE" "$TYPE" "$WT" ${TAGS[@]} :adjust "${@:4}"

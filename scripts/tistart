@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if [[ -n "$1" ]]; then
+    if [[ -n "$2" ]]; then
+        timew modify start "$1" "$2" :adjust
+    else
+        echo "Você não especificou o tempo da tarefa."
+    fi
+else
+    echo "Você não especificou o ID da tarefa."
+fi

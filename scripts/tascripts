@@ -1,0 +1,79 @@
+#!/bin/bash
+
+EXECUTED=0
+
+before_executed() {
+    bspc desktop -f '^4'
+    xdotool mousemove 800 450
+}
+after_executed() {
+    EXECUTED=1
+}
+
+set_sound() {
+    cvol spotify "$1"%
+
+    if [[ -n "$2" ]]; then
+        pulsemixer --set-volume "$2"
+    fi
+}
+
+set_sound 100 75
+
+# Recurring Tasks Case
+case $(task "$1" export | jq -r '.[0].parent') in
+    "ae1e6f89-30d6-4ad7-8870-c20035db6f54")
+        before_executed
+        vivaldi-stable --app=https://www.ditchqwerty.com
+        set_sound 100
+        after_executed
+        ;;
+    "9b499b12-ccfc-4f30-9668-c22fb4daba85")
+        before_executed
+        vivaldi-stable --app=https://www.braingymmer.com/pt/brain-games/
+        set_sound 85
+        after_executed
+        ;;
+    "395f46a2-041c-4e0a-96dc-8c1757d79b48")
+	    before_executed
+        thunderbird >> /dev/null 2>&1 & disown %1
+        set_sound 70
+	    after_executed
+        ;;
+    "dc88bc6c-9018-4e6d-aa87-b545969e6b72")
+        before_executed
+        genymotion >> /dev/null 2>&1 & disown %1
+        after_executed
+        ;;
+    "5ccc0f95-3596-4991-a3fb-6d76778ed6dd")
+        before_executed
+        anki >> /dev/null 2>&1 & disown %1
+        set_sound 85
+        after_executed
+        ;;
+esac
+
+# Info Relationship Case
+case $(task "$1" export | jq -r '.[0].INFORELAT') in
+    "4ea8d410-7eea-481f-b90e-11745d942567")
+        before_executed
+        vivaldi-stable --app=https://www.duolingo.com/learn
+        set_sound 70 100
+        after_executed
+        ;;
+esac
+
+# Projects Case
+case $(task "$1" export | jq -r '.[0].project') in
+    "CerebralLine.Reading")
+        set_sound 70
+        after_executed
+        ;;
+esac
+
+# Check if it has been opened
+if [[ $EXECUTED -eq 0 ]]; then
+    exit 1
+fi
+
+notify-send -u critical "$(task "$2" export | jq -r '.[0].description')"

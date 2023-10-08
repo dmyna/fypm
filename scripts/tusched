@@ -1,0 +1,3 @@
+#!/bin/bash
+
+task "$1" modify WT:NonSched

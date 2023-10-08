@@ -1,0 +1,7 @@
+#!/bin/zsh
+
+if [[ -n "$1" ]]; then
+    tiend "$1" now
+else
+    tiend @2 now
+fi

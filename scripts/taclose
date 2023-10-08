@@ -1,0 +1,30 @@
+#!/bin/bash
+
+TASK="TaskWarrior"
+TIMEW="TimeWarrior"
+SESSIONS=$(tmux list-sessions -F "#S")
+
+write_env() {
+    echo "$1" > /tmp/.current_tmxs_tasks
+}
+
+HAS_TASK=false
+HAS_TIMEW=false
+
+while IFS= read -r line; do
+    if [ "$line" = "$TASK" ]; then
+        HAS_TASK=true
+    elif [ "$line" = "$TIMEW" ]; then
+        HAS_TIMEW=true
+    fi
+done <<< "$SESSIONS"
+
+if [ "$HAS_TIMEW" = true ]; then
+    tmux kill-session -t "$TIMEW"
+
+    if [ "$HAS_TASK" = false ]; then
+        write_env ""
+    fi
+else
+    tmux kill-session -t "$TASK"
+fi

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+DOMAIN="$1"
+SITE_IPS=$(dig +short "$DOMAIN")
+
+echo "$SITE_IPS" | while read -r line; do
+    echo "Added REJECT iptables rule to: $line"
+    sudo iptables -A OUTPUT -d "$line" -j REJECT
+done
+# sudo nft add rule ip filter OUTPUT ip daddr "$SITE_IP" counter reject

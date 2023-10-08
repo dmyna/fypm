@@ -1,0 +1,11 @@
+#!/bin/bash
+
+CONFIG="$HOME/.config/bspwm/alacritty/alacritty.yml"
+
+if [[ "$(cat /tmp/.current_tmxs_tasks)" == "TaskWarrior" ]]; then
+    alacritty --config-file "$CONFIG" --title "TimeWarrior" -e tmxs-tasks
+elif [[ "$(cat /tmp/.current_tmxs_tasks)" == "TimeWarrior" ]]; then
+    alacritty --config-file "$CONFIG" --title "TimeWarrior" -e tmxs-tasks
+else
+    alacritty --config-file "$CONFIG" --title "TaskWarrior" -e tmxs-tasks
+fi

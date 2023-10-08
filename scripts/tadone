@@ -1,0 +1,96 @@
+#!/bin/bash
+
+verify_continuous() {
+    IDS_STR="$1"
+    
+    task "$IDS_STR" export | jq -r '.[].TYPE' | while read -r line; do
+        if [[ "$line" == "Continuous" ]]; then
+            echo "You are trying to complete a task that is in continuous mode!"
+            echo "Verify and try again."
+
+            return 1
+        fi
+    done
+}
+verify_all() {
+        if [[ -z "$1" ]]; then
+            echo "Tarefa não especificada!"
+            return 1
+        fi
+
+        verify_continuous "$1"
+        if [ "$?" -eq 1 ]; then
+            return 1
+        fi
+}
+done_current() {
+    # Get current tasks
+    ids=()
+
+    while IFS= read -r line; do
+        ids+=("$line")
+    done <<< "$(task +ACTIVE _ids)"
+
+    # Complete the current task if it's the only one
+    # and verify the number of current tasks
+    if [[ "${#ids[@]}" -gt 1 ]]; then
+        echo "Mais de uma tarefa em execução! Selecione apenas uma:"
+        echo "${ids[@]}"
+    elif [[ "${#ids[@]}" -eq 0 ]]; then
+        echo "Nenhuma tarefa em execução e nenhuma tarefa especificada!"
+    else
+        verify_continuous "${ids[0]}"
+        if [ "$?" -eq 1 ]; then
+            exit 1
+        fi
+
+        $1 "${@:2}"
+
+        tadone "${ids[0]}"
+    fi
+}
+
+# Complete specified task
+if [[ -n "$1" ]]; then
+    if [[ "$1" == "-s" ]]; then
+        verify_all "$2"
+        if [ "$?" -eq 1 ]; then
+            exit 1
+        fi
+
+        start_task() {
+            tastart "$1"
+        }
+
+        done_current start_task "$2"
+        exit 0
+    else
+        if [[ "$2" == "-s" ]]; then
+            verify_all "$3"
+            if [[ "$?" -eq 1 ]]; then
+                exit 1
+            fi
+
+            tastart "$3"
+        fi
+    fi
+
+    verify_continuous "$1"
+    if [ "$?" -eq 1 ]; then
+        exit 1
+    fi
+
+    # Active a generic time if the current task is specified
+    if [[ "$(task +ACTIVE _ids)" == "$1" ]]; then
+        task "$1" "done"
+        tastart "$(tgetid "Time without specific use")"
+    else
+        task "$1" "done"
+    fi
+else
+    start_nospectime() {
+        tastart "$(tgetid "Time without specific use")"
+    }
+
+    done_current start_nospectime 
+fi

@@ -1,0 +1,19 @@
+#!/bin/bash
+
+if [[ -n "$1" ]]; then
+    if [[ -n "$2" ]]; then
+        task "$1" modify WT:"$2"
+
+        exit 0;
+    fi
+
+    FILTERED_WORKTIME=$("$TWBIN"/tgetwt)
+
+    if [[ "$FILTERED_WORKTIME" == *"Break" ]]; then
+        echo "You're in a break! You cannot work >:("
+    else
+        task "$1" modify WT:"$FILTERED_WORKTIME"
+    fi
+else
+    echo "Do you need to specify a ID!"
+fi
