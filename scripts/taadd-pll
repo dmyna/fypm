@@ -3,7 +3,7 @@
 # $2 = Episódio
 # $3 = ID da tarefa pai
 
-CREATED_ID=$(task add "PLL: T$1E$2" project:Assistir \
+CREATED_ID=$(task add "PLL: T$1E$2" project:Watch \
     STYLE:Dionysian TYPE:SubTask | grep -oP "Created task \K\d+(?=\.)")
 
 task "$3" modify depends:"$CREATED_ID"

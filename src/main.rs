@@ -1,7 +1,7 @@
 extern crate clap;
 use clap::{command, Arg, Command};
 
-use crate::subcommands::*;
+mod subcommands;
 
 fn main() {
     let matches = command!()
@@ -15,11 +15,16 @@ fn main() {
                     .index(1),
             ),
         )
+        .subcommand(
+            Command::new("worktime").about("Manage worktime system."),
+        )
+        .subcommand(
+            Command::new("init-day").about("Initialize day by setting first tasks of the day."),
+        )
+        .subcommand(
+            Command::new("timew").about("Perform timewarrior actions."),
+        )
         .get_matches();
 
-    match matches.subcommand() {
-        Some(("daemon", matches)) => {
-            daemon(matches);
-        }
-    }
+    subcommands::subcommands_matches(&matches);
 }

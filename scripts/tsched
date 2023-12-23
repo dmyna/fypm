@@ -4,15 +4,19 @@ if [[ -n "$1" ]]; then
     if [[ -n "$2" ]]; then
         task "$1" modify WT:"$2"
 
+        if [[ -n "$3" ]]; then
+            task "$1" modify scheduled:"$3"
+        fi
         exit 0;
     fi
 
     FILTERED_WORKTIME=$("$TWBIN"/tgetwt)
 
     if [[ "$FILTERED_WORKTIME" == *"Break" ]]; then
-        echo "You're in a break! You cannot work >:("
+        echo "You're in a break! You can't work >:("
     else
         task "$1" modify WT:"$FILTERED_WORKTIME"
+        task "$1" modify scheduled:today
     fi
 else
     echo "Do you need to specify a ID!"

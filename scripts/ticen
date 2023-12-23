@@ -1,7 +1,11 @@
 #!/bin/zsh
 
-if [[ -n "$1" ]]; then
-    tiend "$1" now
+if [[ $# -eq 0 ]]; then
+    tiend @3 "$(timew export @1 | jq -r '.[0].start')"
+elif [[ $# -eq 1 ]]; then
+    tiend "$1" "$(timew export @1 | jq -r '.[0].start')"
+elif [[ $# -eq 2 ]]; then
+    tiend "$1" "$(timew export "$2" | jq -r '.[0].start')"
 else
-    tiend @2 now
+    echo "Usage: ticart [tomodify_task_end](default: @3) [static_task_start](default: @1)"
 fi

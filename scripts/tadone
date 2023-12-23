@@ -66,10 +66,11 @@ if [[ -n "$1" ]]; then
         exit 0
     else
         if [[ "$2" == "-s" ]]; then
-            verify_all "$3"
-            if [[ "$?" -eq 1 ]]; then
+            verify_continuous "$1"
+            if [[ "$?" -eq 1 ]] || [[ -z "$3" ]]; then
                 exit 1
             fi
+
 
             tastart "$3"
         fi

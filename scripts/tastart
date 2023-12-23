@@ -26,6 +26,18 @@ verify_state() {
 
     return 0
 }
+manage_lock() {
+    local LOCK
+    LOCK=/tmp/task.lock
+
+    if [[ $1 == "true" ]]; then
+        echo "" > "$LOCK"
+    else
+        rm "$LOCK"
+    fi
+}
+
+manage_lock true
 
 # Verify if task is not in Time state
 if [[ "$1" != "last" ]]; then
@@ -40,7 +52,7 @@ if [[ -n "$(task $1 export | jq --arg str 'WithScript' '.[0].tags | index($str)'
     tascripts $1
 else
     # Reset apps volume if necessary
-    pulseaudio --set-volume 75
+    pulseaudio --set-volume 80
     cvol spotify 100
 fi
 
@@ -69,3 +81,5 @@ fi
 # Log Last Task
 echo "$ACTIVE_UUID" > "$LAST_TASK_PATH"
 echo "last: $ACTIVE_UUID"
+
+manage_lock false

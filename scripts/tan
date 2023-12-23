@@ -3,4 +3,4 @@
 TASK_ID=$1
 ANNOTATION=$2
 
-task "$TASK_ID" annotate "$ANNOTATION"
+yes no | task "$TASK_ID" annotate "$ANNOTATION"

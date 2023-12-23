@@ -1,0 +1,4 @@
+#!/bin/zsh
+FILTER='(+TODAY or (scheduled.after:today and scheduled.before:tomorrow)) and (status:pending or status:waiting)'
+
+task "$FILTER" "${@}" all

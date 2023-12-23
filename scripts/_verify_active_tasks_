@@ -1,6 +1,7 @@
 #!/bin/zsh
+LOCK=/tmp/task.lock
 
-while true; do
+action() {
     TASKS_LENGTH=$(task +ACTIVE export | jq -r '. | length')
     
     if [[ $TASKS_LENGTH -eq 0 ]]; then
@@ -13,6 +14,14 @@ while true; do
             tiend @2 "$CURRENT_TIMEW_START"
         fi
     fi
+}
 
-    sleep 10
+
+while true; do
+    if [[ -e "$LOCK" ]]; then
+        sleep 1
+    else
+        action
+	sleep 10
+    fi
 done

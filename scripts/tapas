@@ -1,0 +1,24 @@
+#!/bin/zsh
+
+FILTER=$1
+MODIFIER=$2
+
+MOTHER_TASKS_JSON=$(task "$FILTER" status:pending \
+        export | jq '[.[] | select(.depends != null) | .uuid]')
+
+i_counter=0
+echo "$MOTHER_TASKS_JSON" | jq -r '.[]' | while read element; do
+    UUID=$(echo "$element" | grep -oP '^[a-zA-Z0-9]{8}(?=-)')
+
+    if [[ $i_counter -gt 0 ]]; then
+        echo -e "·································································"
+    fi
+
+    if [[ -n "$MODIFIER" ]]; then
+    	task "(uuid:$UUID or MOTHER:$UUID)" "$MODIFIER" 
+    else
+    	task "(uuid:$UUID or MOTHER:$UUID)" list 
+    fi
+
+    i_counter=$((i_counter + 1))
+done

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 
 EXECUTED=0
 
@@ -35,22 +35,38 @@ case $(task "$1" export | jq -r '.[0].parent') in
         after_executed
         ;;
     "395f46a2-041c-4e0a-96dc-8c1757d79b48")
-	    before_executed
-        thunderbird >> /dev/null 2>&1 & disown %1
+	before_executed
+        thunderbird >> /dev/null 2>&1 & disown
         set_sound 70
-	    after_executed
+	after_executed
         ;;
     "dc88bc6c-9018-4e6d-aa87-b545969e6b72")
         before_executed
-        genymotion >> /dev/null 2>&1 & disown %1
+        genymotion >> /dev/null 2>&1 & disown
         after_executed
         ;;
     "5ccc0f95-3596-4991-a3fb-6d76778ed6dd")
         before_executed
-        anki >> /dev/null 2>&1 & disown %1
+        anki >> /dev/null 2>&1 & disown
         set_sound 85
         after_executed
         ;;
+    "e491559e-8812-402a-9192-05d7ce93c627")
+	    before_executed
+	    ksudoku >> /dev/null 2>&1 & disown
+	    set_sound 100 75
+	    after_executed
+	    ;;
+    "3ad553e8-a16e-4298-833b-5763bae4d123")
+        before_executed
+	    vivaldi-stable --app=https://www.chess.com
+        set_sound 90 75
+        after_executed
+	    ;;
+    "11e575f1-de86-4f71-a522-9a2f75477de9")
+        obs-new_diary
+        backup_con >> /dev/null 2>&1 & disown
+        after_executed
 esac
 
 # Info Relationship Case
@@ -67,9 +83,19 @@ esac
 case $(task "$1" export | jq -r '.[0].project') in
     "CerebralLine.Reading")
         set_sound 70
+	vivaldi-stable https://eggsy.xyz/projects/premid/custom-status/
         after_executed
         ;;
 esac
+
+# Tags Case
+TAGS=$(task "$1" export | jq -r '.[].tags')
+
+case "${TAGS[*]}" in
+    *"Workout"*)
+        ;;
+esac
+
 
 # Check if it has been opened
 if [[ $EXECUTED -eq 0 ]]; then
