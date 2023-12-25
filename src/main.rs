@@ -1,5 +1,5 @@
 extern crate clap;
-use clap::{command, Arg, Command};
+use clap::{command, Arg, ArgAction, Command};
 
 mod subcommands;
 
@@ -7,23 +7,25 @@ fn main() {
     let matches = command!()
         .author("Dev Myna <var.devmyna@gmail.com>")
         .about("A manager of my workflow and the better programs that I use.")
-        .subcommand(
+        .subcommands([
             Command::new("daemon").about("Manage daemon processes").arg(
                 Arg::new("ACTION")
                     .help("Action to perform <start|stop>")
                     .required(true)
                     .index(1),
             ),
-        )
-        .subcommand(
             Command::new("worktime").about("Manage worktime system."),
-        )
-        .subcommand(
             Command::new("init-day").about("Initialize day by setting first tasks of the day."),
-        )
-        .subcommand(
-            Command::new("timew").about("Perform timewarrior actions."),
-        )
+            Command::new("timew")
+                .about("Perform timewarrior actions.")
+                .args(&[
+                    Arg::new("ACTION")
+                        .help("Action to perform <track>")
+                        .required(true)
+                        .index(1),
+                    Arg::new("ACTIONARGS").action(ArgAction::Append).index(2),
+                ]),
+        ])
         .get_matches();
 
     subcommands::subcommands_matches(&matches);
