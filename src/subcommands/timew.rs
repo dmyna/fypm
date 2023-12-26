@@ -1,52 +1,103 @@
+//#region           External Imports
 use std::process::Command;
 use std::str;
+//#endregion
+
+//#region           Structs
 #[derive(serde::Deserialize)]
 #[allow(unused)]
 struct TaskWarriorExported {
-    id: i32,
+    id: u32,
     #[serde(rename = "STATE")]
     state: String,
     #[serde(rename = "STYLE")]
-    style: String,
+    style: Option<String>,
     #[serde(rename = "TYPE")]
-    r#type: String,
+    r#type: Option<String>,
     #[serde(rename = "WT")]
     wt: String,
     description: String,
     entry: String,
     modified: String,
-    project: String,
+    project: Option<String>,
     status: String,
     uuid: String,
     tags: Option<Vec<String>>,
     urgency: f64,
 }
 #[derive(serde::Deserialize)]
+#[allow(unused)]
 struct TimeWarriorExported {
     id: i32,
     start: String,
     end: Option<String>,
     tags: Option<Vec<String>>,
 }
-
-pub fn timew_end_correction(matches: &clap::ArgMatches) {
-    fn usage() {
-        println!("Usage: ticart [tomodify_task_end](default: @3) [static_task_start](default: @1)");
-    }
-
+pub enum TimewAction {
+    Start,
+    End,
+}
+//#endregion
+//#region           Functions
+fn do_end_or_start(
+    action: TimewAction,
+    matches: &clap::ArgMatches,
+    usage: &str,
+) -> Result<(), String> {
     let received_args = matches.get_many::<String>("ACTIONARGS").unwrap();
 
-    fn receive_start_time(start_received_id: Option<String>) -> String {
-        let mut start_id = String::new();
+    if received_args.len() == 1 {
+        println!("{}", usage);
+        Err(String::from("Do you not specify a task time?"))
+    } else if received_args.len() == 0 {
+        println!("{}", usage);
+        Err(String::from("You need to specifiy something! >:("))
+    } else if received_args.len() > 2 {
+        println!("{}", usage);
+        Err(String::from(
+            "Hey... You don't need to specify more than two parameters... Is there an error here?",
+        ))
+    } else {
+        Ok(timew_time_set(
+            &action,
+            received_args.clone().nth(0).unwrap(),
+            received_args.clone().nth(1).unwrap(),
+        ))
+    }
+}
+fn do_end_or_start_correction(
+    action: TimewAction,
+    default_ids: Vec<&str>,
+    matches: &clap::ArgMatches,
+    usage: &str,
+) -> Result<(), String> {
+    let received_args = matches.get_many::<String>("ACTIONARGS").unwrap();
 
-        if let Some(id) = start_received_id {
-            start_id = id;
+    let mut ids: Vec<&str> = vec![];
+
+    for index in 0..=1 {
+        if let Some(option_id) = received_args.clone().nth(index) {
+            ids.push(option_id);
         } else {
-            start_id = "@1".to_string();
+            ids.push(default_ids[index]);
         }
+    }
 
+    if received_args.len() > 2 {
+        println!("{}", usage);
+
+        Err(String::from(
+            "Hey... You don't need to specify more than two parameters!",
+        ))
+    } else {
+        Ok(timew_time_move(&action, ids))
+    }
+}
+
+pub fn timew_time_move(action: &TimewAction, ids: Vec<&str>) {
+    fn receive_time(action: &TimewAction, id: &str) -> String {
         let get_task_info = Command::new("timew")
-            .args([start_id.as_str(), "export"])
+            .args([id, "export"])
             .output()
             .expect("Failed to get timew json!");
 
@@ -56,34 +107,32 @@ pub fn timew_end_correction(matches: &clap::ArgMatches) {
 
         let task_json = tasks_json.get(0).unwrap();
 
-        return task_json.start.clone();
+        if let TimewAction::Start = action {
+            task_json.end.clone().expect("No end id provided!")
+        } else {
+            task_json.start.clone()
+        }
     }
 
-    let mut end_id = String::new();
-
-    if let Some(end_task_id) = received_args.clone().nth(0) {
-        end_id = end_task_id.clone();
-    } else {
-        end_id = "@3".to_string();
-    }
-
-    if received_args.len() > 2 {
-        eprint!("Hey... You don't need to specify more than two parameters!");
-        usage();
-    }
-
-    timew_end(
-        end_id.as_str(),
-        receive_start_time(received_args.clone().nth(1).cloned()).as_str(),
-    );
+    timew_time_set(&action, ids[0], receive_time(&action, ids[1]).as_str());
 }
-pub fn timew_end(received_id: &str, received_end_time: &str) {
+pub fn timew_time_set(received_action: &TimewAction, received_id: &str, time: &str) {
     if !received_id.starts_with("@") {
         panic!("Hey!! Are you trying to use a taskwarrior id? Specify with \"@\"!");
     }
 
+    let mut action = String::new();
+    match received_action {
+        TimewAction::Start => {
+            action.push_str("start");
+        }
+        TimewAction::End => {
+            action.push_str("end");
+        }
+    }
+
     let execute = Command::new("timew")
-        .args(["modify", "end", received_id, received_end_time, ":adjust"])
+        .args(["modify", &action, received_id, time, ":adjust"])
         .output();
 
     match execute {
@@ -93,26 +142,16 @@ pub fn timew_end(received_id: &str, received_end_time: &str) {
         Err(e) => eprintln!("Failed to execute timew command, error: {}", e),
     }
 }
-pub fn timew_track(matches: &clap::ArgMatches) {
+pub fn timew_track(matches: &clap::ArgMatches) -> Result<(), String> {
     let max_description_length = 25;
 
     let received_args = matches.get_many::<String>("ACTIONARGS").unwrap();
-    let received_id = received_args
-        .clone()
-        .nth(0)
-        .expect("No task id provided!")
-        .as_str();
+    let mut get_args = received_args.clone();
 
-    let received_start_time = received_args
-        .clone()
-        .nth(1)
-        .expect("No task start time provided!")
-        .as_str();
-    let receved_final_time = received_args
-        .clone()
-        .nth(2)
-        .expect("No task final time provided!")
-        .as_str();
+    let received_id = get_args.nth(0).expect("No task id provided!");
+
+    let received_start_time = get_args.nth(0).expect("No task start time provided!");
+    let receved_final_time = get_args.nth(0).expect("No task final time provided!");
 
     let get_task_info = Command::new("task")
         .args([received_id, "export"])
@@ -125,25 +164,38 @@ pub fn timew_track(matches: &clap::ArgMatches) {
 
     let task_json = tasks_json.get(0).unwrap();
 
-    let trucated_description = format!(
-        "{}...",
-        &task_json.description[..max_description_length - 3]
-    );
+    let mut truncated_description = String::new();
+    if &task_json.description.len() > &25 {
+        truncated_description = format!(
+            "{}...",
+            &task_json.description[..max_description_length - 3]
+        )
+    } else {
+        truncated_description.push_str(&task_json.description);
+    }
 
     let mut args = vec![
         "track",
         received_start_time,
         "-",
         receved_final_time,
-        task_json.uuid.as_str(),
-        trucated_description.as_str(),
-        task_json.project.as_str(),
-        task_json.style.as_str(),
-        task_json.r#type.as_str(),
-        task_json.wt.as_str(),
+        &task_json.uuid,
+        &truncated_description,
+        &task_json.wt,
         ":adjust",
     ];
 
+    if let Some(style) = &task_json.style {
+        args.push(style.as_str());
+    }
+    if let Some(r#type) = &task_json.r#type {
+        args.push(r#type.as_str());
+    }
+    if let Some(project) = &task_json.project {
+        args.push(project.as_str());
+    }
+
+    // Add tags
     if let Some(tags) = &task_json.tags {
         args.extend(tags.iter().map(|tag| tag.as_str()));
     }
@@ -156,39 +208,39 @@ pub fn timew_track(matches: &clap::ArgMatches) {
         }
         Err(e) => eprintln!("Failed to execute timew command, error: {}", e),
     }
+
+    Ok(())
 }
-pub fn match_action(matches: &clap::ArgMatches) {
+pub fn match_action(matches: &clap::ArgMatches) -> Result<(), String> {
     match matches.get_one::<String>("ACTION") {
         Some(action_value) => match action_value.as_str() {
             "end-correction" => {
-                timew_end_correction(matches);
+                let usage = "Usage: timew end-correction [tomodify_task_end](default: @3) [static_task_start](default: @1)";
+                let default_first_id = "@3";
+                let default_second_id = "@1";
+                let default_ids = vec![default_first_id, default_second_id];
+
+                do_end_or_start_correction(TimewAction::End, default_ids, matches, usage)
+            }
+            "start-correction" => {
+                let usage = "Usage: timew start-correction [tomodify_task_start](default: @1) [static_task_end](default: @3)";
+                let default_first_id = "@1";
+                let default_second_id = "@3";
+                let default_ids = vec![default_first_id, default_second_id];
+
+                do_end_or_start_correction(TimewAction::Start, default_ids, matches, usage)
             }
             "end" => {
-                fn usage() {
-                    println!("Usage: timew end <task id> <task end time>");
-                }
+                let usage = "Usage: timew end <task id> <task end time>";
 
-                let received_args = matches.get_many::<String>("ACTIONARGS").unwrap();
+                do_end_or_start(TimewAction::End, matches, usage)
+            }
+            "start" => {
+                let usage = "Usage: timew start <task id> <task start time>";
 
-                if received_args.len() == 1 {
-                    eprintln!("Do you not specify a task time?");
-                } else if received_args.len() == 0 {
-                    eprintln!("You need to specifiy something! >:(");
-                    usage();
-                } else if received_args.len() > 2 {
-                    eprint!("Hey... You don't need to specify more than");
-                    eprint!("two parameters... Is there an error here?");
-                    usage();
-                } else {
-                    timew_end(
-                        received_args.clone().nth(0).unwrap(),
-                        received_args.clone().nth(1).unwrap(),
-                    );
-                }
+                do_end_or_start(TimewAction::Start, matches, usage)
             }
-            "track" => {
-                timew_track(matches);
-            }
+            "track" => timew_track(matches),
             _ => panic!("No valid action provided!"),
         },
         None => {
@@ -196,3 +248,4 @@ pub fn match_action(matches: &clap::ArgMatches) {
         }
     }
 }
+//#endregion

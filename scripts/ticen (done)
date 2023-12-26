@@ -7,5 +7,5 @@ elif [[ $# -eq 1 ]]; then
 elif [[ $# -eq 2 ]]; then
     tiend "$1" "$(timew export "$2" | jq -r '.[0].start')"
 else
-    echo "Usage: ticart [tomodify_task_end](default: @3) [static_task_start](default: @1)"
+    echo "Usage: ticen [tomodify_task_end](default: @3) [static_task_start](default: @1)"
 fi

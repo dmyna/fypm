@@ -20,7 +20,7 @@ fn main() {
                 .about("Perform timewarrior actions.")
                 .args(&[
                     Arg::new("ACTION")
-                        .help("Action to perform <track>")
+                        .help("Action to perform <track|start|end|start-correction|end-correction>")
                         .required(true)
                         .index(1),
                     Arg::new("ACTIONARGS").action(ArgAction::Append).index(2),
