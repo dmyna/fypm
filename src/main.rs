@@ -7,7 +7,7 @@ fn main() {
     let matches = command!()
         .version("0.1.0")
         .author("Dev Myna <var.devmyna@gmail.com>")
-        .about("Rust Productivity Manager and Scheduler.")
+        .about("Four Years Productivity Manager.")
         .subcommands([
             Command::new("daemon").about("Manage daemon processes").arg(
                 Arg::new("ACTION")
