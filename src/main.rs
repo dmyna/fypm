@@ -5,8 +5,9 @@ mod subcommands;
 
 fn main() {
     let matches = command!()
+        .version("0.1.0")
         .author("Dev Myna <var.devmyna@gmail.com>")
-        .about("A manager of my workflow and the better programs that I use.")
+        .about("Rust Productivity Manager and Scheduler.")
         .subcommands([
             Command::new("daemon").about("Manage daemon processes").arg(
                 Arg::new("ACTION")
@@ -26,6 +27,7 @@ fn main() {
                     Arg::new("ACTIONARGS").action(ArgAction::Append).index(2),
                 ]),
         ])
+        .arg_required_else_help(true)
         .get_matches();
 
     subcommands::subcommands_matches(&matches);

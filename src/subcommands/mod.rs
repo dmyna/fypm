@@ -1,7 +1,7 @@
 pub mod daemon;
-pub mod worktime;
 pub mod init_day;
 pub mod timew;
+pub mod worktime;
 
 pub fn subcommands_matches(matches: &clap::ArgMatches) {
     match matches.subcommand() {
@@ -16,7 +16,7 @@ pub fn subcommands_matches(matches: &clap::ArgMatches) {
         }
         Some(("timew", matches)) => {
             timew::match_action(matches);
-        },
+        }
         _ => unreachable!(),
     }
 }

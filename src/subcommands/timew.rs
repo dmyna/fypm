@@ -179,7 +179,7 @@ pub fn timew_track(matches: &clap::ArgMatches) -> Result<(), String> {
         received_start_time,
         "-",
         receved_final_time,
-        &task_json.uuid,
+        &task_json.uuid[..8],
         &truncated_description,
         &task_json.wt,
         ":adjust",
