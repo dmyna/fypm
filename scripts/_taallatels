@@ -1,0 +1,9 @@
+#!/bin/zsh
+
+if [[ -n "$1" ]]; then
+    MODIFIER=$1
+else
+    MODIFIER=all
+fi
+
+task ALARM.before:now "$MODIFIER"

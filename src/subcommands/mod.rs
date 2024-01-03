@@ -1,7 +1,8 @@
 pub mod daemon;
-pub mod init_day;
-pub mod timew;
 pub mod worktime;
+pub mod init_day;
+pub mod task;
+pub mod timew;
 
 pub fn subcommands_matches(matches: &clap::ArgMatches) {
     match matches.subcommand() {
@@ -13,6 +14,9 @@ pub fn subcommands_matches(matches: &clap::ArgMatches) {
         }
         Some(("init-day", _matches)) => {
             init_day::init_day();
+        }
+        Some(("task", _matches)) => {
+            task::match_action(matches);
         }
         Some(("timew", matches)) => {
             timew::match_action(matches);

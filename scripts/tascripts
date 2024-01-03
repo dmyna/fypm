@@ -3,7 +3,7 @@
 EXECUTED=0
 
 before_executed() {
-    bspc desktop -f '^4'
+    bspc desktop -f "$PRIMARY_WORKSPACE"
     xdotool mousemove 800 450
 }
 after_executed() {

@@ -1,38 +1,10 @@
 //#region           External Imports
+use crate::utils::structs;
 use std::process::Command;
 use std::str;
 //#endregion
 
-//#region           Structs
-#[derive(serde::Deserialize)]
-#[allow(unused)]
-struct TaskWarriorExported {
-    id: u32,
-    #[serde(rename = "STATE")]
-    state: String,
-    #[serde(rename = "STYLE")]
-    style: Option<String>,
-    #[serde(rename = "TYPE")]
-    r#type: Option<String>,
-    #[serde(rename = "WT")]
-    wt: String,
-    description: String,
-    entry: String,
-    modified: String,
-    project: Option<String>,
-    status: String,
-    uuid: String,
-    tags: Option<Vec<String>>,
-    urgency: f64,
-}
-#[derive(serde::Deserialize)]
-#[allow(unused)]
-struct TimeWarriorExported {
-    id: i32,
-    start: String,
-    end: Option<String>,
-    tags: Option<Vec<String>>,
-}
+//#region           Enums
 pub enum TimewAction {
     Start,
     End,
@@ -102,7 +74,7 @@ pub fn timew_time_move(action: &TimewAction, ids: Vec<&str>) {
             .expect("Failed to get timew json!");
 
         let str_json = str::from_utf8(&get_task_info.stdout).unwrap();
-        let tasks_json: Vec<TimeWarriorExported> =
+        let tasks_json: Vec<structs::TimeWarriorExported> =
             serde_json::from_str(str_json).expect("Failed to parse received json!");
 
         let task_json = tasks_json.get(0).unwrap();
@@ -159,7 +131,7 @@ pub fn timew_track(matches: &clap::ArgMatches) -> Result<(), String> {
         .expect("Failed to get task json!");
 
     let str_json = str::from_utf8(&get_task_info.stdout).unwrap();
-    let tasks_json: Vec<TaskWarriorExported> =
+    let tasks_json: Vec<structs::TaskWarriorExported> =
         serde_json::from_str(str_json).expect("Failed to parse received json!");
 
     let task_json = tasks_json.get(0).unwrap();

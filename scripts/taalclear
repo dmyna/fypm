@@ -1,0 +1,7 @@
+#!/bin/zsh
+
+action() {
+    yes yes | task ALARM.any: modify ALARM:
+}
+
+_ask_dialog "Do you want to clear ALL scheduled alarms?" action

@@ -1,0 +1,50 @@
+#!/bin/zsh
+
+action() {
+    TASK_UUID="$1"
+    TASK_DESCRIPTION="$2"
+    SELECTED=$(esch "$TASK_DESCRIPTION" "Start" 5)
+
+    if [[ "$SELECTED" == "action" ]]; then
+        tastart "$TASK_UUID"
+
+        echo no | task "$TASK_UUID" modify ALARM:
+    else
+        echo 'Esch was returned an unknown value!'
+    fi
+}
+
+if [[ "$(_taalarmlatels export | jq -r 'length')" -gt 0 ]]; then
+    TITLE="fypm Alarm: Você tem tasks agendadas pendentes! Resolva isso!"
+    ACT_MSG="Mostre elas"
+
+    SELECTED=$(esch "$TITLE" "$ACT_MSG" 0)
+
+    if [[ -z "$SELECTED" ]]; then
+        esch "$TITLE" "$ACT_MSG" 0
+    elif [[ "$SELECTED" == "action" ]]; then
+        alacritty \
+            --config-file="$BSPDIR"/alacritty/alacritty.yml \
+            --command tmxs-taalwarn _taallatels >> /dev/null 2>&1 & disown
+    fi
+fi
+
+ALARM_FILTER="(ALARM.after:now and ALARM.before:now+10s)"
+while true; do
+    if [[ "$(pgrep -f "$MYBIN"/esch)" != "" ]]; then
+        killall esch
+    fi
+
+    ALARM_TASKS_JSON=$(task "$ALARM_FILTER" export)
+    ALARM_TASKS_COUNT="$(echo "$ALARM_TASKS_JSON" | jq -r 'length')"
+
+    if [[ "$ALARM_TASKS_COUNT" -eq 1 ]]; then
+        action \
+            "$(echo "$ALARM_TASKS_JSON" | jq -r '.[0].uuid')" \
+            "$(echo "$ALARM_TASKS_JSON" | jq -r '.[0].description')"
+    elif [[ "$ALARM_TASKS_COUNT" -eq 0 ]]; then
+        sleep 1s
+    else
+        echo "todo!"
+    fi
+done

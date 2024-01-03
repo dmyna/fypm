@@ -1,0 +1,10 @@
+#!/bin/zsh
+ID=$1
+
+action() {
+    task "$ID" modify ALARM:
+}
+
+if [[ -n "$ID" ]]; then
+    ask "Do you want to unschedule task with the id '$ID'?" action
+fi

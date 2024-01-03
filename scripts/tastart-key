@@ -2,22 +2,40 @@
 
 case "$1" in
     "t")
-        tastart "$(tgetid "Time without specific use" WT:Quantify)"
+        # Time without specific use
+        tastart '5c847c7e-c7eb-44f6-ad7e-29cc989c8854'
         ;;
     "l")
-        tastart "$(tgetid "Tempo perdido" WT:Quantify)"
+        # Lost time
+        tastart '1469ac5d-78ab-463d-bf77-f56a9f042f48'
         ;;
     "d")
-        tastart "$(tgetid "Descanso e Pausas" WT:Quantify)"
+        # Rest and breaks
+        tastart '309d9b37-cd99-4b2c-b3c7-a9c60cb1754f'
         ;;
     "h")
-        tastart "$(tgetid "Higiene e Cuidado" WT:Quantify)"
+        # Higiene e cuidado
+        tastart 'a371cb4e-6fad-452f-a22c-abc932f0a83f'
         ;;
     "c")
-        tastart "$(tgetid "Cantar" WT:Quantify)"
+        # Singing
+        tastart '2d5d97b5-fe43-415f-8501-045aca46cdbb'
         ;;
     "p")
-        tastart "$(tgetid "Pensamento Ativo" WT:Quantify)"
+        # Active Thought
+        tastart 'dd67efbb-f010-42c7-b84c-5d0da1936e57'
+        ;;
+    "hm")
+        # House Maintening
+        tastart 'ef5dbc2c-326e-4443-b0dc-b2595de6e012'
+        ;;
+    "wm")
+        # Workflow Maintening
+        tastart 'b719a399-0b21-4fed-9118-017096466073'
+        ;;    
+    "tm")
+        # Tasks Maintening
+        tastart '8980c7be-1fda-4888-b45a-1a2e52345947'
         ;;
     *)
         echo "Avaiable keys: t, l, d, h, c, p"

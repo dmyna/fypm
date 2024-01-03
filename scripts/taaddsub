@@ -1,13 +1,30 @@
-#!/bin/bash
-
+#!/bin/zsh
 # $1 = Main task ID 
 # $2 = Sub task description
 # ${@:3} = Other attributes
-taskProject=$(task "$1" _projects)
+MAIN_TASK_ID=$1
 
-newTaskStr=$(task add "$2" project:"$taskProject" "${@:3}" TYPE:SubTask)
-newTaskID=$(echo "$newTaskStr" | grep 'Created task' | grep -o '[0-9]\+')
+if [[ $# -eq 2 ]]; then
+    SUBTASK_ID=$2
+    
+    # Change the TYPE of that task
+    task "$SUBTASK_ID" modify TYPE:SubTask
+elif [[ $# -gt 2 ]]; then
+    PROJECT=$(task "$MAIN_TASK_ID" _projects)
 
-task "$1" modify depends:"$newTaskID"
+    SUBTASK_ID=$(task add "$2" project:"$PROJECT" "${@:3}" \
+        TYPE:SubTask | grep 'Created task' | grep -o '[0-9]\+')
+else
+    echo "Usage:
+    If you want to create a subtask:
+        taaddsub <main_task_id> <...task_add_args>
+    If you want to move a task to a subtask:
+        taddsub <main_task_id> <future_subtask_id>
+"
 
-task "$newTaskID" modify MOTHER:"$(task "$1" export | jq -r '.[0].uuid')"
+    exit 1
+fi
+
+task "$MAIN_TASK_ID" modify depends:"$SUBTASK_ID" STATE:Info
+
+task "$SUBTASK_ID" modify MOTHER:"$(task "$MAIN_TASK_ID" export | jq -r '.[0].uuid')"

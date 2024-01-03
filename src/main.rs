@@ -2,6 +2,7 @@ extern crate clap;
 use clap::{command, Arg, ArgAction, Command};
 
 mod subcommands;
+mod utils;
 
 fn main() {
     let matches = command!()
@@ -17,6 +18,15 @@ fn main() {
             ),
             Command::new("worktime").about("Manage worktime system."),
             Command::new("init-day").about("Initialize day by setting first tasks of the day."),
+            Command::new("task")
+                .about("Perform taskwarrior actions.")
+                .args(&[
+                    Arg::new("ACTION")
+                        .help("Action to perform <start>")
+                        .required(true)
+                        .index(1),
+                    Arg::new("ACTIONARGS").action(ArgAction::Append).index(2),
+                ]),
             Command::new("timew")
                 .about("Perform timewarrior actions.")
                 .args(&[
