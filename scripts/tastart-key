@@ -25,6 +25,10 @@ case "$1" in
         # Active Thought
         tastart 'dd67efbb-f010-42c7-b84c-5d0da1936e57'
         ;;
+    "e")
+        # Calisthenics and Stretching
+        tastart '7806d5f7-db60-4841-ba83-97c2106499d3'
+        ;;
     "hm")
         # House Maintening
         tastart 'ef5dbc2c-326e-4443-b0dc-b2595de6e012'

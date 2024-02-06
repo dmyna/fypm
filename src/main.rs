@@ -1,10 +1,15 @@
 extern crate clap;
 use clap::{command, Arg, ArgAction, Command};
 
+mod handlers;
 mod subcommands;
 mod utils;
 
 fn main() {
+    handlers::data_bowl::DataBowlHandler
+        .ensure_db_existence()
+        .unwrap();
+
     let matches = command!()
         .version("0.1.0")
         .author("Dev Myna <var.devmyna@gmail.com>")

@@ -1,0 +1,2 @@
+#!/bin/zsh
+timew annotate $1 $2

@@ -2,20 +2,49 @@
 
 LAST_TASK_PATH=/tmp/.last_task
 
-get_tasks=$(task +ACTIVE export)
-active_tasks=$(echo "$get_tasks" | jq -r 'length')
+inform_filter() {
+    echo "This was the filter inserted: '$FILTER'"
+}
 
-schedule_if_needed () {
+FILTER=$1
+
+if [[ "$FILTER" == "" ]]; then
+    echo "You must insert a filter!"
+    exit 1
+else
+    if [[ "$FILTER" == "last" ]]; then
+        FILTER=$(cat $LAST_TASK_PATH)
+    fi
+
+    TASKS_COUNT=$(task "$FILTER" count);
+
+    # Check task count to start
+    if [[ "$TASKS_COUNT" -eq 0 ]]; then
+        echo "No tasks to start!"
+        inform_filter
+        exit 1
+    elif [[ "$TASKS_COUNT" -gt 1 ]]; then
+        echo "More than one task to start!"
+        inform_filter
+        exit 1
+    fi
+fi
+
+GET_TASKS=$(task +ACTIVE export)
+ACTIVE_TASKS_COUNT=$(echo "$GET_TASKS" | jq -r 'length')
+TASK_JSON=$(task "$FILTER" export);
+
+schedule_if_necessary () {
     local GET_WORKTIME
-    GET_WORKTIME=$(task "$1" export | jq -r '.[0].WT')
+    GET_WORKTIME=$(task "$FILTER" export | jq -r '.[0].WT')
 
     if [[ "$GET_WORKTIME" != "$WORKTIME" ]] && [[ "$GET_WORKTIME" != "Quantify" ]]; then
-        yes no | tsched "$1"
+        yes no | tsched "$FILTER"
     fi
 }
 verify_state() {
     local GET_STATE
-    GET_STATE=$(task "$1" export | jq -r '.[0].STATE')
+    GET_STATE=$(task "$FILTER" export | jq -r '.[0].STATE')
 
     if [[ "$GET_STATE" != "Time" ]]; then
         echo "You are trying to start a task that is not in Time state!"
@@ -30,56 +59,60 @@ manage_lock() {
     local LOCK
     LOCK=/tmp/task.lock
 
-    if [[ $1 == "true" ]]; then
+    if [[ "$1" == "true" ]]; then
         echo "" > "$LOCK"
     else
         rm "$LOCK"
     fi
 }
+main() {
+    manage_lock true
 
-manage_lock true
+    # Verify if task is not in Time state
+    if [[ "$FILTER" != "last" ]]; then
+        verify_state
+        if [[ "$?" -eq 1 ]]; then
+            exit 1
+        fi
+    fi
 
-# Verify if task is not in Time state
-if [[ "$1" != "last" ]]; then
-    verify_state "$1"
-    if [[ "$?" -eq 1 ]]; then
+    # Verify if task is a Divisory
+    if [[ "$(echo "$TASK_JSON" | jq --arg str 'Divisory' '.[0].tags | index($str)')" != "null" ]]; then
+        echo "You are trying to start a Divisory task!"
         exit 1
     fi
-fi
 
-# Verify if task has a script
-if [[ -n "$(task $1 export | jq --arg str 'WithScript' '.[0].tags | index($str)')" ]]; then
-    tascripts $1
-else
-    # Reset apps volume if necessary
-    pulseaudio --set-volume 80
-    cvol spotify 100
-fi
+    # Verify if task has a script
+    if [[ "$(echo "$TASK_JSON" | jq --arg str 'WithScript' '.[0].tags | index($str)')" != "null" ]]; then
+        tascripts $FILTER
+    else
+        # Reset apps volume if necessary
+        pulsemixer --set-volume 80
+        cvol spotify 100%
+    fi
 
-# Stop Active Task
-if [[ "$active_tasks" -gt 1 ]]; then
-    echo "Há mais de uma task em execução!"
-    exit 1
-else
-    ACTIVE_ID="$(echo "$get_tasks" | jq '.[0].id')"
-    ACTIVE_UUID="$(task "$ACTIVE_ID" export | jq -r '.[0].uuid' | sed 's/-.*//')"
+    # Stop Active Task
+    if [[ "$ACTIVE_TASKS_COUNT" -gt 1 ]]; then
+        echo "Há mais de uma task em execução!"
+        exit 1
+    else
+        ACTIVE_ID="$(echo "$GET_TASKS" | jq '.[0].id')"
+        ACTIVE_UUID="$(task "$ACTIVE_ID" export | jq -r '.[0].uuid' | sed 's/-.*//')"
 
-    task "$ACTIVE_ID" stop;
-fi
+        task "$ACTIVE_ID" stop;
+    fi
 
-# Init Task
-if [[ "$1" == "last" ]]; then
-    tastart "$(cat "$LAST_TASK_PATH")"
-else
-    task "$1" start;
-fi
+    # Init Task
+    task "$FILTER" start;
 
-if [[ "$2" != "--no-wt" ]]; then
-    schedule_if_needed "$1"
-fi
+    if [[ "$2" != "--no-wt" ]]; then
+        schedule_if_necessary
+    fi
 
-# Log Last Task
-echo "$ACTIVE_UUID" > "$LAST_TASK_PATH"
-echo "last: $ACTIVE_UUID"
+    # Log Last Task
+    echo "$ACTIVE_UUID" > "$LAST_TASK_PATH"
+    echo "last: $ACTIVE_UUID"
 
-manage_lock false
+    manage_lock false
+}
+main

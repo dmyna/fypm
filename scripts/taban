@@ -1,0 +1,28 @@
+#!/bin/zsh
+ABANDONED="true"
+FAILED="false"
+
+main() {
+    if [[ "$ABANDONED" == "true" ]]; then
+        task "$ID" modify +Abandoned
+    elif [[ "$FAILED" == "true" ]]; then
+        task "$ID" modify +Failed
+    fi
+    task "$ID" delete
+}
+
+if [[ $1 == "" ]]; then
+    echo "Usage: taban <task id>"
+    exit 1
+else
+    if [[ "$1" == "-f" ]]; then
+        FAILED="true"
+        ABANDONED="false"
+
+        shift
+    fi
+
+    ID=$1
+
+    main
+fi

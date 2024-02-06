@@ -1,0 +1,40 @@
+#!/bin/zsh
+
+usage() {
+    echo -e "\
+Usage: taadd [option] <description> <project> <STYLE> <TYPE> !/due||GOAL/ !/ALARM/ !/WT||scheduled/ [...others]
+
+\e[1m\e[38;2;255;0;0mWARN: Don't specify the args with '!//', because they have thier own commands.
+    -> due||GOAL - tasgoal # If recur was specified, you can set due.
+    -> WT||scheduled - tsched
+    -> ALARM - taaladd
+\e[0mOptions:
+        -h    Show this help message and exit"
+}
+
+if [[ $1 == "-h" ]]; then
+    usage
+    exit 0
+else
+    if [[ $# -lt 4 ]]; then
+        usage
+        
+        exit 1
+    fi
+
+    DESCRIPTION=$1
+    PROJECT=$2
+    STYLE=$3
+    TYPE=$4
+
+    echo "\e[38;2;255;255;255mThese are the args:\e[4m
+    description:$DESCRIPTION,
+    project:$PROJECT,
+    style:$STYLE,
+    TYPE:$TYPE,
+    others: ${@:5}"
+
+    _ask_dialog '\e[0m\e[1m\e[38;2;255;255;255mDo you want to continue?\e[0m' || exit 1
+    
+    task add "$DESCRIPTION" project:"$PROJECT" STYLE:"$STYLE" TYPE:"$TYPE" "${@:5}"
+fi

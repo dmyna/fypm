@@ -33,17 +33,16 @@ fn task_start(id: &str, schedule: Option<bool>) {
 }
 
 pub fn match_action(matches: &clap::ArgMatches) {
-    match matches.get_one::<String>("ACTION") {
-        Some(action_value) => match action_value.as_str() {
-            "start" => {
-                
-
-                task_start()
-            }
-            _ => panic!("No valid action provided!"),
-        },
-        None => {
-            panic!("No argument provided!");
-        }
-    }
+    todo!();
+    // match matches.get_one::<String>("ACTION") {
+    //     Some(action_value) => match action_value.as_str() {
+    //         "start" => {
+    //             task_start()
+    //         }
+    //         _ => panic!("No valid action provided!"),
+    //     },
+    //     None => {
+    //         panic!("No argument provided!");
+    //     }
+    // }
 }

@@ -10,7 +10,7 @@ pub fn subcommands_matches(matches: &clap::ArgMatches) {
             daemon::init_daemon(matches);
         }
         Some(("worktime", _matches)) => {
-            worktime::worktime();
+            todo!();
         }
         Some(("init-day", _matches)) => {
             init_day::init_day();

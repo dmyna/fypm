@@ -15,9 +15,9 @@ echo "$MOTHER_TASKS_JSON" | jq -r '.[]' | while read element; do
     fi
 
     if [[ -n "$MODIFIER" ]]; then
-        task "(uuid:$UUID or MOTHER:$UUID)" rc.verbose:affected,label rc.report.$MODIFIER.sort=entry+ "$MODIFIER" 
+        task "(uuid:$UUID or MOTHER:$UUID)" rc.verbose:affected,label rc.report.$MODIFIER.sort=entry+ ${@:3} "$MODIFIER"
     else
-        task "(uuid:$UUID or MOTHER:$UUID)" rc.verbose:affected,label rc.report.list.sort=entry+ list 
+        task "(uuid:$UUID or MOTHER:$UUID)" rc.verbose:affected,label rc.report.list.sort=entry+ ${@:3} list 
     fi
 
     i_counter=$((i_counter + 1))

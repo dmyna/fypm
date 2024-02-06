@@ -1,9 +1,28 @@
 #!/bin/bash
-# $1 = Nome da Playlist
-# $2 = Número de Músicas
+# $1 = Playlist Name
+# $2 = Number of Musics
 
-TASK=$(task add "$1" project:Music +STYLE.Dionysian +TYPE.Objective +WT.NonSched | grep -oP 'Created task \K\d+(?=\.)')
+PLAYLIST_NAME=$1
+MUSIC_LENGTH=$2
+PROJECT="Music.Playlist"
+STYLE="Dionysian"
+TYPE="Objective"
 
-taaddsub "$TASK" "Foto" project:Music +STYLE.Dionysian +WT.NonSched
-taaddsub "$TASK" "Descrição" project:Music +STYLE.Dionysian +WT.NonSched
-taaddsub "$TASK" "Músicas ($2)" project:Music +STYLE.Dionysian +WT.NonSched
+usage() {
+    echo "Usage: taadd-msc <PLAYLIST_NAME> <MUSIC_LENGTH>"
+}
+if [ $# -lt 2 ]; then
+    usage
+
+    exit 1
+fi
+
+main() {
+    MOTHER_ID=$(task add "$PLAYLIST_NAME" project:"$PROJECT" STYLE:"$STYLE" TYPE:"$TYPE" | grep -oP 'Created task \K\d+(?=\.)')
+
+    taaddsub "$MOTHER_ID" "Photo" STYLE:"$STYLE"
+    taaddsub "$MOTHER_ID" "Description" STYLE:"$STYLE"
+    taaddsub "$MOTHER_ID" "Musics ($MUSIC_LENGTH)" STYLE:"$STYLE"
+}
+
+main

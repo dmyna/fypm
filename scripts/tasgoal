@@ -17,7 +17,7 @@ fi
 
 TYPE=$(task "$ID" export | jq -r '.[0].TYPE')
 
-if [[ "$TYPE" == "Continuous" || "$TYPE" == "Essential" ]]; then
+if [[ "$TYPE" == "Continuous" || "$TYPE" == "Essential" || "$TYPE" == "Eventual" ]]; then
     echo "You can't set a goal to a $TYPE task!"
     echo "You need to use the schedule feature! Try 'tsched' :)"
 fi

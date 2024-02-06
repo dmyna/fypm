@@ -24,7 +24,7 @@ if [[ "$(_taalarmlatels export | jq -r 'length')" -gt 0 ]]; then
         esch "$TITLE" "$ACT_MSG" 0
     elif [[ "$SELECTED" == "action" ]]; then
         alacritty \
-            --config-file="$BSPDIR"/alacritty/alacritty.yml \
+            --config-file="$BSPDIR"/alacritty/alacritty.toml \
             --command tmxs-taalwarn _taallatels >> /dev/null 2>&1 & disown
     fi
 fi
