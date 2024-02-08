@@ -1,5 +1,5 @@
-use crate::utils::structs;
 use crate::utils::paths;
+use crate::utils::structs;
 use std::str;
 use std::{fs, process::Command};
 
@@ -15,7 +15,8 @@ fn task_start(id: &str, schedule: Option<bool>) {
 
     let active_tasks: Vec<structs::TaskWarriorExported> = serde_json::from_str(
         str::from_utf8(&get_active_tasks.stdout).expect("I can't parse stdout!"),
-    ).expect("Failed to parse received json!");
+    )
+    .expect("Failed to parse received json!");
 
     fn lock(active: bool) -> () {
         let lock_path = format!("{}/task.lock", paths::get_paths().tmp_dir);
@@ -28,21 +29,18 @@ fn task_start(id: &str, schedule: Option<bool>) {
     }
 
     lock(true);
-
-    
 }
 
 pub fn match_action(matches: &clap::ArgMatches) {
-    todo!();
-    // match matches.get_one::<String>("ACTION") {
-    //     Some(action_value) => match action_value.as_str() {
-    //         "start" => {
-    //             task_start()
-    //         }
-    //         _ => panic!("No valid action provided!"),
-    //     },
-    //     None => {
-    //         panic!("No argument provided!");
-    //     }
-    // }
+    match matches.get_one::<String>("ACTION") {
+        Some(action_value) => match action_value.as_str() {
+            // "start" => {
+            //     task_start()
+            // }
+            _ => panic!("No valid action provided!"),
+        },
+        None => {
+            panic!("No argument provided!");
+        }
+    }
 }

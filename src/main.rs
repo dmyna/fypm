@@ -21,7 +21,15 @@ fn main() {
                     .required(true)
                     .index(1),
             ),
-            Command::new("worktime").about("Manage worktime system."),
+            Command::new("worktime")
+                .about("Manage worktime system.")
+                .args(&[
+                    Arg::new("ACTION")
+                        .help("Action to perform <add>")
+                        .required(true)
+                        .index(1),
+                    Arg::new("ACTIONARGS").action(ArgAction::Append).index(2),
+                ]),
             Command::new("init-day").about("Initialize day by setting first tasks of the day."),
             Command::new("task")
                 .about("Perform taskwarrior actions.")

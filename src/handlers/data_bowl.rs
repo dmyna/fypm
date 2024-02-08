@@ -27,7 +27,7 @@ pub struct DataBowl {
 pub struct DataBowlHandler;
 
 impl DataBowlHandler {
-    fn verify_by_name(name: String) -> Result<bool, Error> {
+    pub fn verify_by_name(name: &String) -> Result<bool, Error> {
         let get_result = fs::read_dir(Path::new(&DB_PATH.to_string()).join(name.as_str()));
 
         let result = match get_result {
@@ -71,10 +71,13 @@ impl DataBowlHandler {
         result
     }
 
-    pub fn create(name: String, description: String) -> Result<DataBowl, Error> {
-        let data_bowl = DataBowl { name, description };
+    pub fn create(name: &String, description: &String) -> Result<DataBowl, Error> {
+        let data_bowl = DataBowl {
+            name: name.clone(),
+            description: description.clone(),
+        };
 
-        let verify_existance = DataBowlHandler::verify_by_name(data_bowl.name.clone());
+        let verify_existance = DataBowlHandler::verify_by_name(&data_bowl.name);
 
         if verify_existance? == false {
             fs::create_dir(DB_PATH.to_string() + "/" + data_bowl.name.as_str())
@@ -97,8 +100,8 @@ impl DataBowlHandler {
             ))
         }
     }
-    pub fn remove(name: String) -> Result<(), Error> {
-        let verify_existance = DataBowlHandler::verify_by_name(name.clone());
+    pub fn remove(name: &String) -> Result<(), Error> {
+        let verify_existance = DataBowlHandler::verify_by_name(name);
 
         if verify_existance? == true {
             fs::remove_dir_all(Path::new(&DB_PATH.to_string()).join(name.as_str()))?;
@@ -111,8 +114,8 @@ impl DataBowlHandler {
             ))
         }
     }
-    pub fn rename(old_name: String, new_name: String) -> Result<(), Error> {
-        let verify_existance = DataBowlHandler::verify_by_name(old_name.clone());
+    pub fn rename(old_name: &String, new_name: &String) -> Result<(), Error> {
+        let verify_existance = DataBowlHandler::verify_by_name(old_name);
 
         if verify_existance? == true {
             let old_path = Path::new(&DB_PATH.to_string()).join(old_name.as_str());
