@@ -1,28 +1,75 @@
 #!/bin/zsh
-ABANDONED="true"
+ABANDONED="false"
 FAILED="false"
+NOCONTROL="false"
 
+usage() {
+    echo "Usage: taban <-a, abandoned | -f, failed | -n, no-control> <task_id> [annotation]"
+}
 main() {
+    local TASKS_LENGHT
+    TASKS_LENGHT=$(task "$ID" count)
+
     if [[ "$ABANDONED" == "true" ]]; then
-        task "$ID" modify +Abandoned
+        if [[ "$TASKS_LENGHT" -gt 2 ]]; then
+            oyes "all" "no" | task "$ID" modify +Abandoned
+        else
+            yes "no" | task "$ID" modify +Abandoned
+        fi
     elif [[ "$FAILED" == "true" ]]; then
-        task "$ID" modify +Failed
+        if [[ "$TASKS_LENGHT" -gt 2 ]]; then
+            oyes "all" "no" | task "$ID" modify +Failed
+        else
+            yes "no" | task "$ID" modify +Failed
+        fi
+    elif [[ "$NOCONTROL" == "true" ]]; then
+        if [[ "$TASKS_LENGHT" -gt 2 ]]; then
+            oyes "all" "no" | task "$ID" modify +NoControl
+        else
+            yes "no" | task "$ID" modify +NoControl
+        fi
     fi
-    task "$ID" delete
+
+    if [[ "$TASKS_LENGHT" -gt 1 ]]; then
+        oyes "all" "no" | task "$ID" delete
+    else
+        oyes "yes" "no" | task "$ID" delete
+    fi
 }
 
-if [[ $1 == "" ]]; then
-    echo "Usage: taban <task id>"
+if [[ $# -gt 3 ]]; then
+    echo "Too many arguments!"
+    usage
+    exit 1
+elif [[ $# -lt 2 ]]; then
+    echo "Not enough arguments!"
+    usage
     exit 1
 else
-    if [[ "$1" == "-f" ]]; then
-        FAILED="true"
-        ABANDONED="false"
+    OPTION=$1
+    ID=$2
+    ANNOTATION=$3 # Optional
 
-        shift
+    case "$OPTION" in
+        "-f" | "--failed")
+            FAILED="true"
+            ;;
+        "-n" | "--no-control")
+            NOCONTROL="true"
+            ;;
+        "-a" | "--abandoned")
+            ABANDONED="true"
+            ;;
+        *)
+            echo "Unknown option: $1"
+            usage
+            exit 1
+            ;;
+    esac
+
+    if [[ $# -eq 3 ]]; then
+        tan "$ID" "$ANNOTATION"
     fi
-
-    ID=$1
-
-    main
 fi
+
+main

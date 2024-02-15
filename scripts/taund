@@ -1,0 +1,7 @@
+#!/bin/zsh
+
+if [[ "$1" == "-d" ]]; then
+    task "$2" modify status:pending -Abandoned -Failed -NoControl
+else
+    task "$1" modify status:pending
+fi

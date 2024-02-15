@@ -1,0 +1,32 @@
+#!/bin/zsh
+
+TRM_COLS="200"
+TRM_LINES="50"
+SESSION="Goals"
+
+CAL="cal -3"
+TAGOALS="tagoals -m"
+PROJS="task projects"
+
+perpetue_cmd() {
+    echo "clear && $1 && while read -r; do clear && $1; done"
+}
+
+open_session() {
+    if ! tmux has-session -t "$SESSION"; then
+        tmux new-session -d -s "$SESSION" -x "$TRM_COLS" -y "$TRM_LINES"
+        tmux split-window -t "$SESSION" -h -l 12%
+        tmux split-window -t "$SESSION":0.0 -v -l 20%
+        tmux split-window -t "$SESSION":0.1 -h -l 37%
+        tmux split-window -t "$SESSION":0.0 -h -l 50%
+
+        tmux send-keys -t "$SESSION":0.1 "$(perpetue_cmd "$TAGOALS")" C-m
+        tmux send-keys -t "$SESSION":0.3 "$(perpetue_cmd "$CAL")" C-m
+        tmux send-keys -t "$SESSION":0.4 "$(perpetue_cmd "$PROJS")" C-m
+        
+        tmux select-pane -t "$SESSION":0.2
+        tmux attach-session -t "$SESSION"
+    fi
+}
+
+open_session

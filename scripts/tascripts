@@ -74,6 +74,7 @@ case $(task "$1" export | jq -r '.[0].INFORELAT') in
     "4ea8d410-7eea-481f-b90e-11745d942567")
         before_executed
         vivaldi-stable --app=https://www.duolingo.com/learn
+        lay dvorak
         set_sound 70 100
         after_executed
         ;;

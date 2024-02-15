@@ -55,6 +55,19 @@ verify_state() {
 
     return 0
 }
+verify_worktime() {
+    local GET_WORKTIME
+    GET_WORKTIME=$(task "$FILTER" export | jq -r '.[0].WT')
+
+    if [[ "$GET_WORKTIME" == "AllDay" ]]; then
+        echo "You are trying to start a task that is AllDay!"
+        echo "Verify and try again."
+
+        return 1
+    fi
+
+    return 0
+}
 manage_lock() {
     local LOCK
     LOCK=/tmp/task.lock
@@ -67,6 +80,12 @@ manage_lock() {
 }
 main() {
     manage_lock true
+
+    # Verify if task worktime is AllDay
+    verify_worktime
+    if [[ "$?" -eq 1 ]]; then
+        exit 1
+    fi
 
     # Verify if task is not in Time state
     if [[ "$FILTER" != "last" ]]; then

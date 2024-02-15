@@ -1,0 +1,16 @@
+#!/bin/bash
+
+SESSION="Goals"
+SESSIONS=$(tmux list-sessions -F "#S")
+
+HAS_SESSION=false
+
+while IFS= read -r line; do
+    if [ "$line" = "$SESSION" ]; then
+        HAS_SESSION=true
+    fi
+done <<< "$SESSIONS"
+
+if [ "$HAS_SESSION" = true ]; then
+    tmux kill-session -t "$SESSION"
+fi

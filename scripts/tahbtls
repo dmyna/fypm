@@ -1,0 +1,19 @@
+#!/bin/zsh
+# $1 = Date
+
+usage() {
+    echo "Usage: tahbtls [date]"
+}
+
+if [[ $# -eq 1 ]]; then
+    INITIAL_DATE=$1
+    FINAL_DATE=$(date -d "$INITIAL_DATE +1 day" +%Y-%m-%d)
+elif [[ $# -eq 0 ]]; then
+    INITIAL_DATE=today
+    FINAL_DATE=tomorrow
+else
+    usage
+    exit 1
+fi
+
+task "\((due:$INITIAL_DATE or due.after:$INITIAL_DATE) and due.before:$FINAL_DATE) and WT:AllDay and TYPE:Habit" all

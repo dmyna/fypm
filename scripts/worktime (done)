@@ -1,0 +1,136 @@
+#!/bin/zsh
+
+VIEWER='twui'
+VIEWER_QUIT='q'
+
+define_values() {
+    echo "$1" > /var/tmp/current_work_time
+    echo "$2" > /var/tmp/current_polybar_b_wt_color
+    echo "$3" > /var/tmp/current_polybar_f_wt_color
+
+    notify-send -u critical "Horário de Trabalho:" "$1"
+}
+update_filters() {
+    local VIT_CFG_LINE
+    local TWUI_CFG_LINE
+    local WT
+
+    WT=$1
+    VIT_CFG_LINE='report.wlist.filter'
+    TWUI_CFG_LINE='uda.taskwarrior-tui.task-report.next.filter'
+    
+    update() {
+        local CFG_LINE
+        local WORKTIME_FILTER
+        local HABIT_FILTER
+        local MAIN_FILTER
+        local FINAL_FILTER
+        local REGEX
+        local WT
+
+        CFG_LINE=$1
+        WT=$2
+        
+        mount_wt_filter() {
+            local WT
+            local BASESTR
+            local SCHDSTR
+            local GOALSTR
+            GOALSTR='(GOAL.before:now and TYPE:Objective)'
+            ESSENTSTR='(+TODAY and +INSTANCE)'
+	        SCHDSTR='((scheduled.after:today or scheduled:today) and scheduled.before:tomorrow)'
+
+            if [[ "$1" == "-s" ]]; then
+                shift 1
+
+                WT=$1
+                BASESTR="(WT:$WT or WT:AllDay) and ($ESSENTSTR or $GOALSTR or $SCHDSTR)"
+            else
+                WT=$1
+                BASESTR="(WT:$WT or WT:AllDay) and $ESSENTSTR"
+            fi
+
+            if [[ -n "$2" ]]; then
+                echo "($BASESTR and $2)"
+            else
+                echo "($BASESTR)"
+            fi
+        }
+
+        if [[ "$WT" =~ Break.* ]] || [[ "$WT" == "PostWork" ]]; then
+            FILTER1=$(mount_wt_filter Break)
+            FILTER2=$(mount_wt_filter PostWork)
+            
+            if [[ ! "$WT" == "PostWork" ]]; then
+                WORKTIME_FILTER="$FILTER1"
+            else
+                WORKTIME_FILTER="$FILTER1 or $FILTER2"
+            fi
+	    else
+            if [[ "$WT" == "PreWork" ]]; then
+                WORKTIME_FILTER="$(mount_wt_filter "$WT" STYLE.not:Dionysian)"
+            else
+                WORKTIME_FILTER="$(mount_wt_filter -s "$WT" "STYLE.not:Dionysian")"
+            fi
+        fi
+
+        HABIT_FILTER="($DUE_FILTER and WT:AllDay and (status.not:recurring and status.not:waiting))"
+        MAIN_FILTER="($TW_FILTER or $WORKTIME_FILTER) and status:pending"
+        FINAL_FILTER="($MAIN_FILTER) or $HABIT_FILTER"
+
+        REGEX="s/$CFG_LINE.*/$CFG_LINE=$FINAL_FILTER/"
+
+        sed -i "$REGEX" ~/.taskrc
+
+        update-vit-taskrc
+    }
+
+    update $VIT_CFG_LINE $WT
+    update $TWUI_CFG_LINE $WT
+}
+update_vit_session() {
+    if tmux has-session -t TaskWarrior 2>/dev/null; then
+        tmux send-keys -t TaskWarrior:0.0 "$VIEWER_QUIT" C-m
+        sleep 1
+        tmux send-keys -t TaskWarrior:0.0 "$VIEWER" C-m
+    else
+        xdotool mousemove 2400 450
+        bspc desktop -f "^5"
+
+        taopen > /dev/null 2& disown %1
+    fi
+}
+
+case $1 in
+    "PreWork")
+        define_values "PreWork -> 09:00" "#999" "#111"
+        ;;
+    "Work1")
+        define_values "Work1 -> 13:00" "#e00" "#111"
+        wmctrl -c "Discord"
+        ;;
+    "Work2")
+        define_values "Work2 -> 15:00" "#f90" "#111"
+        ;;
+    "Work3")
+        define_values "Work3 -> 17:00" "#00e" "#eee"
+        wmctrl -c "Discord"
+        ;;
+    "PostWork")
+        define_values "PostWork" "#999" "#111"
+        obs-new_diary
+        ;;
+    "Sleep")
+        define_values "Sleep" "#fff" "#111"
+        ;;
+    *)
+        echo "Avaiable worktimes: PreWork, Work1, Work2, Break, Work3, PostWork"
+        exit 1
+esac
+
+export WORKTIME=$(sed 's/\s->.*//g' /var/tmp/current_work_time)
+
+update_filters "$WORKTIME"
+update_vit_session
+
+polybar-msg cmd restart
