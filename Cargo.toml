@@ -17,3 +17,5 @@ lazy_static = "1.4.0"
 uuid = { version = "1.7.0", features = ["v5"] }
 toml = "0.8.8"
 dialoguer = "0.11.0"
+regex = "1.10.3"
+enigo = "0.1.3"

@@ -1,12 +1,16 @@
+//#region           Crates
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fs;
 use std::io::{Error, ErrorKind};
 use std::path::Path;
-
-use crate::utils::read;
+//#endregion
+//#region           Modules
+use crate::utils::read::{self, toml};
 use crate::utils::write;
-
+//#endregion
+//#region           Constants
 lazy_static! {
     static ref DB_PATH: String = {
         dirs::home_dir()
@@ -16,16 +20,31 @@ lazy_static! {
             .into_owned()
     };
 }
-
+//#endregion
+//#region           Structs
 #[derive(Serialize, Deserialize)]
 pub struct DataBowl {
-    name: String,
-    description: String,
+    pub name: String,
+    pub description: String,
+}
+#[derive(Serialize, Deserialize)]
+pub struct Preset {
+    pub name: String,
+    pub description: String,
+    pub params: String,
+}
+#[derive(Serialize, Deserialize)]
+pub struct PresetFile {
+    array: Vec<Preset>,
 }
 
 #[derive(Debug)]
 pub struct DataBowlHandler;
-
+pub struct PresetHandler {
+    pub data_bowl_name: String,
+}
+//#endregion
+//#region           Implementation
 impl DataBowlHandler {
     pub fn verify_by_name(name: &String) -> Result<bool, Error> {
         let get_result = fs::read_dir(Path::new(&DB_PATH.to_string()).join(name.as_str()));
@@ -161,3 +180,134 @@ impl DataBowlHandler {
         Ok(data_bowls)
     }
 }
+impl PresetHandler {
+    fn get_file_path(&self) -> String {
+        Path::new(&DB_PATH.to_string())
+            .join(self.data_bowl_name.as_str())
+            .join("presets.toml")
+            .to_string_lossy()
+            .to_string()
+    }
+    pub fn verify_preset_file_existence(&self) -> Result<bool, Error> {
+        let path = self.get_file_path();
+
+        let get_result = read::toml::<PresetFile>(path.as_str());
+
+        let result = match get_result {
+            Ok(_) => Ok(true),
+            Err(error) => match error.kind() {
+                ErrorKind::NotFound => Ok(false),
+                _ => Err(error),
+            },
+        };
+
+        result
+    }
+    pub fn verify_preset_existence(&self, name: &String) -> Result<bool, Error> {
+        let path = self.get_file_path();
+
+        let get_result = read::toml::<PresetFile>(path.as_str());
+
+        let result = match get_result {
+            Ok(presets) => Ok(presets
+                .array
+                .iter()
+                .any(|preset: &Preset| preset.name == *name)),
+            Err(error) => match error.kind() {
+                ErrorKind::NotFound => {
+                    let not_found_msg = "You haven't checked to see if a PresetFile exists! Look where we've come... :(";
+
+                    Err(Error::new(ErrorKind::NotFound, not_found_msg))
+                }
+                _ => Err(error),
+            },
+        };
+
+        result
+    }
+    pub fn add<T: Serialize>(
+        &self,
+        name: &String,
+        description: &String,
+        params: &T,
+    ) -> Result<(), Error> {
+        let str_data =
+            toml::to_string(params).expect("Unable to transform parameters into a string!");
+
+        let preset = Preset {
+            name: name.clone(),
+            description: description.clone(),
+            params: str_data,
+        };
+
+        let path = self.get_file_path();
+
+        if self.verify_preset_file_existence()? == true {
+            let mut preset_file = read::toml::<PresetFile>(path.as_str()).unwrap();
+
+            if preset_file.array.iter().any(|preset| preset.name == *name) {
+                panic!("Preset {} already exists!", name);
+            }
+
+            preset_file.array.push(preset);
+
+            write::toml(path.as_str(), &preset_file)?;
+        } else {
+            let preset_file = PresetFile {
+                array: vec![preset],
+            };
+
+            write::toml(path.as_str(), &preset_file)?;
+        }
+
+        Ok(())
+    }
+    pub fn remove(&self, name: &String) -> Result<(), Error> {
+        let path = self.get_file_path();
+
+        if self.verify_preset_file_existence()? == true {
+            let mut preset_file = read::toml::<PresetFile>(path.as_str()).unwrap();
+
+            preset_file.array.retain(|preset| preset.name != *name);
+
+            write::toml(path.as_str(), &preset_file)?;
+
+            Ok(())
+        } else {
+            let not_found_msg = "Preset not found!";
+
+            Err(Error::new(ErrorKind::NotFound, not_found_msg))
+        }
+    }
+    pub fn get(&self, name: &String) -> Result<Preset, Error> {
+        let path = self.get_file_path();
+
+        if self.verify_preset_file_existence()? == true {
+            let preset_file = read::toml::<PresetFile>(path.as_str()).unwrap();
+
+            for preset in preset_file.array {
+                if preset.name == *name {
+                    return Ok(preset);
+                }
+            }
+        }
+
+        Err(Error::new(ErrorKind::NotFound, "Preset not found!"))
+    }
+    pub fn list(&self) -> Result<Vec<(String, String)>, Error> {
+        let path = self.get_file_path();
+
+        let mut presets = Vec::new();
+
+        if self.verify_preset_file_existence()? == true {
+            let preset_file = read::toml::<PresetFile>(path.as_str()).unwrap();
+
+            for preset in preset_file.array {
+                presets.push((preset.name, preset.description));
+            }
+        }
+
+        Ok(presets)
+    }
+}
+//#endregion

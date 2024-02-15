@@ -5,12 +5,8 @@ mod handlers;
 mod subcommands;
 mod utils;
 
-fn main() {
-    handlers::data_bowl::DataBowlHandler
-        .ensure_db_existence()
-        .unwrap();
-
-    let matches = command!()
+fn create_command() -> clap::Command {
+    command!()
         .version("0.1.0")
         .author("Dev Myna <var.devmyna@gmail.com>")
         .about("Four Years Productivity Manager.")
@@ -25,7 +21,7 @@ fn main() {
                 .about("Manage worktime system.")
                 .args(&[
                     Arg::new("ACTION")
-                        .help("Action to perform <add>")
+                        .help("Action to perform <add|create|rm|remove|ls|list|apply>")
                         .required(true)
                         .index(1),
                     Arg::new("ACTIONARGS").action(ArgAction::Append).index(2),
@@ -51,7 +47,14 @@ fn main() {
                 ]),
         ])
         .arg_required_else_help(true)
-        .get_matches();
+}
+
+fn main() {
+    handlers::data_bowl::DataBowlHandler
+        .ensure_db_existence()
+        .unwrap();
+
+    let matches = create_command().get_matches();
 
     subcommands::subcommands_matches(&matches);
 }

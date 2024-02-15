@@ -18,7 +18,7 @@ update_filters() {
     WT=$1
     VIT_CFG_LINE='report.wlist.filter'
     TWUI_CFG_LINE='uda.taskwarrior-tui.task-report.next.filter'
-
+    
     update() {
         local CFG_LINE
         local WORKTIME_FILTER
@@ -30,7 +30,7 @@ update_filters() {
 
         CFG_LINE=$1
         WT=$2
-
+        
         mount_wt_filter() {
             local WT
             local BASESTR
@@ -60,7 +60,7 @@ update_filters() {
         if [[ "$WT" =~ Break.* ]] || [[ "$WT" == "PostWork" ]]; then
             FILTER1=$(mount_wt_filter Break)
             FILTER2=$(mount_wt_filter PostWork)
-
+            
             if [[ ! "$WT" == "PostWork" ]]; then
                 WORKTIME_FILTER="$FILTER1"
             else
@@ -103,26 +103,25 @@ update_vit_session() {
 
 case $1 in
     "PreWork")
-        define_values "PreWork -> 09:00" "#999999" "#111111"
+        define_values "PreWork -> 09:00" "#999" "#111"
         ;;
     "Work1")
-        define_values "Work1 -> 11:00" "#ff9900" "#111111"
+        define_values "Work1 -> 13:00" "#e00" "#111"
         wmctrl -c "Discord"
         ;;
     "Work2")
-        define_values "Work2 -> 16:30" "#ee0000" "#111111"
-        wmctrl -c "Discord"
-        ;;
-    "Break")
-        define_values "Break -> 17:00" "#00eeee" "#111111"
+        define_values "Work2 -> 15:00" "#f90" "#111"
         ;;
     "Work3")
-        define_values "Work3 -> 19:00" "#0000ee" "#eeeeee"
+        define_values "Work3 -> 17:00" "#00e" "#eee"
         wmctrl -c "Discord"
         ;;
     "PostWork")
-        define_values "PostWork" "#999999" "#111111"
+        define_values "PostWork" "#999" "#111"
         obs-new_diary
+        ;;
+    "Sleep")
+        define_values "Sleep" "#fff" "#111"
         ;;
     *)
         echo "Avaiable worktimes: PreWork, Work1, Work2, Break, Work3, PostWork"
