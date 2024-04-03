@@ -1,52 +1,52 @@
-extern crate clap;
-use clap::{command, Arg, ArgAction, Command};
+use clap::{Parser, Subcommand};
 
+mod func;
 mod handlers;
 mod subcommands;
 mod utils;
 
-fn create_command() -> clap::Command {
-    command!()
-        .version("0.1.0")
-        .author("Dev Myna <var.devmyna@gmail.com>")
-        .about("Four Years Productivity Manager.")
-        .subcommands([
-            Command::new("daemon").about("Manage daemon processes").arg(
-                Arg::new("ACTION")
-                    .help("Action to perform <start|stop>")
-                    .required(true)
-                    .index(1),
-            ),
-            Command::new("worktime")
-                .about("Manage worktime system.")
-                .args(&[
-                    Arg::new("ACTION")
-                        .help("Action to perform <add|create|rm|remove|ls|list|apply>")
-                        .required(true)
-                        .index(1),
-                    Arg::new("ACTIONARGS").action(ArgAction::Append).index(2),
-                ]),
-            Command::new("init-day").about("Initialize day by setting first tasks of the day."),
-            Command::new("task")
-                .about("Perform taskwarrior actions.")
-                .args(&[
-                    Arg::new("ACTION")
-                        .help("Action to perform <start>")
-                        .required(true)
-                        .index(1),
-                    Arg::new("ACTIONARGS").action(ArgAction::Append).index(2),
-                ]),
-            Command::new("timew")
-                .about("Perform timewarrior actions.")
-                .args(&[
-                    Arg::new("ACTION")
-                        .help("Action to perform <track|start|end|start-correction|end-correction>")
-                        .required(true)
-                        .index(1),
-                    Arg::new("ACTIONARGS").action(ArgAction::Append).index(2),
-                ]),
-        ])
-        .arg_required_else_help(true)
+use crate::subcommands::{daemon, init_day, task, timew, worktime};
+
+#[derive(Parser)]
+#[command(name = "fypm")]
+#[command(version = "0.1.0")]
+#[command(about = "Four Years Productivity Manager", long_about = None)]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
+#[derive(Subcommand)]
+pub enum Commands {
+    /// Manage daemon processes
+    Daemon {
+        #[arg(long)]
+        action: String,
+        #[arg(long)]
+        name: String,
+    },
+    /// Manage worktime system
+    Worktime {
+        #[arg(long)]
+        action: String,
+        #[arg(long)]
+        actionargs: Vec<String>,
+    },
+    /// Initialize day by setting first tasks of the day
+    InitDay,
+    /// Perform taskwarrior actions
+    Task {
+        #[arg(long)]
+        action: String,
+        #[arg(long)]
+        actionargs: Vec<String>,
+    },
+    /// Perform timew actions
+    Timew {
+        #[arg(long)]
+        action: String,
+        #[arg(long)]
+        actionargs: Vec<String>,
+    },
 }
 
 fn main() {
@@ -54,7 +54,23 @@ fn main() {
         .ensure_db_existence()
         .unwrap();
 
-    let matches = create_command().get_matches();
+    let cli = Cli::parse();
 
-    subcommands::subcommands_matches(&matches);
+    match &cli.command {
+        Commands::Daemon { action, name } => {
+            daemon::init_daemon(action, name);
+        }
+        Commands::Worktime { action, actionargs } => {
+            worktime::match_action(action, actionargs);
+        }
+        Commands::InitDay => {
+            init_day::init_day();
+        }
+        Commands::Task { action, actionargs } => {
+            task::match_action(action, actionargs);
+        }
+        Commands::Timew { action, actionargs } => {
+            timew::match_action(action, actionargs);
+        }
+    }
 }

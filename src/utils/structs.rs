@@ -1,4 +1,4 @@
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Debug)]
 #[allow(unused)]
 pub struct TaskWarriorExported {
     pub id: u32,
@@ -7,9 +7,17 @@ pub struct TaskWarriorExported {
     #[serde(rename = "STYLE")]
     pub style: Option<String>,
     #[serde(rename = "TYPE")]
-    pub r#type: Option<String>,
+    pub r#type: String,
     #[serde(rename = "WT")]
     pub wt: String,
+    #[serde(rename = "INFORELAT")]
+    pub inforelat: Option<String>,
+    #[serde(rename = "SEQ_CURRENT")]
+    pub seq_current: Option<String>,
+    #[serde(rename = "SEQ_NEXT")]
+    pub seq_next: Option<String>,
+    #[serde(rename = "SEQ_PREVIOUS")]
+    pub seq_prev: Option<String>,
     pub description: String,
     pub entry: String,
     pub modified: String,
@@ -19,7 +27,7 @@ pub struct TaskWarriorExported {
     pub tags: Option<Vec<String>>,
     pub urgency: f64,
 }
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Debug)]
 #[allow(unused)]
 pub struct TimeWarriorExported {
     pub id: i32,

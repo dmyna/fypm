@@ -12,29 +12,41 @@ Usage: taadd [option] <description> <project> <STYLE> <TYPE> !/due||GOAL/ !/ALAR
         -h    Show this help message and exit"
 }
 
-if [[ $1 == "-h" ]]; then
-    usage
-    exit 0
-else
+verify_args() {
+    if [[ $1 == "-h" ]]; then
+        usage
+        exit 0
+    elif [[ $1 == "-y" ]]; then
+        SKIP_CONFIRM=true
+        shift
+    fi
+
     if [[ $# -lt 4 ]]; then
         usage
         
-        exit 1
+        return 1
     fi
 
     DESCRIPTION=$1
     PROJECT=$2
     STYLE=$3
     TYPE=$4
+    OTHERS=(${@:5})
+}
 
-    echo "\e[38;2;255;255;255mThese are the args:\e[4m
-    description:$DESCRIPTION,
-    project:$PROJECT,
-    style:$STYLE,
-    TYPE:$TYPE,
-    others: ${@:5}"
+main() {
+    if [[ $SKIP_CONFIRM != true ]]; then
+        echo "\e[38;2;255;255;255mThese are the args:\e[4m
+        description:$DESCRIPTION,
+        project:$PROJECT,
+        style:$STYLE,
+        TYPE:$TYPE,
+        others: ${OTHERS[@]}"
 
-    _ask_dialog '\e[0m\e[1m\e[38;2;255;255;255mDo you want to continue?\e[0m' || exit 1
-    
-    task add "$DESCRIPTION" project:"$PROJECT" STYLE:"$STYLE" TYPE:"$TYPE" "${@:5}"
-fi
+        _ask_dialog '\e[0m\e[1m\e[38;2;255;255;255mDo you want to continue?\e[0m' || exit 1
+    fi
+
+    task add "$DESCRIPTION" project:"$PROJECT" STYLE:"$STYLE" TYPE:"$TYPE" "${OTHERS[@]}"
+}
+verify_args $@ || exit 1
+main

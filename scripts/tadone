@@ -45,7 +45,7 @@ done_current() {
     fi
 }
 start_nospectime() {
-    tastart "$(tgetid "Time without specific use")"
+    tastart "$(tgetid "Time without specific use")" || exit 1
 }
 
 # Complete specified task
@@ -57,7 +57,7 @@ if [[ -n "$1" ]]; then
         fi
 
         start_task() {
-            tastart "$1"
+            tastart "$1" || exit 1
         }
 
         done_current start_task "$2"

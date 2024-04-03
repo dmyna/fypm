@@ -1,0 +1,17 @@
+#!/bin/zsh
+# $1 = Project Name
+usage() {
+    echo "Usage: $0 <project>"
+}
+main() {
+    taadd "Project Marker" "$PROJECT" ' ' Continuous +Ghost STATE:Info
+}
+
+if [[ $# -eq 1 ]]; then
+    PROJECT=$1
+
+    main
+else
+    usage
+    exit 1
+fi  

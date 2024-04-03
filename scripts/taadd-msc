@@ -18,7 +18,7 @@ if [ $# -lt 2 ]; then
 fi
 
 main() {
-    MOTHER_ID=$(task add "$PLAYLIST_NAME" project:"$PROJECT" STYLE:"$STYLE" TYPE:"$TYPE" | grep -oP 'Created task \K\d+(?=\.)')
+    MOTHER_ID=$(yes | taadd "$PLAYLIST_NAME" "$PROJECT" "$STYLE" "$TYPE" | grep -oP 'Created task \K\d+(?=\.)')
 
     taaddsub "$MOTHER_ID" "Photo" STYLE:"$STYLE"
     taaddsub "$MOTHER_ID" "Description" STYLE:"$STYLE"

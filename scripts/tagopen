@@ -2,4 +2,4 @@
 
 CONFIG="$HOME/.config/bspwm/alacritty/alacritty.toml"
 
-alacritty --config-file "$CONFIG" --option 'font.size=10' --title "Goals" -e tmxs-goals
+alacritty --config-file "$CONFIG" --option 'font.size=9' --title "Goals" -e tmxs-goals

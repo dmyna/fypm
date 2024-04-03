@@ -6,38 +6,64 @@
 alias tils="timew summary :ids"
 
 calculate_time() {
-    if [[ -n "$2" ]]; then
-        TASK_DESC="$2"
+    TASK_DESC="Sleep"
+
+    if [[ -n "$1" ]]; then
+        DAY="$1"
     else
-        TASK_DESC="Sleep"
+        DAY="today"
+    fi
+    
+    GET_INITIAL_SLEEP=$(tils 10h before "$DAY" "$TASK_DESC")
+    GET_END_SLEEP=$(tils 10h after "$DAY" "$TASK_DESC")
+
+    if [[ ! "$GET_INITIAL_SLEEP" =~ "No filtered data" ]]; then
+        INITIAL_SLEEP=$(echo "$GET_INITIAL_SLEEP" | tail -n 2 | tr -d ' ' | tr -d '\n')
+
+        IFS=":" read -r initial_hours initial_minutes initial_seconds <<< "$INITIAL_SLEEP"
+        INITIAL_SECS=$((initial_hours*3600 + initial_minutes*60 + initial_seconds))
     fi
 
-    INITIAL_SLEEP=$(tils 10h before "$1" "$TASK_DESC" | tail -n 2 | tr -d ' ')
+    if [[ ! "$GET_END_SLEEP" =~ "No filtered data" ]]; then
+        END_SLEEP=$(echo "$GET_END_SLEEP" | tail -n 2 | tr -d ' ' | tr -d '\n')
+        
+        IFS=":" read -r end_hours end_minutes end_seconds <<< "$END_SLEEP"
+        END_SECS=$((end_hours*3600 + end_minutes*60 + end_seconds))
+    fi
 
-    FINAL_SLEEP=$(tils "$1" for 10h "$TASK_DESC" | tail -n 2 | tr -d ' ')
+    TOTAL_SECS=0;
+    if [[ -n "$INITIAL_SECS" ]]; then
+        TOTAL_SECS=$((TOTAL_SECS + INITIAL_SECS))
+    fi
+    if [[ -n "$END_SECS" ]]; then
+        TOTAL_SECS=$((TOTAL_SECS + END_SECS))
+    fi
 
-    IFS=":" read -r h1 m1 s1 <<< "$INITIAL_SLEEP"
-    IFS=":" read -r h2 m2 s2 <<< "$FINAL_SLEEP"
-    INITIAL_SECS=$((h1*3600 + m1*60 + s1))
-    FINAL_SECS=$((h2*3600 + m2*60 + s2))
+    if [[ "$TOTAL_SECS" == "0" ]]; then
+        HOURS=0
+        MINUTES=0
+        SECONDS=0
+        TIME_IN_BED=0
+        TIME_BEFORE_ASLEEP=0
+        SLEEP_POINTS=0
+    else
+        HOURS=$((TOTAL_SECS / 3600))
+        MINUTES=$(( (TOTAL_SECS % 3600) / 60 ))
+        SECONDS=$((TOTAL_SECS % 60))
+        TIME_IN_BED=$((TOTAL_SECS / 60))
+    fi
 
-    # Some os segundos
-    TOTAL_SECS=$((FINAL_SECS + INITIAL_SECS))
-
-    # Converta os segundos de volta para horas, minutos e segundos
-    HOURS=$((TOTAL_SECS / 3600))
-    MINUTES=$(( (TOTAL_SECS % 3600) / 60 ))
-    SECONDS=$((TOTAL_SECS % 60))
-
-    TIME_IN_BED=$((TOTAL_SECS / 60))
 
     printf "Total Sleep: %02d:%02d:%02d (%02dm)\n" \
         "$HOURS" "$MINUTES" "$SECONDS" "$TIME_IN_BED"
 
-    printf "How long did it take before you fell sleep? (minutes): "
-    read -r BEFORE_ASLEEP_TIME
+    if [[ "$TOTAL_SECS" != "0" ]]; then
+        printf "How long did it take before you fell sleep? (minutes): "
+        read -r BEFORE_ASLEEP_TIME
 
-    SLEEP_POINTS=$(sleepc.mjs $TIME_IN_BED $BEFORE_ASLEEP_TIME)
+        SLEEP_POINTS=$(sleepc.mjs $TIME_IN_BED $BEFORE_ASLEEP_TIME)
+    fi
+    
     echo "Sleep Points: $SLEEP_POINTS"
 
     SLEEP_TASK_UUID=$(task "Sleep" due.after:yesterday due.before:today uuids)
@@ -49,31 +75,29 @@ calculate_time() {
         tan "$SLEEP_TASK_UUID" "Time Before Asleep: $BEFORE_ASLEEP_TIME (min)"
         tan "$SLEEP_TASK_UUID" "Pure Sleep: $((TIME_IN_BED - BEFORE_ASLEEP_TIME)) (min)"
         tan "$SLEEP_TASK_UUID" "Sleep Points: $SLEEP_POINTS"
+
+        tadone "$SLEEP_TASK_UUID"
     else
         echo "No sleep task found!"
     fi
 }
 
 if [[ -z "$1" ]]; then
-    if [[ "${@#}" -gt 1 ]]; then
-        calculate_time today ${@:2}
-    else
-        calculate_time today
-    fi
+    calculate_time today
 elif [[ "$1" == "-v" ]]; then
-    if [[ -n "$3" ]]; then
-        TASK_DESC="$3"
-    else
-        TASK_DESC="Sleep"
-    fi
     if [[ -n "$2" ]]; then
         TASK_DAY="$2"
     else
         TASK_DAY="today"
     fi
+    if [[ -n "$3" ]]; then
+        TASK_DESC="$3"
+    else
+        TASK_DESC="Sleep"
+    fi
 
     tils 10h before "$TASK_DAY" "$TASK_DESC"
-    tils "$TASK_DAY" for 10h "$TASK_DESC"
+    tils 10h after "$TASK_DAY" "$TASK_DESC"
 else
     calculate_time "$1" "$2"
 fi

@@ -14,6 +14,7 @@ elif [[ $# -gt 2 ]]; then
 
     SUBTASK_ID=$(task add "$2" project:"$PROJECT" "${@:3}" \
         TYPE:SubTask | grep 'Created task' | grep -o '[0-9]\+')
+    echo "Created task $SUBTASK_ID."
 else
     echo "Usage:
     If you want to create a subtask:

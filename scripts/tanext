@@ -1,0 +1,34 @@
+#!/bin/zsh
+
+usage() {
+    echo "Usage: tanext [TASK_ID]"
+}
+verify_args() {
+    if [[ $# -eq 0 ]]; then
+        CURRENT_TASKS_JSON=$(task +ACTIVE export)
+
+        if [[ $(echo "$CURRENT_TASKS_JSON" | jq -r 'length') -ne 1 ]]; then
+            echo "Something went wrong! The number of active tasks is not equal to 1."
+            return 1
+        fi
+
+        if [[ $(echo "$CURRENT_TASKS_JSON" | jq -r '.[0].SEQ_NEXT') == "null" ]]; then
+            echo "There is no next task."
+            return 1
+        fi
+
+        MOTHER_UUID=$(echo "$CURRENT_TASKS_JSON" | jq -r '.[0].MOTHER')
+        NEXT=$(echo "$CURRENT_TASKS_JSON" | jq -r '.[0].SEQ_NEXT')
+    else
+        usage
+        return 1
+    fi
+}
+
+main() {
+    tadone -s "$NEXT"
+
+    task "$MOTHER_UUID" modify SEQ_CURRENT:"$NEXT"
+}
+verify_args $@ || exit 1
+main

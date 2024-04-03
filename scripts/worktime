@@ -2,11 +2,17 @@
 
 VIEWER='twui'
 VIEWER_QUIT='q'
+LAST_WT_PATH=/var/tmp/.last_work_time
 
 define_values() {
+    local CURRENT_WT
+
+    CURRENT_WT=$(cat /var/tmp/current_work_time)
+
     echo "$1" > /var/tmp/current_work_time
     echo "$2" > /var/tmp/current_polybar_b_wt_color
     echo "$3" > /var/tmp/current_polybar_f_wt_color
+    echo "$CURRENT_WT" > "$LAST_WT_PATH"
 
     notify-send -u critical "Horário de Trabalho:" "$1"
 }
@@ -36,7 +42,7 @@ update_filters() {
             local BASESTR
             local SCHDSTR
             local GOALSTR
-            GOALSTR='(GOAL.before:now and TYPE:Objective)'
+            GOALSTR="(GOAL.after:$(date +%Y-%m-01) and GOAL.before:now and TYPE:Objective)"
             ESSENTSTR='(+TODAY and +INSTANCE)'
 	        SCHDSTR='((scheduled.after:today or scheduled:today) and scheduled.before:tomorrow)'
 
@@ -68,7 +74,7 @@ update_filters() {
             fi
 	    else
             if [[ "$WT" == "PreWork" ]]; then
-                WORKTIME_FILTER="$(mount_wt_filter "$WT" STYLE.not:Dionysian)"
+                WORKTIME_FILTER="$(mount_wt_filter "$WT")"
             else
                 WORKTIME_FILTER="$(mount_wt_filter -s "$WT" "STYLE.not:Dionysian")"
             fi
@@ -105,26 +111,32 @@ case $1 in
     "PreWork")
         define_values "PreWork -> 09:00" "#999" "#111"
         ;;
-    "Work1")
-        define_values "Work1 -> 13:00" "#e00" "#111"
+    "General")
+        define_values "General -> 13:00" "#e00" "#111"
         wmctrl -c "Discord"
         ;;
-    "Work2")
-        define_values "Work2 -> 15:00" "#f90" "#111"
+    "Essentials")
+        define_values "Essentials -> 16:00" "#f90" "#111"
         ;;
-    "Work3")
-        define_values "Work3 -> 17:00" "#00e" "#eee"
+    "Calm")
+        define_values "Calm -> 17:00" "#00e" "#eee"
         wmctrl -c "Discord"
         ;;
     "PostWork")
         define_values "PostWork" "#999" "#111"
-        obs-new_diary
         ;;
     "Sleep")
         define_values "Sleep" "#fff" "#111"
         ;;
+    "Break")
+        define_values "Break" "#fff" "#111"
+        ;;
+    "last")
+        worktime $(cat "$LAST_WT_PATH")
+        exit 0
+        ;;
     *)
-        echo "Avaiable worktimes: PreWork, Work1, Work2, Break, Work3, PostWork"
+        echo "Avaiable worktimes: PreWork, General, Essentials, Calm, PostWork, Break"
         exit 1
 esac
 

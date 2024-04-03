@@ -11,6 +11,9 @@ FILTER=$1
 if [[ "$FILTER" == "" ]]; then
     echo "You must insert a filter!"
     exit 1
+elif [[ "$FILTER" =~ ^[a-zA-Z]{1,2}$ ]]; then
+    tastart-key "$FILTER"
+    exit 0
 else
     if [[ "$FILTER" == "last" ]]; then
         FILTER=$(cat $LAST_TASK_PATH)
@@ -32,28 +35,14 @@ fi
 
 GET_TASKS=$(task +ACTIVE export)
 ACTIVE_TASKS_COUNT=$(echo "$GET_TASKS" | jq -r 'length')
-TASK_JSON=$(task "$FILTER" export);
 
 schedule_if_necessary () {
     local GET_WORKTIME
     GET_WORKTIME=$(task "$FILTER" export | jq -r '.[0].WT')
 
-    if [[ "$GET_WORKTIME" != "$WORKTIME" ]] && [[ "$GET_WORKTIME" != "Quantify" ]]; then
+    if [[ "$GET_WORKTIME" == "NonSched" ]]; then
         yes no | tsched "$FILTER"
     fi
-}
-verify_state() {
-    local GET_STATE
-    GET_STATE=$(task "$FILTER" export | jq -r '.[0].STATE')
-
-    if [[ "$GET_STATE" != "Time" ]]; then
-        echo "You are trying to start a task that is not in Time state!"
-        echo "Verify and try again."
-
-        return 1
-    fi
-
-    return 0
 }
 verify_worktime() {
     local GET_WORKTIME
@@ -87,19 +76,61 @@ main() {
         exit 1
     fi
 
-    # Verify if task is not in Time state
-    if [[ "$FILTER" != "last" ]]; then
-        verify_state
-        if [[ "$?" -eq 1 ]]; then
-            exit 1
-        fi
-    fi
-
     # Verify if task is a Divisory
-    if [[ "$(echo "$TASK_JSON" | jq --arg str 'Divisory' '.[0].tags | index($str)')" != "null" ]]; then
+    if [[ $(task "$FILTER" export  | jq --arg str 'Divisory' '.[0].tags | index($str)') != "null" ]]; then
         echo "You are trying to start a Divisory task!"
         exit 1
     fi
+
+    GET_STATE=$(task "$FILTER" export | jq -r '.[0].STATE')
+
+    GET_SEQUENCE=$(task "$FILTER" export | jq --arg str 'Sequence' '.[0].tags | index($str)')
+
+    if [[ "$GET_STATE" == "Info" ]]; then
+        INFORELAT=$(task "$FILTER" export | jq -r '.[0].INFORELAT')
+
+        if [[ $INFORELAT != "null" ]]; then
+            if [[ "$(task "$INFORELAT" export | jq --arg str 'Sequence' '.[0].tags | index($str)')" != "null" ]]; then
+                tastart "$INFORELAT"
+                exit 0
+            else
+                FILTER="$INFORELAT"
+            fi
+        else
+            if [[ $GET_SEQUENCE == "null" ]]; then
+                echo "You are trying to start a Info task without a INFORELAT!"
+                exit 1
+            fi
+
+            NEXT=$(task "$FILTER" export | jq -r '.[0].SEQ_CURRENT')
+            if [[ $NEXT == "null" || $NEXT == "" ]]; then
+                echo "There is no next task."
+                exit 1
+            else
+                NEXT_STATUS=$(task "$NEXT" export | jq -r '.[0].status')
+
+                if [[ $NEXT_STATUS == "completed" ]]; then
+                    FILTER=$(task "$NEXT" export | jq -r '.[0].SEQ_NEXT')
+                else
+                    FILTER="$NEXT"
+                fi
+            fi
+        fi
+    else
+        if [[ $GET_SEQUENCE != "null" ]]; then
+            if [[ "$(task "$FILTER" export | jq -r '.[0].TYPE')" != "SubTask" ]]; then
+                echo "There's a problem! This is a +Sequence task, but is not a Time STATE and is not a SubTask!"
+                exit 1
+            else
+                task "$MOTHER_UUID" modify SEQ_CURRENT:"$NEXT"
+            fi
+        fi
+    fi
+
+
+    TASK_JSON=$(task "$FILTER" export)
+
+    # Implement something to put scripts on Sequencial tasks
 
     # Verify if task has a script
     if [[ "$(echo "$TASK_JSON" | jq --arg str 'WithScript' '.[0].tags | index($str)')" != "null" ]]; then
@@ -130,7 +161,6 @@ main() {
 
     # Log Last Task
     echo "$ACTIVE_UUID" > "$LAST_TASK_PATH"
-    echo "last: $ACTIVE_UUID"
 
     manage_lock false
 }

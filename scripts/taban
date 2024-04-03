@@ -48,7 +48,7 @@ elif [[ $# -lt 2 ]]; then
 else
     OPTION=$1
     ID=$2
-    ANNOTATION=$3 # Optional
+    ANNOTATION=$3 # Optional / Required in NoControl
 
     case "$OPTION" in
         "-f" | "--failed")
@@ -56,6 +56,11 @@ else
             ;;
         "-n" | "--no-control")
             NOCONTROL="true"
+
+            if [[ -z "$3" ]]; then
+                echo "Annotation is required for NoControl!"
+                exit 1;
+            fi
             ;;
         "-a" | "--abandoned")
             ABANDONED="true"

@@ -29,6 +29,10 @@ case "$1" in
         # Calisthenics and Stretching
         tastart '7806d5f7-db60-4841-ba83-97c2106499d3'
         ;;
+    "x")
+        # Chess Practice
+        tastart '100372a8-5ca2-493a-b6f3-4b74195c8848'
+        ;;
     "hm")
         # House Maintening
         tastart 'ef5dbc2c-326e-4443-b0dc-b2595de6e012'

@@ -55,9 +55,8 @@ impl WorktimeHandler {
             .unwrap();
         }
     }
-    pub fn add(matches: &clap::ArgMatches) -> Result<(), Error> {
+    pub fn add(args: &Vec<String>) -> Result<(), Error> {
         let date_format = "%H:%M";
-        let args = matches.get_many::<String>("ACTIONARGS").unwrap();
         let term = Term::stdout();
 
         if args.len() != 1 {
@@ -68,7 +67,7 @@ impl WorktimeHandler {
             }
         }
 
-        let name = args.clone().nth(0).unwrap().to_string();
+        let name = args.get(0).unwrap().to_string();
 
         let description = Input::<String>::new()
             .with_prompt("Write a description for your worktime")
@@ -119,7 +118,7 @@ impl WorktimeHandler {
             .with_prompt(
                 "What color do you want to use for the background of polybar module? (HEX)",
             )
-            .validate_with(|input: &String| -> Result<(), String> {
+            .validate_with(|input: &String| -> Result<(), Error> {
                 let hex = verify::verify_hex(input.to_string());
 
                 match hex {
@@ -161,9 +160,7 @@ impl WorktimeHandler {
 
         preset_instance.add::<Worktime>(&name, &description, &new_worktime)
     }
-    pub fn remove(matches: &clap::ArgMatches) -> Result<(), Error> {
-        let args = matches.get_many::<String>("ACTIONARGS").unwrap();
-
+    pub fn remove(args: &Vec<String>) -> Result<(), Error> {
         if args.len() != 1 {
             if args.len() > 1 {
                 panic!("Too much arguments!");
@@ -172,7 +169,7 @@ impl WorktimeHandler {
             }
         }
 
-        let name = args.clone().nth(0).unwrap().to_string();
+        let name = args.get(0).unwrap().to_string();
 
         let preset_instance = PresetHandler {
             data_bowl_name: DATA_BOWL_NAME.to_string(),
@@ -250,7 +247,11 @@ fn update_vit_taskrc() {
 
 fn update_filter(current_wt: &String, cfg_line: &str) -> () {
     let config_file_path = dirs::home_dir().unwrap().join(".taskrc");
-    let goal_string = "(GOAL.before:now and TYPE:Objective)";
+
+    // !DEV
+    // transform this: "(GOAL.after:$(date +%Y-%m-01) and GOAL.before:now and TYPE:Objective)"
+
+    let goal_string = "(GOAL.before:now and due.before:eom and TYPE:Objective)";
     let essential_string = "(+TODAY and +INSTANCE)";
     let scheduled_string =
         "((scheduled.after:today or scheduled:today) and scheduled.before:tomorrow)";
@@ -285,9 +286,7 @@ fn update_filter(current_wt: &String, cfg_line: &str) -> () {
     update_vit_taskrc();
 }
 
-pub fn apply(matches: &clap::ArgMatches) -> Result<(), Error> {
-    let args = matches.get_many::<String>("ACTIONARGS").unwrap();
-
+pub fn apply(args: &Vec<String>) -> Result<(), Error> {
     if args.len() != 1 {
         if args.len() > 1 {
             panic!("Too much arguments!");
@@ -296,7 +295,7 @@ pub fn apply(matches: &clap::ArgMatches) -> Result<(), Error> {
         }
     }
 
-    let name = args.clone().nth(0).unwrap().to_string();
+    let name = args.get(0).unwrap().to_string();
 
     let preset_instance = PresetHandler {
         data_bowl_name: DATA_BOWL_NAME.to_string(),
@@ -306,11 +305,7 @@ pub fn apply(matches: &clap::ArgMatches) -> Result<(), Error> {
 
     let preset_params = toml::from_str::<Worktime>(preset.params.as_str()).unwrap();
 
-    let current_wt_string = format!(
-        "{} -> {}",
-        preset.name,
-        preset_params.end_time.as_str()
-    );
+    let current_wt_string = format!("{} -> {}", preset.name, preset_params.end_time.as_str());
 
     env::set_var("WORKTIME", preset.name);
 
@@ -357,20 +352,15 @@ pub fn apply(matches: &clap::ArgMatches) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn match_action(matches: &clap::ArgMatches) -> Result<(), Error> {
+pub fn match_action(action: &String, actionargs: &Vec<String>) -> Result<(), Error> {
     WorktimeHandler::ensure_worktime_data_bowl();
 
-    match matches.get_one::<String>("ACTION") {
-        Some(action_value) => match action_value.as_str() {
-            "add" | "create" => WorktimeHandler::add(matches).unwrap(),
-            "rm" | "remove" => WorktimeHandler::remove(matches).unwrap(),
-            "ls" | "list" => WorktimeHandler::list().unwrap(),
-            "apply" => apply(matches).unwrap(),
-            _ => panic!("No valid action provided!"),
-        },
-        None => {
-            panic!("No argument provided!");
-        }
+    match action.as_str() {
+        "add" | "create" => WorktimeHandler::add(actionargs).unwrap(),
+        "rm" | "remove" => WorktimeHandler::remove(actionargs).unwrap(),
+        "ls" | "list" => WorktimeHandler::list().unwrap(),
+        "apply" => apply(actionargs).unwrap(),
+        _ => panic!("No valid action provided!"),
     }
 
     Ok(())

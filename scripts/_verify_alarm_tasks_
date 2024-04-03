@@ -31,10 +31,6 @@ fi
 
 ALARM_FILTER="(ALARM.after:now and ALARM.before:now+10s)"
 while true; do
-    if [[ "$(pgrep -f "$MYBIN"/esch)" != "" ]]; then
-        killall esch
-    fi
-
     ALARM_TASKS_JSON=$(task "$ALARM_FILTER" export)
     ALARM_TASKS_COUNT="$(echo "$ALARM_TASKS_JSON" | jq -r 'length')"
 

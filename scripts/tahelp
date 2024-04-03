@@ -1,0 +1,5 @@
+#!/bin/zsh
+VAULT_NAME="Fypm"
+MAIN_FILE="Roadmap"
+
+obs open $MAIN_FILE --vault $VAULT_NAME

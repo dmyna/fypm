@@ -1,7 +1,7 @@
 #!/bin/zsh
 
-TRM_COLS="200"
-TRM_LINES="50"
+TRM_COLS="225"
+TRM_LINES="55"
 SESSION="Goals"
 
 CAL="cal -3"
@@ -15,9 +15,9 @@ perpetue_cmd() {
 open_session() {
     if ! tmux has-session -t "$SESSION"; then
         tmux new-session -d -s "$SESSION" -x "$TRM_COLS" -y "$TRM_LINES"
-        tmux split-window -t "$SESSION" -h -l 12%
+        tmux split-window -t "$SESSION" -h -l 10%
         tmux split-window -t "$SESSION":0.0 -v -l 20%
-        tmux split-window -t "$SESSION":0.1 -h -l 37%
+        tmux split-window -t "$SESSION":0.1 -h -l 33%
         tmux split-window -t "$SESSION":0.0 -h -l 50%
 
         tmux send-keys -t "$SESSION":0.1 "$(perpetue_cmd "$TAGOALS")" C-m

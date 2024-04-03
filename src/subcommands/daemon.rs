@@ -1,11 +1,8 @@
 use daemonize::Daemonize;
 use std::fs;
 
-pub fn init_daemon(matches: &clap::ArgMatches) -> Result<(), Box<dyn std::error::Error>> {
+pub fn init_daemon(action: &String, name: &String) -> Result<(), Box<dyn std::error::Error>> {
     let tmp_file_name = "/tmp/rpms_daemon";
-
-    let action = *matches.get_one::<&str>("ACTION").unwrap();
-    let daemon_name = *matches.get_one::<&str>("NAME").unwrap();
 
     struct Actions;
     impl Actions {
@@ -27,8 +24,8 @@ pub fn init_daemon(matches: &clap::ArgMatches) -> Result<(), Box<dyn std::error:
         }
     }
 
-    let action = match action {
-        "start" => Actions::start(tmp_file_name, daemon_name),
+    let action = match action.as_str() {
+        "start" => Actions::start(tmp_file_name, name),
         "stop" => Actions::kill(),
         _ => unreachable!(),
     };
