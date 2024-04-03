@@ -1,0 +1,47 @@
+#!/bin/zsh
+
+FILTERS_NAMES=("dio_mains")
+FILTERS=("(STYLE:Dionysian and project.not:Lazer.Watch and (TYPE:Continuous or TYPE:Objective or TYPE:Eventual))")
+
+fgr="\e[38;2;"
+bld="\e[1m"
+rst="\e[0m"
+
+if [[ ! ${#FILTERS_NAMES[@]} -eq ${#FILTERS[@]} ]]; then
+    echo "There's an error! Check your filter variables!"
+fi
+
+usage() {
+    echo "Usage: taf [FILTER_NAME] [MODIFIER]"
+}
+verify_args() {
+    if [[ $# -gt 2 ]]; then
+        usage
+        return 1
+    else
+        FILTER="$1"
+        MODIFIER="$2"
+    fi
+}
+list_filters() {
+    for ((i = 1; i <= ${#FILTERS_NAMES[@]}; i++)); do
+        echo -e "$bld${FILTERS_NAMES[$i]}$rst: ${fgr}100;100;100m${FILTERS[$i]}"
+    done
+}
+list_filter_tasks() {
+    for (( i = 1; i <= ${#FILTERS_NAMES[@]}; i++ )); do
+        if [[ ${FILTERS_NAMES[$i]} == "$1" ]]; then
+            task "${FILTERS[$i]}" "$MODIFIER"
+        fi
+    done
+}
+main() {
+    if [[ -z $FILTER ]]; then
+        list_filters
+    else
+        list_filter_tasks "$FILTER"
+    fi
+}
+
+verify_args "$@" || exit 1
+main

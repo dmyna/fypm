@@ -1,0 +1,3 @@
+#!/bin/zsh
+
+taadd-seq "Book" "${@}"

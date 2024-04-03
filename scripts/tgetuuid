@@ -1,3 +1,21 @@
 #!/bin/bash
 
-task "$1" "${@:3}" export | jq -r ".[$2].uuid"
+usage() {
+    echo "Usage: tgetuuid \"<filter>\" <task_index> \"[more_filter]\""
+}
+verify_args() {
+    if [[ $# -lt 2 ]]; then
+        usage
+        return 1
+    else
+        FILTER="$1"
+        INDEX="$2"
+        OTHER_ARGS="${@:3}"
+    fi
+}
+main() {
+    task "$FILTER" "$OTHER_ARGS" export | jq -r ".[$INDEX].uuid"
+}
+
+verify_args "$@" || exit 1
+main

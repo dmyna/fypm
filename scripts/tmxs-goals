@@ -4,13 +4,20 @@ TRM_COLS="225"
 TRM_LINES="55"
 SESSION="Goals"
 
-CAL="cal -3"
-TAGOALS="tagoals -m"
-PROJS="task projects"
+CURRENT_MONTH=$(date +%m)
 
-perpetue_cmd() {
-    echo "clear && $1 && while read -r; do clear && $1; done"
-}
+case $CURRENT_MONTH in
+    01|04|07|10)
+        CAL_ARGS="-n 3"
+        ;;
+    *)
+        CAL_ARGS="-3"
+        ;;
+esac
+
+CAL="cal -c 3 $CAL_ARGS"
+TAGOALS="_tadatels GOAL goals -m"
+PROJS="task projects"
 
 open_session() {
     if ! tmux has-session -t "$SESSION"; then
@@ -20,9 +27,9 @@ open_session() {
         tmux split-window -t "$SESSION":0.1 -h -l 33%
         tmux split-window -t "$SESSION":0.0 -h -l 50%
 
-        tmux send-keys -t "$SESSION":0.1 "$(perpetue_cmd "$TAGOALS")" C-m
-        tmux send-keys -t "$SESSION":0.3 "$(perpetue_cmd "$CAL")" C-m
-        tmux send-keys -t "$SESSION":0.4 "$(perpetue_cmd "$PROJS")" C-m
+        tmux send-keys -t "$SESSION":0.1 "perpetue_cmd $TAGOALS" C-m
+        tmux send-keys -t "$SESSION":0.3 "perpetue_cmd $CAL" C-m
+        tmux send-keys -t "$SESSION":0.4 "perpetue_cmd $PROJS" C-m
         
         tmux select-pane -t "$SESSION":0.2
         tmux attach-session -t "$SESSION"

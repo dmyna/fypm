@@ -6,6 +6,7 @@ usage() {
 verify_args() {
     if [[ $# -eq 0 ]]; then
         CURRENT_TASKS_JSON=$(task +ACTIVE export)
+        MOTHER_UUID=$(echo "$CURRENT_TASKS_JSON" | jq -r '.[0].MOTHER')
 
         if [[ $(echo "$CURRENT_TASKS_JSON" | jq -r 'length') -ne 1 ]]; then
             echo "Something went wrong! The number of active tasks is not equal to 1."
@@ -13,12 +14,17 @@ verify_args() {
         fi
 
         if [[ $(echo "$CURRENT_TASKS_JSON" | jq -r '.[0].SEQ_NEXT') == "null" ]]; then
-            echo "There is no next task."
-            return 1
-        fi
+            MOTHER_NEXT=$(task "$MOTHER_UUID" export | jq -r '.[0].SEQ_NEXT')
 
-        MOTHER_UUID=$(echo "$CURRENT_TASKS_JSON" | jq -r '.[0].MOTHER')
-        NEXT=$(echo "$CURRENT_TASKS_JSON" | jq -r '.[0].SEQ_NEXT')
+            if [[ "$MOTHER_NEXT" == "null" ]]; then
+                echo "There is no next task."
+                return 1
+            fi
+            
+            NEXT=$(task "$MOTHER_NEXT" export | jq -r '.[0].SEQ_CURRENT')
+        else
+            NEXT=$(echo "$CURRENT_TASKS_JSON" | jq -r '.[0].SEQ_NEXT')
+        fi
     else
         usage
         return 1

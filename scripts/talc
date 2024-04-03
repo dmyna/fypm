@@ -1,0 +1,19 @@
+#!/bin/zsh
+
+usage() {
+    echo "Usage: talc <filter[...]>"
+}
+verify_args() {
+    if [[ $# -lt 1 ]]; then
+        usage
+        return 1
+    else
+        FILTER=($@)
+    fi
+}
+main() {
+    task $FILTER[@] rc.report.all.sort=due+ all
+}
+
+verify_args "$@" || exit 1
+main

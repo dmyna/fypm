@@ -2,17 +2,17 @@
 
 FILTER=$1
 MODIFIER=$2
+DIV_STR="·································································"
+
+if [[ -z $MODIFIER ]]; then
+    FILTER="($FILTER) and status:pending"
+fi
 
 MOTHER_TASKS_JSON=$(task "$FILTER" \
         export | jq '[.[] | select(.depends != null) | .uuid]')
 
-i_counter=0
 echo "$MOTHER_TASKS_JSON" | jq -r '.[]' | while read element; do
     UUID=$(echo "$element" | grep -oP '^[a-zA-Z0-9]{8}(?=-)')
-
-    if [[ $i_counter -gt 0 ]]; then
-        echo -e "·································································"
-    fi
 
     if [[ -n "$MODIFIER" ]]; then
         task "(uuid:$UUID or MOTHER:$UUID)" rc.verbose:affected,label rc.report.$MODIFIER.sort=entry+ ${@:3} "$MODIFIER"
@@ -20,5 +20,5 @@ echo "$MOTHER_TASKS_JSON" | jq -r '.[]' | while read element; do
         task "(uuid:$UUID or MOTHER:$UUID)" rc.verbose:affected,label rc.report.list.sort=entry+ ${@:3} list 
     fi
 
-    i_counter=$((i_counter + 1))
+    echo -e "$DIV_STR"
 done
