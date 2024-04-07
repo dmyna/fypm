@@ -4,7 +4,6 @@ use std::process::Command;
 use std::str;
 //#endregion
 //#region           Modules
-use crate::func::actions;
 use crate::utils::structs;
 //#endregion
 //#region           Enums
@@ -14,54 +13,7 @@ pub enum TimewAction {
 }
 //#endregion
 //#region           Functions
-fn do_end_or_start(
-    action: TimewAction,
-    actionargs: &Vec<String>,
-    usage: &str,
-) -> Result<(), Error> {
-    if actionargs.len() != 2 {
-        println!("{}", usage);
-
-        Err(Error::new(
-            std::io::ErrorKind::InvalidInput,
-            String::from("Hey... You don't need to specify more than two parameters!"),
-        ))
-    } else {
-        let received_id = actionargs.get(0).unwrap().to_string();
-        let time = actionargs.get(1).unwrap().to_string();
-
-        timew_time_set(&action, received_id, time)
-    }
-}
-fn do_end_or_start_correction(
-    action: TimewAction,
-    actionargs: &Vec<String>,
-    default_ids: [&str; 2],
-    usage: &str,
-) -> Result<(), Error> {
-    if actionargs.len() > 2 {
-        println!("{}", usage);
-
-        Err(Error::new(
-            std::io::ErrorKind::InvalidInput,
-            String::from("Hey... You don't need to specify more than two parameters!"),
-        ))
-    } else {
-        let mut ids: Vec<String> = Vec::new();
-
-        for index in 0..=1 {
-            if let Some(received_id) = actionargs.get(index) {
-                ids.push(received_id.to_string());
-            } else {
-                ids.push(default_ids[index].to_string());
-            }
-        }
-
-        timew_time_move(&action, ids)
-    }
-}
-
-pub fn timew_time_move(action: &TimewAction, ids: Vec<String>) -> Result<(), Error> {
+pub fn time_move(action: &TimewAction, ids: Vec<&String>) -> Result<(), Error> {
     fn receive_time(action: &TimewAction, id: String) -> String {
         let get_task_info = Command::new("timew")
             .args([id, String::from("export")])
@@ -81,15 +33,15 @@ pub fn timew_time_move(action: &TimewAction, ids: Vec<String>) -> Result<(), Err
         }
     }
 
-    let received_id = ids.get(0).unwrap().to_string();
+    let received_id = ids.get(0).unwrap();
     let time = receive_time(&action, ids.get(1).unwrap().to_string());
 
-    timew_time_set(&action, received_id, time)
+    time_set(&action, *received_id, &time)
 }
-pub fn timew_time_set(
+pub fn time_set(
     received_action: &TimewAction,
-    received_id: String,
-    time: String,
+    received_id: &String,
+    time: &String,
 ) -> Result<(), Error> {
     if !received_id.starts_with("@") {
         panic!("Hey!! Are you trying to use a taskwarrior id? Specify with \"@\"!");
@@ -107,11 +59,11 @@ pub fn timew_time_set(
 
     let execute = Command::new("timew")
         .args([
-            String::from("modify"),
-            action,
+            "modify",
+            &action,
             received_id,
             time,
-            String::from(":adjust"),
+            ":adjust",
         ])
         .output();
 
@@ -124,7 +76,7 @@ pub fn timew_time_set(
         Err(e) => Err(e),
     }
 }
-pub fn timew_track(
+pub fn track(
     received_id: &String,
     received_start_time: &String,
     receved_final_time: &String,
@@ -206,58 +158,5 @@ pub fn timew_track(
     }
 
     Ok(())
-}
-
-pub fn match_action(action: &String, actionargs: &Vec<String>) -> Result<(), Error> {
-    match action.as_str() {
-        "end-correction" => {
-            let usage = "Usage: timew end-correction [tomodify_task_end](default: @3) [static_task_start](default: @1)";
-            let default_first_id = "@3";
-            let default_second_id = "@1";
-            let default_ids = [default_first_id, default_second_id];
-
-            do_end_or_start_correction(TimewAction::End, actionargs, default_ids, usage)
-        }
-        "start-correction" => {
-            let usage = "Usage: timew start-correction [tomodify_task_start](default: @1) [static_task_end](default: @3)";
-            let default_first_id = "@1";
-            let default_second_id = "@3";
-            let default_ids = [default_first_id, default_second_id];
-
-            do_end_or_start_correction(TimewAction::Start, actionargs, default_ids, usage)
-        }
-        "end" => {
-            let usage = "Usage: timew end <task id> <task end time>";
-
-            do_end_or_start(TimewAction::End, actionargs, usage)
-        }
-        "start" => {
-            let usage = "Usage: timew start <task id> <task start time>";
-
-            do_end_or_start(TimewAction::Start, actionargs, usage)
-        }
-        "track" => {
-            if actionargs.len() != 3 {
-                panic!("Not enough arguments provided!");
-            }
-
-            let received_id = &actionargs[0];
-            let received_start_time = &actionargs[1];
-            let receved_final_time = &actionargs[2];
-
-            timew_track(received_id, received_start_time, receved_final_time)
-        }
-        "annotate" => {
-            if actionargs.len() != 2 {
-                panic!("Not enough arguments provided!");
-            }
-
-            let id = &actionargs[0];
-            let annotation = &actionargs[1];
-
-            actions::annotate("timew", id, annotation)
-        }
-        _ => panic!("No valid action provided!"),
-    }
 }
 //#endregion

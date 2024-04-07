@@ -4,7 +4,6 @@ use std::str;
 use std::{fs, process::Command};
 //#endregion
 //#region           Modules
-use crate::func::actions;
 use crate::utils::err::{FypmError, FypmErrorKind};
 use crate::utils::structs::TaskWarriorExported;
 //#endregion
@@ -91,6 +90,8 @@ fn match_special_aliases(filter: &String) -> String {
         // Tasks Maintening
         "tm" => "8980c7be-1fda-4888-b45a-1a2e52345947".to_string(),
         _ => filter.to_string(),
+        // Need to implement a filter to prevent cases like "r", "ab", etc.
+        // Now, if I write "r", it will pass and break
     }
 }
 fn verify_if_wt_is_allday(filter_json: &TaskWarriorExported) -> Result<(), Error> {
@@ -121,7 +122,7 @@ fn match_inforelat_and_sequence_logic(
     let state = &filter_json.state;
     let r#type = &filter_json.r#type;
 
-    let mut is_sequence: bool;
+    let is_sequence: bool;
     if let Some(verify_tags) = &filter_json.tags {
         if verify_tags.contains(&"Sequence".to_string()) {
             is_sequence = true;
@@ -141,14 +142,14 @@ fn match_inforelat_and_sequence_logic(
             if is_sequence {
                 if let Some(next_task) = &filter_json.seq_current {
                     let mut next_json = get_filter_json(&next_task, GET_JSON_OPTIONS)?;
-                    let mut status = next_json[0].status.clone().as_str();
+                    let mut status = next_json[0].status.as_str();
 
                     // Loop until find a pending task or there is no next task
 
                     while status == "completed" {
                         if let Some(next_task) = &filter_json.seq_next {
                             next_json = get_filter_json(&next_task, GET_JSON_OPTIONS)?;
-                            status = next_json[0].status.clone().as_str();
+                            status = next_json[0].status.as_str();
                         } else {
                             return Err(FypmError {
                                     kind: FypmErrorKind::NoTasksFound,
@@ -186,11 +187,10 @@ fn match_inforelat_and_sequence_logic(
         }
     }
 }
-fn task_start(filter: &String) {
+pub fn task_start(filter: &String) {
     let mut filter = match_special_aliases(filter);
-    let mut filter_json = get_filter_json(&filter, GET_JSON_OPTIONS).unwrap();
+    let filter_json = get_filter_json(&filter, GET_JSON_OPTIONS).unwrap();
     let filter_length = filter_json.len();
-
 
     if filter_length == 0 {
         panic!("No task with filter \"{}\" found!", filter);
@@ -205,7 +205,6 @@ fn task_start(filter: &String) {
     let new_filter = match_inforelat_and_sequence_logic(&filter_json[0]).unwrap();
 
     if new_filter != filter {
-        filter_json = get_filter_json(&filter, GET_JSON_OPTIONS).unwrap();
         filter = new_filter;
     }
 
@@ -224,48 +223,19 @@ fn task_start(filter: &String) {
         } else {
             let active_task_uuid = &active_tasks.unwrap()[0].uuid;
 
-            let stop_task = Command::new("task")
+            println!("Stopping active task with id: {}", active_task_uuid);
+            Command::new("task")
                 .args([active_task_uuid.as_str(), "stop"])
                 .output()
                 .unwrap();
         }
 
-        let start_task = Command::new("task")
+        println!("Starting task with id: {}", filter);
+        Command::new("task")
             .args([filter.as_str(), "start"])
             .output()
             .unwrap();
-        let write_last_task = fs::write(LAST_TASK_PATH, filter.as_bytes()).unwrap();
-    }
-}
-
-pub fn match_action(action: &String, actionargs: &Vec<String>) {
-    match action.as_str() {
-        "start" => {
-            if actionargs.len() != 1 {
-                if actionargs.len() > 1 {
-                    panic!("Too many arguments provided!");
-                }
-
-                panic!("Not enough arguments provided!");
-            }
-
-            let filter = &actionargs[0];
-
-            // add --no-wt option later
-            task_start(filter)
-        }
-        "annotate" => {
-            if actionargs.len() == 2 {
-                actions::annotate("task", &actionargs[0], &actionargs[1])
-            } else {
-                if actionargs.len() < 1 {
-                    panic!("Not enough arguments provided!");
-                }
-
-                panic!("Too many arguments provided!");
-            }
-        }
-        _ => panic!("No valid action provided!"),
+        fs::write(LAST_TASK_PATH, filter.as_bytes()).unwrap();
     }
 }
 //#endregion

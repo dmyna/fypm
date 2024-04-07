@@ -1,5 +1,4 @@
 //#region           Crates
-use crate::utils::err::SomeErr;
 use std::process::Command;
 use std::str;
 //#endregion
