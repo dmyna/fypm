@@ -116,7 +116,7 @@ fn verify_if_is_divisory(filter_json: &TaskWarriorExported) -> Result<(), Error>
 
     Ok(())
 }
-fn match_inforelat_and_sequence_logic(
+fn match_inforelat_and_sequence(
     filter_json: &TaskWarriorExported,
 ) -> Result<String, FypmError> {
     let state = &filter_json.state;
@@ -137,7 +137,9 @@ fn match_inforelat_and_sequence_logic(
         let inforelat = &filter_json.inforelat;
 
         if let Some(inforelat) = inforelat {
-            return Ok(inforelat.clone());
+            let new_filter_json = get_filter_json(&inforelat, GET_JSON_OPTIONS).unwrap();
+
+            return match_inforelat_and_sequence(&new_filter_json[0]);
         } else {
             if is_sequence {
                 if let Some(next_task) = &filter_json.seq_current {
@@ -158,7 +160,7 @@ fn match_inforelat_and_sequence_logic(
                         }
                     }
 
-                    return Ok(next_task.clone());
+                    return match_inforelat_and_sequence(&next_json[0]);
                 } else {
                     Err(FypmError {
                         kind: FypmErrorKind::NoTasksFound,
@@ -202,7 +204,7 @@ pub fn task_start(filter: &String) {
 
     verify_if_is_divisory(&filter_json[0]).unwrap();
 
-    let new_filter = match_inforelat_and_sequence_logic(&filter_json[0]).unwrap();
+    let new_filter = match_inforelat_and_sequence(&filter_json[0]).unwrap();
 
     if new_filter != filter {
         filter = new_filter;
