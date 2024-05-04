@@ -61,6 +61,17 @@ case $(task "$1" export | jq -r '.[0].parent') in
         obs-new_diary
         backup_con >> /dev/null 2>&1 & disown
         after_executed
+        ;;
+    "534895c6-f264-4353-904a-679318b3b968")
+        before_executed
+        vivaldi --new-window https://loritta.website/br/daily https://top.gg/bot/loritta/vote https://apolobot.com/dashboard/daily
+        after_executed
+        ;;
+    "5ad9400e-df1b-49be-b565-1bd7ddb1c000")
+        before_executed
+        vivaldi --new-window https://www.instagram.com/direct/inbox/ https://www.facebook.com/messages/
+        after_executed
+        ;;
 esac
 
 # Mother Task Case

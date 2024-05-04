@@ -1,0 +1,4 @@
+#!/bin/zsh
+# $1 = Date
+
+timew summary :ids "$(date -d "$1" +%Y-%m-%dT00:00)" - "$(date -d "$1 + 1 day" +%Y-%m-%dT00:00)" "${@:2}"

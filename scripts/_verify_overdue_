@@ -1,0 +1,46 @@
+#!/bin/zsh
+
+usage() {
+    echo "Usage: _verify_overdue_ <args>"
+}
+verify_args() {
+    if [[ ]]; then
+    else
+        usage
+        return 1
+    fi
+}
+main() {
+    BASE_FILTER="+OVERDUE"
+
+    while true; do
+        ACTIVE_TASK_UUID=$(get_active_task || continue)
+
+        RAW_TASKS_JSON=$(task "($BASE_FILTER)" export)
+        RAW_TASKS_COUNT=$(echo "$RAW_TASKS_JSON" | jq -r 'length')
+
+        if [[ "$ACTIVE_TASK_UUID" != "null" ]]; then
+            NO_ACTIVE_FILTER="($BASE_FILTER) and -ACTIVE and INFORELAT.not:$ACTIVE_TASK_UUID"
+
+            NO_ACTIVE_TASKS_COUNT=$(task "$NO_ACTIVE_FILTER" export | jq -r 'length')
+
+            if [[ "$RAW_TASKS_COUNT" != "$NO_ACTIVE_TASKS_COUNT" ]]; then
+                sleep 2s
+                continue
+            fi
+        fi
+
+        if [[ "$RAW_TASKS_COUNT" -eq 1 ]]; then
+            action \
+                "$(echo "$RAW_TASKS_JSON" | jq -r '.[0].uuid')" \
+                "$(echo "$RAW_TASKS_JSON" | jq -r '.[0].description')"
+        elif [[ "$RAW_TASKS_COUNT" -eq 0 ]]; then
+            sleep 5s
+        else
+            inform_pending_tasks
+        fi
+    done
+
+}
+verify_args $@ || exit 1
+main

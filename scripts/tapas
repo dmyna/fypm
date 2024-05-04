@@ -1,24 +1,40 @@
 #!/bin/zsh
 
-FILTER=$1
-MODIFIER=$2
 DIV_STR="·································································"
 
-if [[ -z $MODIFIER ]]; then
+FILTER=$1
+if [[ -n "$2" ]]; then
+    MODIFIER=$2
+else
+    MODIFIER="list"
     FILTER="($FILTER) and status:pending"
 fi
 
-MOTHER_TASKS_JSON=$(task "$FILTER" \
-        export | jq '[.[] | select(.depends != null) | .uuid]')
+if [[ $MODIFIER != "all" ]]; then
+    MODIFIER_FILTER="and ($(task show "report.$MODIFIER" | grep 'report.'"$MODIFIER"'.filter' | sed 's/report.'"$MODIFIER"'.filter//' | sed 's/^[ \t]*//;s/[ \t]*$//'))"
+fi
+
+MOTHER_TASKS_JSON=$(task "($FILTER and +MOTHER)" \
+        export | jq '[.[] | .uuid]')
+
+TASKS_COUNT=0
 
 echo "$MOTHER_TASKS_JSON" | jq -r '.[]' | while read element; do
     UUID=$(echo "$element" | grep -oP '^[a-zA-Z0-9]{8}(?=-)')
 
-    if [[ -n "$MODIFIER" ]]; then
-        task "(uuid:$UUID or MOTHER:$UUID)" rc.verbose:affected,label rc.report.$MODIFIER.sort=entry+ ${@:3} "$MODIFIER"
-    else
-        task "(uuid:$UUID or MOTHER:$UUID)" rc.verbose:affected,label rc.report.list.sort=entry+ ${@:3} list 
-    fi
+    GET_TASKS_LENGTH=$(task "(uuid:$UUID or MOTHER:$UUID) $MODIFIER_FILTER" count)
+    TASKS_COUNT=$((TASKS_COUNT + GET_TASKS_LENGTH))
 
-    echo -e "$DIV_STR"
+    task "(uuid:$UUID or MOTHER:$UUID)" rc.verbose:false rc.report.$MODIFIER.sort=TYPE-,entry+ ${@:3} "$MODIFIER"
 done
+
+GET_TASKS_LENGTH=$(task '('"($FILTER) and MOTHER: and -MOTHER) $MODIFIER_FILTER" count)
+TASKS_COUNT=$((TASKS_COUNT + GET_TASKS_LENGTH))
+
+task "($FILTER) and MOTHER: and -MOTHER" rc.verbose:false rc.report.$MODIFIER.sort=entry+ ${@:3} "$MODIFIER"
+
+# ------------------------------------
+echo -e "$DIV_STR"
+# ------------------------------------
+
+echo "$TASKS_COUNT tasks found."

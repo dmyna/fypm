@@ -1,11 +1,18 @@
 #!/bin/bash
 
-if [[ "$WORKTIME" != "PreWork" ]] && [[ "$WORKTIME" != "PostWork" ]]; then
-    if [[ ${#@} -eq 0 ]]; then
-        task '-Sequence and STYLE.not:Dionysian and TYPE.not:Continuous' blist
-    else
-        task "${@}" or '-Sequence and STYLE.not:Dionysian and TYPE.not:Continuous' blist
-    fi
+if [[ -n "$1" ]]; then
+    DATE=$1
+    shift
 else
-    task "${@}" blist
+    DATE=$(date '+%Y-%m-%dT00:00:00')
+fi
+
+DUE_FILTER="(due:$DATE or due.after:$DATE) and due.before:$(date -d "$DATE 1 day" +%Y-%m-%dT00:00:00)"
+CONFIG="rc.report.blist.sort=due+"
+BASE_FILTER="(-Sequence and STYLE.not:Dionysian and TYPE.not:Continuous) and ($DUE_FILTER)"
+
+if [[ ${#@} -eq 0 ]]; then
+    task "($BASE_FILTER)" "$CONFIG" blist
+else
+    task "(${@}) or ($BASE_FILTER)" "$CONFIG" blist
 fi

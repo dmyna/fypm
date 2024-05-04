@@ -1,22 +1,25 @@
 #!/bin/zsh
 
-action() {
+actio() {
     TASK_UUID="$1"
     TASK_DESCRIPTION="$2"
-    SELECTED=$(esch "$TASK_DESCRIPTION" "Start" 5)
+    SELECTED=$(esch "$TASK_DESCRIPTION" "Start" 5 --pass-when-wait)
 
     if [[ "$SELECTED" == "action" ]]; then
-        tastart "$TASK_UUID"
-
-        echo no | task "$TASK_UUID" modify ALARM:
+        alacritty \
+                --config-file="$BSPDIR"/alacritty/alacritty.toml \
+                --command zsh -c "tastart $TASK_UUID; echo 'Press any key to exit!'; read" & disown
+        sleep 10s
+    elif [[ "$SELECTED" =~ ^[0-9]+ ]]; then
+        sleep "$SELECTED"
     else
         echo 'Esch was returned an unknown value!'
     fi
 }
 
-if [[ "$(_taalarmlatels export | jq -r 'length')" -gt 0 ]]; then
-    TITLE="fypm Alarm: Você tem tasks agendadas pendentes! Resolva isso!"
-    ACT_MSG="Mostre elas"
+inform_pending_tasks() {
+    TITLE="fypm Alarm: You have more than one pending task! Do this!"
+    ACT_MSG="Show me"
 
     SELECTED=$(esch "$TITLE" "$ACT_MSG" 0)
 
@@ -25,22 +28,48 @@ if [[ "$(_taalarmlatels export | jq -r 'length')" -gt 0 ]]; then
     elif [[ "$SELECTED" == "action" ]]; then
         alacritty \
             --config-file="$BSPDIR"/alacritty/alacritty.toml \
-            --command tmxs-taalwarn _taallatels >> /dev/null 2>&1 & disown
+            --command tmxs-taalwarn _taallatels & disown
+        sleep 5m
     fi
-fi
+}
+get_active_task() {
+    ACTIVE_TASKS=$(task +ACTIVE export)
+    ACTIVE_TASKS_COUNT=$(echo "$ACTIVE_TASKS" | jq -r 'length')
 
-ALARM_FILTER="(ALARM.after:now and ALARM.before:now+10s)"
-while true; do
-    ALARM_TASKS_JSON=$(task "$ALARM_FILTER" export)
-    ALARM_TASKS_COUNT="$(echo "$ALARM_TASKS_JSON" | jq -r 'length')"
-
-    if [[ "$ALARM_TASKS_COUNT" -eq 1 ]]; then
-        action \
-            "$(echo "$ALARM_TASKS_JSON" | jq -r '.[0].uuid')" \
-            "$(echo "$ALARM_TASKS_JSON" | jq -r '.[0].description')"
-    elif [[ "$ALARM_TASKS_COUNT" -eq 0 ]]; then
-        sleep 1s
+    if [[ $ACTIVE_TASKS_COUNT -eq 1 ]]; then
+        echo "$ACTIVE_TASKS" | jq -r '.[0].uuid'
+    elif [[ $ACTIVE_TASKS_COUNT -eq 0 ]]; then 
+        echo 'null'
     else
-        echo "todo!"
+        return 1
+    fi
+}
+
+BASE_ALARM_FILTER="ALARM.before:now+10s and -COMPLETED and -DELETED and -PARENT"
+while true; do
+    ACTIVE_TASK_UUID=$(get_active_task || continue)
+
+    RAW_TASKS_JSON=$(task "($BASE_ALARM_FILTER)" export)
+    RAW_TASKS_COUNT=$(echo "$RAW_TASKS_JSON" | jq -r 'length')
+
+    if [[ "$ACTIVE_TASK_UUID" != "null" ]]; then
+        NO_ACTIVE_FILTER="($BASE_ALARM_FILTER) and -ACTIVE and INFORELAT.not:$ACTIVE_TASK_UUID"
+
+        NO_ACTIVE_TASKS_COUNT=$(task "$NO_ACTIVE_FILTER" export | jq -r 'length')
+
+        if [[ "$RAW_TASKS_COUNT" != "$NO_ACTIVE_TASKS_COUNT" ]]; then
+            sleep 2s
+            continue
+        fi
+    fi
+
+    if [[ "$RAW_TASKS_COUNT" -eq 1 ]]; then
+        action \
+            "$(echo "$RAW_TASKS_JSON" | jq -r '.[0].uuid')" \
+            "$(echo "$RAW_TASKS_JSON" | jq -r '.[0].description')"
+    elif [[ "$RAW_TASKS_COUNT" -eq 0 ]]; then
+        sleep 5s
+    else
+        inform_pending_tasks
     fi
 done

@@ -41,7 +41,7 @@ schedule_if_necessary () {
     GET_WORKTIME=$(task "$FILTER" export | jq -r '.[0].WT')
 
     if [[ "$GET_WORKTIME" == "NonSched" ]]; then
-        yes no | tsched "$FILTER"
+        yes no | tsched "$FILTER" "$GET_WORKTIME"
     fi
 }
 verify_worktime() {

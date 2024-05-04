@@ -26,6 +26,6 @@ else
     exit 1
 fi
 
-task "$MAIN_TASK_ID" modify depends:"$SUBTASK_ID" STATE:Info
+task "$MAIN_TASK_ID" modify depends:"$SUBTASK_ID" STATE:Info +MOTHER
 
 task "$SUBTASK_ID" modify MOTHER:"$(task "$MAIN_TASK_ID" export | jq -r '.[0].uuid')"

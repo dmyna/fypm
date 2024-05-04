@@ -1,0 +1,46 @@
+#!/bin/zsh
+usage() {
+    echo "Usage: taproj <ACTION> [ARGS]"
+    echo "Actions:"
+    echo
+    echo "  -l [FILTER], list projects"
+    echo "  -a <PROJECT>, add project"
+    echo "  -c <PROJECT>, archive project"
+}
+verify_args() {
+    if [[ $# -eq 1 ]]; then
+        if [[ "$1" == "-l" ]]; then
+            ACTION=$1
+        else
+            usage
+            return 1
+        fi
+    elif [[ $# -eq 2 ]]; then
+        ACTION=$1
+        PROJECT=$2
+    else
+        usage
+        return 1
+    fi
+}
+main() {
+    case $ACTION in
+        -l)
+            if [[ -n "$PROJECT" ]]; then
+                task project:$PROJECT projects
+            else
+                task projects
+            fi
+            ;;
+        -a)
+            task add "Project Marker" project:$PROJECT TYPE:Continuous +Ghost
+            # add colors feature later
+            ;;
+        -c)
+            taban -c "(project:$PROJECT and -DELETED and -COMPLETED)"
+            ;;
+    esac
+}
+
+verify_args $@ || exit 1
+main

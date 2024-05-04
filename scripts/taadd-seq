@@ -5,6 +5,7 @@
 # $4 = Temp Number
 # $5 = Sequence/Temp Last Episode Number
 # $6 = Initial Ep Number
+# $7 = Last Temp ID
 
 TYPE=$1
 DESCRIPTION=$2
@@ -13,13 +14,13 @@ INITIAL=$4
 LAST=$5
 
 usage() {
-    echo "Usage: taadd-seq _<TYPE> <DESCRIPTION> <TAG> <INITIAL_NUMBER> <LAST_NUMBER> [TEMP]"
+    echo "Usage: taadd-seq _<TYPE> <DESCRIPTION> <TAG> <INITIAL_NUMBER> <LAST_NUMBER> [TEMP] [LAST_TEMP_ID]"
 }
 verify_args() {
     if [[ $# -lt 5 ]]; then
         usage
         return 1
-    elif [[ $# -gt 6 ]]; then
+    elif [[ $# -gt 7 ]]; then
         usage
         return 1
     else
@@ -31,11 +32,15 @@ verify_args() {
                 TEMP=$6
             fi
         fi
+        if [[ -n $7 ]]; then
+            LAST_TEMP_ID=$7
+        fi
     fi
 }
-get_id() {
-    read -r id
-    echo $id | grep -oP 'Created task \K\d+(?=\.)'
+get_uuid() {
+    read -r INPUT
+    ID=$(echo $INPUT | grep -oP 'Created task \K\d+(?=\.)')
+    task "$ID" uuids
 }
 main() {
     if [[ "$TYPE" == "Book" ]]; then
@@ -50,7 +55,7 @@ main() {
         MOTHER_DESC="$DESCRIPTION"
     fi
 
-    MOTHER_ID=$(yes | taadd -y "$MOTHER_DESC" "$PROJECT" Dionysian Objective +Sequence "+$TYPE" | get_id)
+    MOTHER_UUID=$(yes | taadd -y "$MOTHER_DESC" "$PROJECT" Dionysian Objective +Sequence "+ST_$TAG" "+$TYPE" | get_uuid)
 
     for ((i=$INITIAL; i <= $LAST; i++)); do
         if [[ "$TYPE" == "Book" ]]; then
@@ -63,30 +68,37 @@ main() {
             fi
         fi
 
-        ARGS=("$MOTHER_ID" "$DESCRIPTION" "+ST_$TAG" "STYLE:Dionysian" "+Sequence" "+$TYPE")
+        ARGS=("$MOTHER_UUID" "$DESCRIPTION" "+ST_$TAG" "STYLE:Dionysian" "+Sequence" "+$TYPE")
 
         if [[ $i -eq $INITIAL ]]; then
+            if [[ -n $LAST_TEMP_ID ]]; then
+                LAST_TEMP_LAST_EP_UUID=$(task MOTHER:"$(task $LAST_TEMP_ID uuids)" SEQ_NEXT: uuids)
+                ARGS+=("SEQ_PREVIOUS:$LAST_TEMP_LAST_EP_UUID")
+            fi
+
             # Create new task
-            CURRENT_TASK_ID=$(taaddsub "${ARGS[@]}" | get_id)
-            CURRENT_TASK_UUID=$(task "$CURRENT_TASK_ID" uuids)
+            CURRENT_TASK_UUID=$(taaddsub "${ARGS[@]}" | get_uuid)
+
+            if [[ -n $LAST_TEMP_ID ]]; then
+                task "$LAST_TEMP_LAST_EP_UUID" modify SEQ_NEXT:"$CURRENT_TASK_UUID"
+            fi
 
             # Set current to mother
-            task "$MOTHER_ID" modify SEQ_CURRENT:"$CURRENT_TASK_UUID"
+            task "$MOTHER_UUID" modify SEQ_CURRENT:"$CURRENT_TASK_UUID"
 
             # Set current task as previous on variable
             PREVIOUS_TASK_UUID=$CURRENT_TASK_UUID
         else
             if [[ -n $PREVIOUS_TASK_UUID ]]; then
                 # Create new task and set your previous task
-                CURRENT_TASK_ID=$(taaddsub "${ARGS[@]}" | get_id)
-                CURRENT_TASK_UUID=$(task "$CURRENT_TASK_ID" uuids)
+                CURRENT_TASK_UUID=$(taaddsub "${ARGS[@]}" | get_uuid)
 
                 # Set next and previous UDA's
                 task "$CURRENT_TASK_UUID" modify SEQ_PREVIOUS:"$PREVIOUS_TASK_UUID"
                 task "$PREVIOUS_TASK_UUID" modify SEQ_NEXT:"$CURRENT_TASK_UUID"
 
                 # Set current task as previous on variable
-                PREVIOUS_TASK_UUID=$(task "$CURRENT_TASK_ID" uuids)
+                PREVIOUS_TASK_UUID=$CURRENT_TASK_UUID
             else
                 echo "Something went wrong! The iterator isn't the initial ep, but has no previous task id!"
                 exit 1

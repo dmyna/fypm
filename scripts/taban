@@ -1,39 +1,55 @@
 #!/bin/zsh
 ABANDONED="false"
+ARCHIVED="false"
 FAILED="false"
 NOCONTROL="false"
 
 usage() {
-    echo "Usage: taban <-a, abandoned | -f, failed | -n, no-control> <task_id> [annotation]"
+    echo "Usage: taban <OPTION> <task_id> [annotation]"
+    echo
+    echo "Options:"
+    echo "      -a, --abandoned (requires annotation)"
+    echo "      -c, --archived"
+    echo "      -f, --failed"
+    echo "      -n, --no-control (requires annotation)"
 }
 main() {
     local TASKS_LENGHT
-    TASKS_LENGHT=$(task "$ID" count)
+    TASKS_LENGHT=$(task "$FILTER" count)
 
     if [[ "$ABANDONED" == "true" ]]; then
         if [[ "$TASKS_LENGHT" -gt 2 ]]; then
-            oyes "all" "no" | task "$ID" modify +Abandoned
+            oyes "all" "no" | task "$FILTER" modify +Abandoned
         else
-            yes "no" | task "$ID" modify +Abandoned
+            yes "no" | task "$FILTER" modify +Abandoned
         fi
     elif [[ "$FAILED" == "true" ]]; then
         if [[ "$TASKS_LENGHT" -gt 2 ]]; then
-            oyes "all" "no" | task "$ID" modify +Failed
+            oyes "all" "no" | task "$FILTER" modify +Failed
         else
-            yes "no" | task "$ID" modify +Failed
+            yes "no" | task "$FILTER" modify +Failed
         fi
     elif [[ "$NOCONTROL" == "true" ]]; then
         if [[ "$TASKS_LENGHT" -gt 2 ]]; then
-            oyes "all" "no" | task "$ID" modify +NoControl
+            oyes "all" "no" | task "$FILTER" modify +NoControl
         else
-            yes "no" | task "$ID" modify +NoControl
+            yes "no" | task "$FILTER" modify +NoControl
+        fi
+    elif [[ "$ARCHIVED" == "true" ]]; then
+        BASE_FILTER='-DELETED and -COMPLETED'
+        FILTER="($FILTER and $BASE_FILTER)"
+
+        if [[ "$TASKS_LENGHT" -gt 2 ]]; then
+            oyes "all" "no" | task "$FILTER" modify +Archived
+        else
+            yes "no" | task "$FILTER" modify +Archived
         fi
     fi
 
     if [[ "$TASKS_LENGHT" -gt 1 ]]; then
-        oyes "all" "no" | task "$ID" delete
+        oyes "all" "no" | task "$FILTER" delete
     else
-        oyes "yes" "no" | task "$ID" delete
+        oyes "yes" "no" | task "$FILTER" delete
     fi
 }
 
@@ -47,7 +63,7 @@ elif [[ $# -lt 2 ]]; then
     exit 1
 else
     OPTION=$1
-    ID=$2
+    FILTER=$2
     ANNOTATION=$3 # Optional / Required in NoControl
 
     case "$OPTION" in
@@ -64,6 +80,14 @@ else
             ;;
         "-a" | "--abandoned")
             ABANDONED="true"
+
+            if [[ -z "$3" ]]; then
+                echo "Annotation is required for Abandoned!"
+                exit 1;
+            fi
+            ;;
+        "-c" | "--archived")
+            ARCHIVED="true"
             ;;
         *)
             echo "Unknown option: $1"
@@ -73,7 +97,7 @@ else
     esac
 
     if [[ $# -eq 3 ]]; then
-        tan "$ID" "$ANNOTATION"
+        tan "$FILTER" "$ANNOTATION"
     fi
 fi
 

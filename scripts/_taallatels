@@ -3,7 +3,7 @@
 if [[ -n "$1" ]]; then
     MODIFIER=$1
 else
-    MODIFIER=all
+    MODIFIER=list
 fi
 
-task ALARM.before:now "$MODIFIER"
+task ALARM.before:now -PARENT -COMPLETED -DELETED "$MODIFIER"

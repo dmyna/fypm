@@ -1,0 +1,8 @@
+#!/bin/zsh
+EXEC="$@"
+SESSION="Alarm Warn"
+
+tmux new-session -d -s "$SESSION"
+tmux send-keys -t "$SESSION" "$EXEC" C-m
+
+tmux attach-session -t "$SESSION"
