@@ -16,7 +16,11 @@ case $CURRENT_MONTH in
 esac
 
 CAL="cal -c 3 $CAL_ARGS"
-TAGOALS="_tadatels GOAL goals -m"
+if [[ "$1" == "-a" ]]; then
+    TAGOALS="_tadatels ALARM alarms -w"
+else
+    TAGOALS="_tadatels GOAL goals -m"
+fi
 PROJS="task projects"
 
 open_session() {

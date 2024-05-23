@@ -1,7 +1,6 @@
 //#region           Crates
 use chrono::NaiveTime;
 use dialoguer::{console::Term, Input};
-use lazy_static::lazy_static;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::env;
@@ -14,21 +13,9 @@ use std::process::Command;
 
 //#endregion
 //#region           Modules
-use crate::handlers::data_bowl::{DataBowlHandler, PresetHandler};
+use crate::DB_PATH;
 use crate::utils::verify;
-//#endregion
-//#region           Constants
-const DATA_BOWL_NAME: &str = "worktime";
-lazy_static! {
-    static ref WORKTIME_DATABOWL_PATH: String = {
-        dirs::home_dir()
-            .unwrap()
-            .join(".local/share/fypm")
-            .join(DATA_BOWL_NAME)
-            .to_string_lossy()
-            .into_owned()
-    };
-}
+use crate::handlers::database::{DBHandler, PresetHandler};
 //#endregion
 //#region           Structs
 #[derive(Debug, Serialize, Deserialize)]
@@ -43,13 +30,13 @@ pub struct WorktimeHandler;
 //#endregion
 //#region           Implementation
 impl WorktimeHandler {
-    pub fn ensure_worktime_data_bowl() {
+    pub fn ensure_worktime_database() {
         let verify_existence =
-            DataBowlHandler::verify_by_name(&DATA_BOWL_NAME.to_string()).unwrap();
+            DBHandler::verify_by_name(&DB_PATH.to_string()).unwrap();
 
         if verify_existence == false {
-            DataBowlHandler::create(
-                &DATA_BOWL_NAME.to_string(),
+            DBHandler::create(
+                &DB_PATH.to_string(),
                 &String::from("The databowl of your worktimes!"),
             )
             .unwrap();
@@ -155,7 +142,7 @@ impl WorktimeHandler {
         };
 
         let preset_instance = PresetHandler {
-            data_bowl_name: DATA_BOWL_NAME.to_string(),
+            database_name: DB_PATH.to_string(),
         };
 
         preset_instance.add::<Worktime>(&name, &description, &new_worktime)
@@ -172,7 +159,7 @@ impl WorktimeHandler {
         let name = args.get(0).unwrap().to_string();
 
         let preset_instance = PresetHandler {
-            data_bowl_name: DATA_BOWL_NAME.to_string(),
+            database_name: DB_PATH.to_string(),
         };
 
         preset_instance.remove(&name)?;
@@ -183,7 +170,7 @@ impl WorktimeHandler {
     }
     pub fn list() -> Result<(), Error> {
         let preset_instance = PresetHandler {
-            data_bowl_name: DATA_BOWL_NAME.to_string(),
+            database_name: DB_PATH.to_string(),
         };
 
         let worktimes = preset_instance.list()?;
@@ -298,7 +285,7 @@ pub fn apply(args: &Vec<String>) -> Result<(), Error> {
     let name = args.get(0).unwrap().to_string();
 
     let preset_instance = PresetHandler {
-        data_bowl_name: DATA_BOWL_NAME.to_string(),
+        database_name: DB_PATH.to_string(),
     };
 
     let preset = preset_instance.get(&name).unwrap();
@@ -353,7 +340,7 @@ pub fn apply(args: &Vec<String>) -> Result<(), Error> {
 }
 
 pub fn match_action(action: &String, actionargs: &Vec<String>) -> Result<(), Error> {
-    WorktimeHandler::ensure_worktime_data_bowl();
+    WorktimeHandler::ensure_worktime_database();
 
     match action.as_str() {
         "add" | "create" => WorktimeHandler::add(actionargs).unwrap(),

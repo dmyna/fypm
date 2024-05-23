@@ -7,19 +7,9 @@ use std::io::{Error, ErrorKind};
 use std::path::Path;
 //#endregion
 //#region           Modules
-use crate::utils::read::{self, toml};
+use crate::DB_PATH;
 use crate::utils::write;
-//#endregion
-//#region           Constants
-lazy_static! {
-    static ref DB_PATH: String = {
-        dirs::home_dir()
-            .unwrap()
-            .join(".local/share/fypm")
-            .to_string_lossy()
-            .into_owned()
-    };
-}
+use crate::utils::read::{self, toml};
 //#endregion
 //#region           Structs
 #[derive(Serialize, Deserialize)]
@@ -39,13 +29,13 @@ pub struct PresetFile {
 }
 
 #[derive(Debug)]
-pub struct DataBowlHandler;
+pub struct DBHandler;
 pub struct PresetHandler {
-    pub data_bowl_name: String,
+    pub database_name: String,
 }
 //#endregion
 //#region           Implementation
-impl DataBowlHandler {
+impl DBHandler {
     pub fn verify_by_name(name: &String) -> Result<bool, Error> {
         let get_result = fs::read_dir(Path::new(&DB_PATH.to_string()).join(name.as_str()));
 
@@ -59,7 +49,7 @@ impl DataBowlHandler {
 
         result
     }
-    pub fn ensure_db_existence(&self) -> Result<&DataBowlHandler, Error> {
+    pub fn ensure_db_existence(&self) -> Result<&DBHandler, Error> {
         let get_result = fs::read_dir(DB_PATH.to_string());
 
         let result = match get_result {
@@ -74,6 +64,8 @@ impl DataBowlHandler {
                             DB_PATH.to_string()
                         );
                     }
+
+                    
 
                     Ok(self)
                 }
@@ -91,27 +83,27 @@ impl DataBowlHandler {
     }
 
     pub fn create(name: &String, description: &String) -> Result<DataBowl, Error> {
-        let data_bowl = DataBowl {
+        let database = DataBowl {
             name: name.clone(),
             description: description.clone(),
         };
 
-        let verify_existance = DataBowlHandler::verify_by_name(&data_bowl.name);
+        let verify_existance = DBHandler::verify_by_name(&database.name);
 
         if verify_existance? == false {
-            fs::create_dir(DB_PATH.to_string() + "/" + data_bowl.name.as_str())
+            fs::create_dir(DB_PATH.to_string() + "/" + database.name.as_str())
                 .expect("Couldn't create directory!");
 
             write::toml(
                 Path::new(&DB_PATH.to_string())
-                    .join(&data_bowl.name)
+                    .join(&database.name)
                     .join("info.toml")
                     .to_str()
                     .unwrap(),
-                &data_bowl,
+                &database,
             )?;
 
-            Ok(data_bowl)
+            Ok(database)
         } else {
             Err(Error::new(
                 ErrorKind::AlreadyExists,
@@ -120,7 +112,7 @@ impl DataBowlHandler {
         }
     }
     pub fn remove(name: &String) -> Result<(), Error> {
-        let verify_existance = DataBowlHandler::verify_by_name(name);
+        let verify_existance = DBHandler::verify_by_name(name);
 
         if verify_existance? == true {
             fs::remove_dir_all(Path::new(&DB_PATH.to_string()).join(name.as_str()))?;
@@ -134,7 +126,7 @@ impl DataBowlHandler {
         }
     }
     pub fn rename(old_name: &String, new_name: &String) -> Result<(), Error> {
-        let verify_existance = DataBowlHandler::verify_by_name(old_name);
+        let verify_existance = DBHandler::verify_by_name(old_name);
 
         if verify_existance? == true {
             let old_path = Path::new(&DB_PATH.to_string()).join(old_name.as_str());
@@ -160,7 +152,7 @@ impl DataBowlHandler {
         }
     }
     pub fn list() -> Result<Vec<(String, String)>, Error> {
-        let mut data_bowls = Vec::new();
+        let mut databases = Vec::new();
 
         for folder in fs::read_dir(DB_PATH.to_string()).unwrap() {
             let folder_info = read::toml::<DataBowl>(
@@ -174,16 +166,16 @@ impl DataBowlHandler {
             let name = folder_info.name;
             let description = folder_info.description;
 
-            data_bowls.push((name, description));
+            databases.push((name, description));
         }
 
-        Ok(data_bowls)
+        Ok(databases)
     }
 }
 impl PresetHandler {
     fn get_file_path(&self) -> String {
         Path::new(&DB_PATH.to_string())
-            .join(self.data_bowl_name.as_str())
+            .join(self.database_name.as_str())
             .join("presets.toml")
             .to_string_lossy()
             .to_string()

@@ -1,0 +1,31 @@
+#!/bin/bash
+
+usage() {
+    echo "Usage: _tals <modifier> [date] [other_filters]"
+}
+verify_args() {
+    if [[ $# -lt 1 ]]; then
+        usage
+        return 1
+    else
+        MODIFIER=$1
+
+        if [[ -n "$2" ]]; then
+            DATE=$2
+
+            OTHER_FILTERS="(${@:3})"
+        else
+            DATE=$(date '+%Y-%m-%dT00:00:00')
+        fi
+    fi
+}
+main() {
+    DUE_FILTER="(due:$DATE or due.after:$DATE) and due.before:$(date -d "$DATE 1 day" +%Y-%m-%dT00:00:00)"
+    CONFIG="rc.report.blist.sort=due+"
+    BASE_FILTER="(-Sequence and STYLE.not:Dionysian and TYPE.not:Continuous) and ($DUE_FILTER)"
+
+    task "($OTHER_FILTERS[@]) or ($BASE_FILTER)" "$CONFIG" $MODIFIER
+}
+
+verify_args "$@" || exit 1
+main

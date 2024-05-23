@@ -1,0 +1,23 @@
+#!/bin/zsh
+
+usage() {
+    echo "Usage: taest <filter> <estimate_in_minutes>"
+}
+verify_args() {
+    if [[ $# -eq 2 ]]; then
+        FILTER=$1
+        MIN_EST=$2
+    else
+        usage
+        return 1
+    fi
+}
+main() {
+    if [[ $(task "$FILTER" count) -gt 2 ]]; then
+        oyes all no | task "$FILTER" modify estimate:$MIN_EST
+    else
+        yes no | task "$FILTER" modify estimate:$MIN_EST
+    fi
+}
+verify_args $@ || exit 1
+main

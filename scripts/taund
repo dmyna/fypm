@@ -1,7 +1,14 @@
 #!/bin/zsh
 
+usage() {
+    echo "Usage: taund [-d|-c] <filter>"
+    echo "  -d: To Abandoned, Failed and NoControl tasks (it won't undo if the task is Archived!)"
+    echo "  -c: To Archived tasks"
+    echo "  no_filter: It will only modify the status, not the tags."
+}
+
 if [[ "$1" == "-d" ]]; then
-    task "$2" modify status:pending -Abandoned -Failed -NoControl
+    task "($2 and -Archived)" modify status:pending -Abandoned -Failed -NoControl
 elif [[ "$1" == "-c" ]]; then
     task "($2) and +Archived)" modify status:pending -Archived
 else

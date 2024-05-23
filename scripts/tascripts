@@ -11,7 +11,7 @@ after_executed() {
 }
 
 set_sound() {
-    cvol spotify "$1"%
+    cvol Spotify "$1"%
 
     if [[ -n "$2" ]]; then
         pulsemixer --set-volume "$2"
@@ -58,7 +58,7 @@ case $(task "$1" export | jq -r '.[0].parent') in
 	    after_executed
 	    ;;
     "11e575f1-de86-4f71-a522-9a2f75477de9")
-        obs-new_diary
+        obs-new_diary -y
         backup_con >> /dev/null 2>&1 & disown
         after_executed
         ;;
@@ -99,10 +99,15 @@ esac
 # Projects Case
 case $(task "$1" export | jq -r '.[0].project') in
     "CerebralLine.Reading")
-        set_sound 70
+        set_sound 50
 	    vivaldi-stable https://eggsy.xyz/projects/premid/custom-status/
         after_executed
         ;;
+    "Lazer.Watch")
+        set_sound 100
+        audiorelay > /dev/null 2>&1 & disown
+        remotemouse > /dev/null 2>&1 & disown
+        after_executed
 esac
 
 # Tags Case
@@ -123,9 +128,12 @@ case $(task "$1" export | jq -r '.[0].uuid') in
 esac
 
 
-# Check if it has been opened
+# Check if some script was executed
 if [[ $EXECUTED -eq 0 ]]; then
-    exit 1
+    pulsemixer --set-volume 80
+    cvol spotify 100%
+
+    exit
 fi
 
 notify-send -u critical "$(task "$2" export | jq -r '.[0].description')"

@@ -15,6 +15,7 @@ fi
 PROPERTY=$1
 MODIFIER=$2
 VERBOSE="rc.verbose=false"
+SORT="rc.report.$MODIFIER.sort=$PROPERTY+"
 
 shift
 shift
@@ -77,10 +78,10 @@ if [[ $# -gt 0 ]]; then
     echo ""
 
     task "\(($PROPERTY.after:$INITIAL_DATE or $PROPERTY:$INITIAL_DATE) and $PROPERTY.before:$FINAL_DATE)" \
-        "$VERBOSE" "${@}" "$MODIFIER"
+        "$VERBOSE" "$SORT" "${@}" "$MODIFIER"
 else
     echo "Showing tasks with any $PROPERTY:"
     echo ""
 
-    task "$PROPERTY.any:" "$VERBOSE" "${@}" "$MODIFIER"
+    task "$PROPERTY.any:" "$VERBOSE" "$SORT" "${@}" "$MODIFIER"
 fi

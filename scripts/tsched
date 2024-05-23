@@ -2,25 +2,26 @@
 ONLY_ALARM=false
 usage() {
     echo "Usage: $0 [OPTION] [...args]"
-    echo "      normal_args: <id> <worktime> [alarm_time]"
+    echo "      normal_args: <id> <worktime> [alarm_time] [due_time]"
     echo "Options:"
     echo "  -a  Specify only an alarm time."
-    echo "      args: <id> <alarm_time>"
+    echo "      args: <id> <alarm_time> [due_time]"
 }
 verify_args() {
     if [[ "$1" == "-a" ]]; then
+        NO_WT=true
         shift
 
-        if [[ $# -eq 2 ]]; then
-            ID="$1"
-            ALARM="$2"
-            ONLY_ALARM=true
-
-            return 0
-        else
-            echo "With -a option, you can only specify two arguments!"
+        if [[ $# -lt 2 || $# -gt 3 ]]; then
+            echo "With -a option, you can only specify three arguments!"
             usage
             return 1
+        else
+            FILTER="$1"
+            ALARM="$2"
+            DUE="$3"
+
+            return 0
         fi
     fi
 
@@ -28,34 +29,60 @@ verify_args() {
         echo "Too few arguments!"
         usage
         return 1
-    elif [[ $# -gt 3 ]]; then
+    elif [[ $# -gt 4 ]]; then
         echo "Too many arguments!"
         usage
         return 1
     else
+        FILTER="$1"
+        WT="$2"
+
         if [[ -n "$3" ]]; then
             ALARM="$3"
         fi
-
-        ID="$1"
-        WT="$2"
+        if [[ -n "$4" ]]; then
+            DUE="$4"
+        fi
     fi
 }
 apply_alarm() {
-    task "$ID" modify ALARM:"$ALARM"
+    IFS=','
+    for CURRENT_ID in $FILTER; do
+        TASK_JSON=$(task "$CURRENT_ID" export)
+        TASK_TYPE=$(echo $TASK_JSON | jq -r '.[0].TYPE')
 
-    echo "\nThe task with id '$ID' was scheduled to be warned at '$ALARM'!"
+        if [[ "$TASK_TYPE" == "Objective" ]]; then
+            echo "fypm warn: This task has Objective type. Setting GOAL property as '$ALARM'..."
+
+            task $CURRENT_ID modify GOAL:"$ALARM"
+        elif [[ "$TASK_TYPE" == "SubTask" ]]; then
+            echo "fypm warn: This task has SubTask type. You cannot set GOAL for this, only to respective Objective task! '$ALARM'..."
+        fi
+    done
+    unset IFS
+
+    PROPERTIES+=( ALARM:"$ALARM" )
+
+    echo "The filter '$FILTER' was scheduled to be warned at '$ALARM'!"
 }
 main() {
-    if [[ $ONLY_ALARM == true ]]; then
+    PROPERTIES=()
+
+    if [[ $NO_WT == true ]]; then
         apply_alarm
     else
+        PROPERTIES+=( WT:"$WT" )
+
         if [[ -n $ALARM ]]; then
             apply_alarm
         fi
-
-        task "$ID" modify WT:"$WT"
     fi
+
+    if [[ -n "$DUE" ]]; then
+        PROPERTIES+=( due:"$DUE" )
+    fi
+
+    task "$FILTER" modify ${PROPERTIES[@]}
 }
 
 verify_args "$@" || exit 1

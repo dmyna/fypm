@@ -40,7 +40,7 @@ schedule_if_necessary () {
     local GET_WORKTIME
     GET_WORKTIME=$(task "$FILTER" export | jq -r '.[0].WT')
 
-    if [[ "$GET_WORKTIME" == "NonSched" ]]; then
+    if [[ "$GET_WORKTIME" == "NonSched!" ]]; then
         yes no | tsched "$FILTER" "$GET_WORKTIME"
     fi
 }
@@ -133,13 +133,7 @@ main() {
     # Implement something to put scripts on Sequencial tasks
 
     # Verify if task has a script
-    if [[ "$(echo "$TASK_JSON" | jq --arg str 'WithScript' '.[0].tags | index($str)')" != "null" ]]; then
-        tascripts $FILTER
-    else
-        # Reset apps volume if necessary
-        pulsemixer --set-volume 80
-        cvol spotify 100%
-    fi
+    tascripts $FILTER
 
     # Stop Active Task
     if [[ "$ACTIVE_TASKS_COUNT" -gt 1 ]]; then

@@ -13,9 +13,62 @@ usage() {
     echo "      -f, --failed"
     echo "      -n, --no-control (requires annotation)"
 }
+verify_args() {
+    if [[ $# -gt 3 ]]; then
+        echo "Too many arguments!"
+        usage
+        exit 1
+    elif [[ $# -lt 2 ]]; then
+        echo "Not enough arguments!"
+        usage
+        exit 1
+    else
+        OPTION=$1
+        FILTER=$2
+        ANNOTATION=$3 # Optional / Required in NoControl and Abandonned
+
+        case "$OPTION" in
+            "-f" | "--failed")
+                FAILED="true"
+                ;;
+            "-n" | "--no-control")
+                NOCONTROL="true"
+
+                if [[ -z "$3" ]]; then
+                    echo "Annotation is required for NoControl!"
+                    return 1;
+                fi
+                ;;
+            "-a" | "--abandoned")
+                ABANDONED="true"
+
+                if [[ -z "$3" ]]; then
+                    echo "Annotation is required for Abandoned!"
+                    return 1;
+                fi
+                ;;
+            "-c" | "--archived")
+                ARCHIVED="true"
+                ;;
+            "--help" | "-h")
+                usage
+                exit 0
+                ;;
+            *)
+                echo "Unknown option: $1"
+                usage
+                return 1
+                ;;
+        esac
+    fi
+}
 main() {
     local TASKS_LENGHT
     TASKS_LENGHT=$(task "$FILTER" count)
+
+    if [[ -n "$ANNOTATION" ]]; then
+        yes | tan "$FILTER" "$ANNOTATION"
+    fi
 
     if [[ "$ABANDONED" == "true" ]]; then
         if [[ "$TASKS_LENGHT" -gt 2 ]]; then
@@ -53,52 +106,6 @@ main() {
     fi
 }
 
-if [[ $# -gt 3 ]]; then
-    echo "Too many arguments!"
-    usage
-    exit 1
-elif [[ $# -lt 2 ]]; then
-    echo "Not enough arguments!"
-    usage
-    exit 1
-else
-    OPTION=$1
-    FILTER=$2
-    ANNOTATION=$3 # Optional / Required in NoControl
 
-    case "$OPTION" in
-        "-f" | "--failed")
-            FAILED="true"
-            ;;
-        "-n" | "--no-control")
-            NOCONTROL="true"
-
-            if [[ -z "$3" ]]; then
-                echo "Annotation is required for NoControl!"
-                exit 1;
-            fi
-            ;;
-        "-a" | "--abandoned")
-            ABANDONED="true"
-
-            if [[ -z "$3" ]]; then
-                echo "Annotation is required for Abandoned!"
-                exit 1;
-            fi
-            ;;
-        "-c" | "--archived")
-            ARCHIVED="true"
-            ;;
-        *)
-            echo "Unknown option: $1"
-            usage
-            exit 1
-            ;;
-    esac
-
-    if [[ $# -eq 3 ]]; then
-        tan "$FILTER" "$ANNOTATION"
-    fi
-fi
-
+verify_args "$@" || exit 1
 main
