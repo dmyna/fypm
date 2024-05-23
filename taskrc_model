@@ -1,0 +1,183 @@
+# ------------------------------------------------------ #
+#                       FYPM
+regex=on
+
+# Default reports
+report.waiting.sort=wait+
+
+report.next.columns=id,entry.age,STYLE,TYPE,project,WT,estimate,due.relative,description,urgency
+report.next.labels=ID,Age,Style,Type,Project,WorkTime,Est,Due,Description,Urg
+report.next.sort=urgency-,ALARM-
+
+report.list.columns=id,entry.age,STYLE,TYPE,project,tags,recur,WT,GOAL,scheduled.countdown,due.relative,description,urgency
+report.list.labels=ID,Age,Style,Type,Project,Tag,Recur,WorkTime,Goal,Sched,Due,Description,Urg
+
+report.all.sort=urgency+
+report.all.columns=uuid.short,id,entry.age,STYLE,TYPE,project,tags,recur,WT,GOAL,scheduled.countdown,due.relative,description,urgency
+report.all.labels=UUID,ID,Age,Style,Type,Project,Tag,Recur,WorkTime,Goal,Sched,Due,Description,Urg
+
+report.list.sort=urgency+
+report.list.filter=status:pending -WAITING -Ghost
+
+report.recurring.sort=due+,urgency+,entry+
+
+# My Reports
+report.blist.columns=id,status.short,STYLE,TYPE,project,tags,WT,GOAL,wait.relative,due.relative,description,urgency
+report.blist.filter=WT.not:NonSched and -Ghost and -DELETED and -PARENT and -COMPLETED and TYPE.not:Event
+report.blist.sort=urgency-
+
+
+report.wlist.columns=id,status.short,STYLE,TYPE,project,tags,WT,GOAL,wait.relative,due.relative,description,urgency
+report.wlist.labels=ID,S,Style,Type,Project,Tags,Worktime,Goal,Wait,Due,Desc,Urg
+report.wlist.filter=((+ACTIVE or +OVERDUE or +Divisory or (((due:today or due.after:today) and due.before:tomorrow) and (WT:Quantify or WT:NonSched)) or ((WT:Essentials or WT:AllDay) and ((+TODAY and +INSTANCE) or (GOAL.after:2024-05-01 and GOAL.before:now and TYPE:Objective) or ((scheduled.after:today or scheduled:today) and scheduled.before:tomorrow)) and STYLE.not:Dionysian)) and status:pending) or (((due:today or due.after:today) and due.before:tomorrow) and WT:AllDay and (status.not:recurring and status.not:waiting))
+report.wlist.sort=urgency-
+
+report.goals.columns=id,entry.age,TYPE,project,WT,GOAL,due.relative,description,urgency
+report.goals.labels=ID,Age,Type,Project,WorkTime,Goal,Due,Description,Urg
+report.goals.sort=GOAL+
+report.goals.filter=status:pending and GOAL.any:
+
+report.alarms.columns=id,entry.age,TYPE,project,WT,ALARM,due.relative,description,urgency
+report.alarms.labels=ID,Age,Type,Project,WorkTime,Alarm,Due,Description,Urg
+report.alarms.sort=ALARM+
+report.alarms.filter=status:pending and ALARM.any:
+
+report.all-goals.sort=GOAL+
+report.all-goals.columns=uuid.short,id,entry.age,TYPE,project,tags,WT,GOAL,due.relative,description,urgency
+report.all-goals.labels=UUID,ID,Age,Type,Project,Tag,WorkTime,Goal,Due,Description,Urg
+
+
+report.const.columns=uuid.short,id,entry.age,STYLE,TYPE,project,tags,recur,WT,GOAL,scheduled.countdown,due.relative,description,urgency
+report.const.labels=UUID,ID,Age,Style,Type,Project,Tag,Recur,WorkTime,Goal,Sched,Due,Description,Urg
+report.const.sort=due+
+
+# --------------------------- #
+#           UDA's
+
+uda.STYLE.type=string
+uda.STYLE.label=Style
+uda.STYLE.values=Apollonian,Dionysian,Creative,Necessity,Idle
+
+#           Behavior UDA's
+uda.TYPE.type=string
+uda.TYPE.label=Type
+uda.TYPE.values=Habit,Eventual,Objective,Continuous,SubTask,Event,Check
+
+uda.STATE.type=string
+uda.STATE.label=State
+uda.STATE.default=Time
+uda.STATE.values=Info,Time
+
+uda.MOTHER.type=string
+uda.MOTHER.label=Mother
+
+uda.INFORELAT.type=string
+uda.INFORELAT.label=InfoRelation
+
+# Sequence
+uda.SEQ_CURRENT.type=string
+uda.SEQ_CURRENT.label=Current
+
+uda.SEQ_PREVIOUS.type=string
+uda.SEQ_PREVIOUS.label=Previous
+
+uda.SEQ_NEXT.type=string
+uda.SEQ_NEXT.label=Next
+
+#           Timing Properties 
+uda.WT.type=string
+uda.WT.label=WorkTime
+uda.WT.default=NonSched
+uda.WT.values=PreWork,General,Essentials,Calm,PostWork,PreSleep,Break,Quantify!,AllDay!,NonSched!
+
+uda.GOAL.type=date
+uda.GOAL.label=Goal
+
+uda.ALARM.type=date
+uda.ALARM.label=Alarm
+
+#           Urgency Properties
+uda.effort.type=string
+uda.effort.label=Efort
+uda.effort.values=Inconsistent,One,Two,Three,Four,Five,None
+uda.effort.default=None
+
+uda.quadrant.type=string
+uda.quadrant.label=Quadrant
+uda.quadrant.values=One,Two,Three,None
+uda.quadrant.default=None
+
+uda.estimate.type=string
+uda.estimate.label=Estimate
+
+# --------------------------- #
+#       Urgency Coefficients
+# General
+urgency.active.coefficient=1000
+urgency.tags.coefficient=0
+urgency.project.coefficient=0
+urgency.annotations.coefficient=0
+urgency.scheduled.coefficient=20
+
+# Virtual Tags
+urgency.user.tag.OVERDUE.coefficient=50
+urgency.user.tag.WAITING.coefficient=-10
+urgency.user.tag.TEMPLATE.coefficient=-20
+urgency.user.tag.COMPLETED.coefficient=-30
+urgency.user.tag.DELETED.coefficient=-50
+
+# Projects
+urgency.user.project.Finances.coefficient=5
+# WorkTime
+urgency.uda.WT.Quantify!.coefficient=0
+urgency.uda.WT.AllDay!.coefficient=-200
+urgency.uda.WT.NonSched!.coefficient=-5
+# Type
+urgency.uda.TYPE.SubTask.coefficient=-8
+urgency.uda.TYPE.Essential.coefficient=5
+urgency.uda.TYPE.Essential.coefficient=2
+urgency.uda.TYPE.Objective.coefficient=-5
+urgency.uda.TYPE.Continuous.coefficient=0
+urgency.uda.TYPE.Check.coefficient=0
+urgency.uda.TYPE.Event.coefficient=-175
+# Style
+urgency.uda.STYLE.Apollonian.coefficient=3
+urgency.uda.STYLE.Creative.coefficient=1
+urgency.uda.STYLE.Dionysian.coefficient=-2
+urgency.uda.STYLE.Necessity.coefficient=5
+
+urgency.uda.effort.Zero.coefficient=0
+urgency.uda.effort.One.coefficient=1
+urgency.uda.effort.Two.coefficient=2
+urgency.uda.effort.Three.coefficient=3
+urgency.uda.effort.Four.coefficient=4
+urgency.uda.effort.Five.coefficient=5
+
+urgency.uda.quadrant.One.coefficient=10
+urgency.uda.quadrant.Two.coefficient=7
+urgency.uda.quadrant.Three.coefficient=5
+urgency.uda.quadrant.None.coefficient=0
+
+
+# Urgency Increment
+urgency.user.tag.URG_P5.coefficient=5
+urgency.user.tag.URG_P10.coefficient=10
+urgency.user.tag.URG_P15.coefficient=15
+urgency.user.tag.URG_P20.coefficient=20
+urgency.user.tag.URG_P25.coefficient=25
+urgency.user.tag.URG_P30.coefficient=30
+urgency.user.tag.URG_P100.coefficient=100
+urgency.user.tag.URG_N5.coefficient=-5
+urgency.user.tag.URG_N10.coefficient=-10
+urgency.user.tag.URG_N15.coefficient=-15
+urgency.user.tag.URG_N20.coefficient=-20
+urgency.user.tag.URG_N25.coefficient=-25
+urgency.user.tag.URG_N30.coefficient=-30
+urgency.user.tag.URG_N100.coefficient=-100
+
+
+# Uncomment this and just leave the worktime script handle
+#report.next.filter=
+#uda.taskwarrior-tui.task-report.show-info=false
+#news.version=2.6.0
+# ------------------------------------------------------ #
