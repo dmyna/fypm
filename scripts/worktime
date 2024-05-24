@@ -55,10 +55,10 @@ update_filters() {
                 shift 1
 
                 WT=$1
-                BASESTR="(WT:$WT or WT:AllDay or $ALARMSTR) and ($ESSENTSTR or $GOALSTR)"
+                BASESTR="(WT:$WT or WT:AllDay) and ($ESSENTSTR or $GOALSTR or $ALARMSTR)"
             else
                 WT=$1
-                BASESTR="(WT:$WT or WT:AllDay or $ALARMSTR) and $ESSENTSTR"
+                BASESTR="(WT:$WT or WT:AllDay) and ($ESSENTSTR or $ALARMSTR)"
             fi
 
             if [[ -n "$2" ]]; then
