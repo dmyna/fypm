@@ -119,6 +119,9 @@ else
     export WORKTIME=$1
 fi
 
+
+# ------------------- #
+# Change this based on your worktimes and actions to do at each worktime
 pdfw rm rule www.instagram.com
 pdfw add rule www.instagram.com
 case $1 in
@@ -155,6 +158,10 @@ case $1 in
         exit 1
 esac
 
-update_vit_session
+
+# ------------------- #
+
+
+#update_vit_session
 
 polybar-msg cmd restart
