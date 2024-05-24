@@ -11,8 +11,12 @@
             "id": "33bb253ec36c0a99",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {}
+              "type": "markdown",
+              "state": {
+                "file": "Workflow/Commands/Introduction.md",
+                "mode": "source",
+                "source": false
+              }
             }
           }
         ]
@@ -81,6 +85,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "Workflow/Commands/Introduction.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -97,6 +102,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
+                "file": "Workflow/Commands/Introduction.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -118,7 +124,9 @@
             "type": "leaf",
             "state": {
               "type": "outline",
-              "state": {}
+              "state": {
+                "file": "Workflow/Commands/Introduction.md"
+              }
             }
           }
         ]
@@ -140,6 +148,11 @@
   },
   "active": "33bb253ec36c0a99",
   "lastOpenFiles": [
+    "Workflow/Properties/Behavior Properties.md",
+    "Workflow/Properties/Timing Properties.md",
+    "Workflow/Properties/Urgency Properties.md",
+    "Workflow/Commands/Introduction.md",
+    "Workflow/Commands",
     "fypm/Workflow/Properties/Urgency Properties.md",
     "fypm/Workflow/Properties/Behavior Properties.md",
     "fypm/Workflow/Properties/Timing Properties.md",
@@ -148,9 +161,6 @@
     "fypm/Roadmap.canvas",
     "fypm/match_inforelat_and_sequence.canvas",
     "fypm",
-    "Workflow/Properties/Urgency Properties.md",
-    "Workflow/Properties/Timing Properties.md",
-    "Workflow/Properties/Behavior Properties.md",
     "match_inforelat_and_sequence.canvas",
     "Roadmap.canvas",
     "Tasks/Recurrents/Quadrant One.md",
@@ -167,7 +177,6 @@
     "Tasks/Recurrents",
     "Tasks",
     "Untitled.md",
-    "Workflow",
     "Test.md",
     "Welcome.md"
   ]

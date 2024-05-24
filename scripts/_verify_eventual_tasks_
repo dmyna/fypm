@@ -1,0 +1,26 @@
+#!/bin/zsh
+# Verify Eventual Types
+
+EVENTUAL_FILTER='(TYPE:Eventual and -COMPLETED and -DELETED and due.before:today)'
+
+TITLE="fypm Types: An overdue Eventual task has been found!"
+ACT_MSG="Fix it"
+
+
+FIXED=false;
+
+while ! $FIXED; do
+    if [[ "$(task "$EVENTUAL_FILTER" count)" -gt 0 ]]; then
+        SELECTED=$(esch "$TITLE" "$ACT_MSG" 0)
+
+        if [[ -z "$SELECTED" ]]; then
+            esch "$TITLE" "$ACT_MSG" 0
+        elif [[ "$SELECTED" == "action" ]]; then
+            alacritty \
+                --config-file="$BSPDIR"/alacritty/alacritty.toml \
+                --command tmxs-taftypes "task '$EVENTUAL_FILTER' all"
+        fi
+    else
+        FIXED=true
+    fi
+done

@@ -1,7 +1,0 @@
-#!/bin/zsh
-
-alias tir="rpms timew track"
-alias tistart="rpms timew start"
-alias tiend="rpms timew end"
-alias ticart="rpms timew start-correction"
-alias ticend="rpms timew end-correction"
