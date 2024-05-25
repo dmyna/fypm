@@ -1,0 +1,24 @@
+#!/bin/bash
+
+COMMAND=$3
+
+loop=1;
+while read -r line; do
+    if [ $loop -eq 1 ]; then
+        OLD_TASK=$line
+    else
+        NEW_TASK=$line
+    fi
+    loop=$((loop + 1))
+done
+
+TYPE=$(echo "$OLD_TASK" | jq -r '.TYPE');
+
+if [[ "$TYPE" == "Continuous" && "$COMMAND" == "command:done" ]]; then
+    echo "You cannot done a continuous task!"
+    exit 1;
+fi
+
+echo "$NEW_TASK"
+
+exit 0

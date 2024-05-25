@@ -33,7 +33,7 @@ main() {
             fi
             ;;
         -a)
-            task add "Project Marker" project:$PROJECT TYPE:Continuous +Ghost
+            yes | taadd "Project Marker" $PROJECT ' ' Continuous +Ghost STATE:Info
             # add colors feature later
             ;;
         -c)
