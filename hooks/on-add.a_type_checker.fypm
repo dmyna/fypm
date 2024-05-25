@@ -1,0 +1,69 @@
+#!/bin/zsh
+
+read -r JSON;
+
+TYPE="$(echo $JSON | jq -r '.TYPE')"
+
+errprint() {
+    echo $1
+    exit 1
+}
+
+if [[ $TYPE == "Habit" ]]; then
+    # Check if a Habit task has a recur
+    if [[ $(echo $JSON | jq -r '.recur') == "null" ]]; then
+        errprint "Habit tasks must have a recur!"
+    fi
+    
+    # Check if a Habit task has STATE set to 'Time'
+    if [[ $(echo $JSON | jq -r '.STATE') != "Time" ]]; then
+        errprint "Habit tasks must have STATE set to 'Time'!"
+    fi
+elif [[ $TYPE == "Eventual" ]]; then
+    DUE_DATE="$(echo $JSON | jq -r '.due' | _transform_tw_dates_to_iso_)"
+
+    if [[ "$DUE_DATE" == "null" ]]; then
+        # If no due date, set due to today at 23:59:59
+
+        echo "fypm warn: No due specified, setting due to today at 23:59:59."
+
+        NEW_DATE=$(date -d 'today' +%Y-%m-%dT23:59:59)
+        NEW_UTC_DATE=$(date -d "$NEW_DATE 3 hours" +%Y%m%dT%H%M%SZ)
+
+        JSON="$(echo $JSON | jq -r --arg NEW_DUE "$NEW_UTC_DATE" '.due = $NEW_DUE')"
+    else
+        # Check if the due date is in a different day than today
+        if [[ $(date -d "$DUE_DATE" +%s) -ge $(date -d "tomorrow 00:00:00" +%s) ]]; then
+            errprint "Eventual tasks must be completed in the same day! You can use 'Objective' instead."
+        fi
+    fi
+elif [[ $TYPE == "Event" ]]; then
+    # Check if a Event task accompanies a WT AllDay
+    if [[ $(echo $JSON | jq -r '.WT') != "AllDay!" ]]; then
+        errprint "You can only add an task with Event TYPE if it has an AllDay WT! You can use 'Check' instead."
+    fi
+
+    if [[ $(echo $JSON | jq -r '.parent') == "null" ]]; then
+        # Ensure that the due date is at 23:59:59
+        DUE_DATE="$(echo $JSON | jq -r '.due' | _transform_tw_dates_to_iso_)"
+
+        NEW_DATE=$(date -d "$DUE_DATE" +%Y-%m-%dT23:59:59)
+        NEW_UTC_DATE=$(date -d "$NEW_DATE 3 hours" +%Y%m%dT%H%M%SZ)
+
+        JSON="$(echo $JSON | jq -r --arg NEW_DUE "$NEW_UTC_DATE" '.due = $NEW_DUE')"
+    fi
+elif [[ $TYPE == "Check" ]]; then
+    # Check if a Check task has a recur
+    if [[ $(echo $JSON | jq -r '.recur') == "null" ]]; then
+        errprint "Check tasks must have a recur!"
+    fi
+    
+    # Check if a Check task has STATE set to 'Info'
+    if [[ $(echo $JSON | jq -r '.STATE') != "Info" ]]; then
+        errprint "Habit tasks must have STATE set to 'Info'!"
+    fi
+fi
+
+echo $JSON | jq -c
+
+exit 0

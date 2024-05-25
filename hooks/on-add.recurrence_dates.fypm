@@ -1,0 +1,45 @@
+#!/bin/zsh
+
+read -r JSON;
+
+TASK_PARENT_UUID=$(echo "$JSON" | jq -r '.parent')
+if [[ "$TASK_PARENT_UUID" != "null" ]]; then
+    TASK_RECUR=$(echo "$JSON" | jq -r '.recur')
+    IMASK=$(echo $JSON | jq -r '.imask')
+    
+    case $TASK_RECUR in
+        "daily")
+            COUNTER="$IMASK days"
+            ;;
+        "weekly")
+            COUNTER="$IMASK weeks"
+            ;;
+        "monthly")
+            COUNTER="$IMASK months"
+            ;;
+        "yearly")
+            COUNTER="$IMASK years"
+            ;;
+        "weekdays")
+            COUNTER="$(( $IMASK + ( ($IMASK / 5) * 2 ) )) days"
+            ;;
+        *d)
+            if [[ "$TEST" =~ ^[0-9]+d$ ]]; then
+                COUNTER="$(( $IMASK * ${TASK_RECUR%d})) days"
+            fi
+            ;;
+    esac
+
+    TASK_ALARM=$(echo "$JSON" | jq -r '.ALARM')
+    if [[ "$TASK_ALARM" != "null" ]]; then
+        # Convert to ISO 8601
+        TASK_ALARM=$(echo $TASK_ALARM | _transform_tw_dates_to_iso_)
+
+        NEW_ALARM_DATE=$(date -d "$TASK_ALARM $COUNTER" +'%Y-%m-%dT%H:%M:%S')
+        JSON=$(echo "$JSON" | jq -r --arg NEW_ALARM_DATE "$NEW_ALARM_DATE" '.ALARM = $NEW_ALARM_DATE')
+    fi
+fi
+
+echo $JSON | jq -c
+
+exit 0
