@@ -18,7 +18,7 @@ set_sound() {
     fi
 }
 
-set_sound 100 75
+# set_sound 100 75
 
 # Recurring Tasks Case
 case $(task "$1" export | jq -r '.[0].parent') in
@@ -129,11 +129,11 @@ esac
 
 
 # Check if some script was executed
-if [[ $EXECUTED -eq 0 ]]; then
-    pulsemixer --set-volume 80
-    cvol spotify 100%
-
-    exit
-fi
+# if [[ $EXECUTED -eq 0 ]]; then
+#     pulsemixer --set-volume 80
+#     cvol spotify 100%
+#
+#     exit
+# fi
 
 notify-send -u critical "$(task "$2" export | jq -r '.[0].description')"

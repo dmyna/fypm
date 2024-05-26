@@ -53,6 +53,7 @@ update_filters() {
 	        ALARMSTR="(ALARM.after:now and ALARM.before:$FINAL_TIME)"
 
             WT=$1
+
             BASESTR="(WT:$WT or WT:AllDay) and ($ESSENTSTR or $GOALSTR or $ALARMSTR)"
 
             if [[ -n "$2" ]]; then
@@ -72,10 +73,10 @@ update_filters() {
 
         sed -i "$REGEX" ~/.taskrc
 
-        update-vit-taskrc
+        #update-vit-taskrc
     }
 
-    update $VIT_CFG_LINE $WT
+    #update $VIT_CFG_LINE $WT
     update $TWUI_CFG_LINE $WT
 }
 update_vit_session() {
