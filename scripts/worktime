@@ -3,6 +3,7 @@
 VIEWER='twui'
 VIEWER_QUIT='q'
 LAST_WT_PATH=/var/tmp/.last_work_time
+WORKTIMES_MSG="Avaiable worktimes: PreWork, General, Essentials, Calm, PreSleep, Break"
 
 define_values() {
     local CURRENT_WT
@@ -14,7 +15,7 @@ define_values() {
     echo "$3" > /var/tmp/current_polybar_f_wt_color
     echo "$CURRENT_WT" > "$LAST_WT_PATH"
 
-    notify-send -u critical "Horário de Trabalho:" "$1"
+    notify-send -u critical "Worktime:" "$1"
 
     update_filters "$4"
 }
@@ -113,7 +114,7 @@ update_vit_session() {
 }
 
 if [[ -z "$1" ]]; then
-    echo "Avaiable worktimes: PreWork, General, Essentials, Calm, PreSleep, Break"
+    echo $WORKTIMES_MSG
     exit 1
 else
     export WORKTIME=$1
@@ -122,39 +123,31 @@ fi
 
 # ------------------- #
 # Change this based on your worktimes and actions to do at each worktime
-pdfw rm rule www.instagram.com
-pdfw add rule www.instagram.com
 case $1 in
-    "PreWork")
-        define_values "PreWork" "#999" "#111" "08:30"
+    "Highlevel")
+        define_values "Highlevel" "#0f0" "#111" "04:00"
         ;;
-    "Essentials")
-        define_values "Essentials" "#f90" "#111" "10:00"
-        pdfw rm rule www.instagram.com
+    "School")
+        define_values "School" "#f70" "#111" "06:00"
         ;;
-    "General")
-        define_values "General" "#e00" "#111" "14:00"
-        wmctrl -c "Discord"
+    "Food")
+        define_values "Food" "#393" "#111" "13:00"
         ;;
-    "Calm")
-        define_values "Calm" "#00e" "#eee" "18:00"
-        ;;
-    "PreSleep")
-        define_values "PreSleep" "#999" "#111" "19:00"
-        wmctrl -c "Discord"
-        ;;
-    "Sleep")
-        define_values "Sleep" "#fff" "#111" "06:00"
+    "Highload")
+        define_values "Highload" "#e44" "#eee" "18:00"
         ;;
     "Break")
-        define_values "Break" "#fff" "#111"
+        define_values "Break" "#06f" "#111"
+        ;;
+    "Sleep")
+        define_values "Sleep" "#666" "#111" "19:00"
         ;;
     "last")
         worktime $(cat "$LAST_WT_PATH")
         exit 0
         ;;
     *)
-        echo "Avaiable worktimes: PreWork, General, Essentials, Calm, PreSleep, Break"
+        echo $WORKTIMES_MSG
         exit 1
 esac
 
