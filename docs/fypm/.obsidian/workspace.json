@@ -18,8 +18,17 @@
                 "source": false
               }
             }
+          },
+          {
+            "id": "2e3f54fce3259996",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {}
+            }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -85,7 +94,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Workflow/Commands/Introduction.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -102,7 +110,6 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Workflow/Commands/Introduction.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -124,9 +131,7 @@
             "type": "leaf",
             "state": {
               "type": "outline",
-              "state": {
-                "file": "Workflow/Commands/Introduction.md"
-              }
+              "state": {}
             }
           }
         ]
@@ -146,12 +151,12 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "33bb253ec36c0a99",
+  "active": "2e3f54fce3259996",
   "lastOpenFiles": [
+    "Workflow/Commands/Introduction.md",
     "Workflow/Properties/Behavior Properties.md",
     "Workflow/Properties/Timing Properties.md",
     "Workflow/Properties/Urgency Properties.md",
-    "Workflow/Commands/Introduction.md",
     "Workflow/Commands",
     "fypm/Workflow/Properties/Urgency Properties.md",
     "fypm/Workflow/Properties/Behavior Properties.md",

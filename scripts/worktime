@@ -51,15 +51,7 @@ update_filters() {
             ESSENTSTR='(+TODAY and +INSTANCE)'
 	        ALARMSTR="(ALARM.after:now and ALARM.before:$FINAL_TIME)"
 
-            if [[ "$1" == "-s" ]]; then
-                shift 1
-
-                WT=$1
-                BASESTR="(WT:$WT or WT:AllDay) and ($ESSENTSTR or $GOALSTR or $ALARMSTR)"
-            else
-                WT=$1
-                BASESTR="(WT:$WT or WT:AllDay) and ($ESSENTSTR or $ALARMSTR)"
-            fi
+            BASESTR="(WT:$WT or WT:AllDay) and ($ESSENTSTR or $GOALSTR or $ALARMSTR)"
 
             if [[ -n "$2" ]]; then
                 echo "($BASESTR and $2)"
@@ -78,11 +70,7 @@ update_filters() {
                 WORKTIME_FILTER="$FILTER1 or $FILTER2"
             fi
 	    else
-            if [[ "$WT" == "PreWork" ]] || [[ "$WT" == "Calm" ]] || [[ "$WT" == "Sleep" ]]; then
-                WORKTIME_FILTER="$(mount_wt_filter "$WT")"
-            else
-                WORKTIME_FILTER="$(mount_wt_filter -s "$WT")"
-            fi
+            WORKTIME_FILTER="$(mount_wt_filter -s "$WT")"
         fi
 
         HABIT_FILTER="($DUE_FILTER and WT:AllDay and (status.not:recurring and status.not:waiting))"
@@ -93,10 +81,10 @@ update_filters() {
 
         sed -i "$REGEX" ~/.taskrc
 
-        update-vit-taskrc
+        #update-vit-taskrc
     }
 
-    update $VIT_CFG_LINE $WT
+    #update $VIT_CFG_LINE $WT
     update $TWUI_CFG_LINE $WT
 }
 update_vit_session() {
@@ -112,8 +100,10 @@ update_vit_session() {
     fi
 }
 
+WKT_ERR="Avaiable worktimes: PreWork, General, Essentials, Calm, PreSleep, Break"
+
 if [[ -z "$1" ]]; then
-    echo "Avaiable worktimes: PreWork, General, Essentials, Calm, PreSleep, Break"
+    echo "$WKT_ERR"
     exit 1
 else
     export WORKTIME=$1
@@ -154,7 +144,7 @@ case $1 in
         exit 0
         ;;
     *)
-        echo "Avaiable worktimes: PreWork, General, Essentials, Calm, PreSleep, Break"
+        echo "$WKT_ERR"
         exit 1
 esac
 

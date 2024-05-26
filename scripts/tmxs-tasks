@@ -1,0 +1,52 @@
+#!/bin/zsh
+
+# VERIFY_WINDOW=$(tmux list-windows -t "$SESSION_NAME" -F "#{window_index}")
+TRM_COLS=225
+TRM_LINES=55
+TASK="TaskWarrior"
+TIMEW="TimeWarrior"
+VIEWER="twui"
+
+
+write_env() {
+    echo "$1" > /tmp/.current_tmxs_tasks
+}
+read_env() {
+    cat /tmp/.current_tmxs_tasks
+}
+
+open_taskwarrior() {
+    write_env "$TASK"
+    
+    if ! tmux has-session -t "$TASK"; then
+        tmux new-session -d -s "$TASK" -x "$TRM_COLS" -y "$TRM_LINES"
+        tmux split-window -t "$TASK" -h -l 30%
+        tmux send-keys -t "$TASK":0.0 "$VIEWER" C-m
+    fi
+
+    bspc desktop -l monocle
+    tmux attach-session -t "$TASK"
+
+    write_env ""
+}
+open_timewarrior() {
+    write_env "$TIMEW"
+
+    tmux new-session -d -s "$TIMEW" -x "$TRM_COLS" -y "$TRM_LINES"
+    tmux send-keys -t "$TIMEW":0.0 'tils' C-m
+    
+    tmux attach-session -t "$TIMEW"
+
+    write_env "$TASK"
+}
+
+
+if [[ "$(read_env)" == "$TASK" ]]; then
+    open_timewarrior
+else
+    if [[ "$(read_env)" == "$TIMEW" ]]; then
+        exit 0;
+    fi
+
+    open_taskwarrior
+fi
