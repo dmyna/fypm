@@ -56,7 +56,7 @@ pub fn task_start(filter: &String) {
     }
 
     {
-        let active_tasks = get::get_json_by_filter(&filter, DEFAULT_GET_JSON_OPTIONS);
+        let active_tasks = get::get_json_by_filter(&"+ACTIVE".to_string(), DEFAULT_GET_JSON_OPTIONS);
 
         if active_tasks.is_err() {
             let err = active_tasks.unwrap_err();
