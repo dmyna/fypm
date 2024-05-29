@@ -20,11 +20,11 @@ open_taskwarrior() {
     
     if ! tmux has-session -t "$TASK"; then
         tmux new-session -d -s "$TASK" -x "$TRM_COLS" -y "$TRM_LINES"
-        tmux split-window -t "$TASK" -h -l 30%
-        tmux send-keys -t "$TASK":0.0 "$VIEWER" C-m
+        tmux split-window -t "$TASK" -h -l 50%
+        tmux send-keys -t "$TASK":1.1 "$VIEWER" C-m
     fi
 
-    bspc desktop -l monocle
+    # bspc desktop -l monocle
     tmux attach-session -t "$TASK"
 
     write_env ""
@@ -33,7 +33,7 @@ open_timewarrior() {
     write_env "$TIMEW"
 
     tmux new-session -d -s "$TIMEW" -x "$TRM_COLS" -y "$TRM_LINES"
-    tmux send-keys -t "$TIMEW":0.0 'tils' C-m
+    tmux send-keys -t "$TIMEW":1 'tils' C-m
     
     tmux attach-session -t "$TIMEW"
 
