@@ -45,7 +45,7 @@ done_current() {
     fi
 }
 start_nospectime() {
-    fypm ta-start "$(tgetid "Time without specific use")" || exit 1
+    fypm ta-start "(description.is:'Time without specific use' and WT:Quantify! and TYPE:Continuous)" || exit 1
 }
 
 # Complete specified task
