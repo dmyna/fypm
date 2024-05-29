@@ -12,8 +12,8 @@ if [[ $# -eq 2 ]]; then
 elif [[ $# -gt 2 ]]; then
     PROJECT=$(task "$MAIN_TASK_ID" _projects)
 
-    SUBTASK_ID=$(task add "$2" project:"$PROJECT" "${@:3}" \
-        TYPE:SubTask | grep 'Created task' | grep -o '[0-9]\+')
+    SUBTASK_ID=$(taadd -y "$2" "$PROJECT" "$3" \
+        SubTask ${@:4} | grep 'Created task' | grep -o '[0-9]\+')
     echo "Created task $SUBTASK_ID."
 else
     echo "Usage:
@@ -26,6 +26,6 @@ else
     exit 1
 fi
 
-task "$MAIN_TASK_ID" modify depends:"$SUBTASK_ID" STATE:Info +MOTHER
+task "$MAIN_TASK_ID" modify STATE:Info +MOTHER
 
 task "$SUBTASK_ID" modify MOTHER:"$(task "$MAIN_TASK_ID" export | jq -r '.[0].uuid')"

@@ -9,7 +9,8 @@ Usage: taadd [option] <description> <project> <STYLE> <TYPE> !/due||GOAL/ !/ALAR
     -> WT||scheduled - tsched
     -> ALARM - taaladd
 \e[0mOptions:
-        -h    Show this help message and exit"
+        -h    Show this help message and exit
+        -y    Skip confirmation"
 }
 
 verify_args() {

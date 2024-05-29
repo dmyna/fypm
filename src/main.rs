@@ -1,7 +1,7 @@
 //#region           Crates
-use std::env;
 use clap::{Parser, Subcommand};
 use lazy_static::lazy_static;
+use std::env;
 //#endregion
 //#region           Modules
 mod func;
@@ -9,8 +9,8 @@ mod handlers;
 mod subcommands;
 mod utils;
 
-use func::actions;
 use crate::subcommands::{daemon, init_day, instance, task, timew, worktime};
+use func::actions;
 //#endregion
 //#region           Structs && Enums
 #[derive(Parser)]
@@ -49,6 +49,8 @@ pub enum Commands {
     TaAnnotate { filter: String, annotation: String },
     /// Start a task (tastart)
     TaStart { filter: String },
+    /// Stop a task (tastop)
+    TaStop { filter: Option<String> },
 
     /// Anotate on timewarrior task (tin)
     TiAnnotate { filter: String, annotation: String },
@@ -56,15 +58,13 @@ pub enum Commands {
     TiStartCorrection {
         #[arg(default_value_t = String::from("@1"))]
         manipulation_id: String,
-        #[arg(default_value_t = String::from("@3"))]
-        reference_id: String,
+        reference_id: Option<String>,
     },
     /// Move end of a task to start of other (ticend)
     TiEndCorrection {
         #[arg(default_value_t = String::from("@3"))]
         manipulation_id: String,
-        #[arg(default_value_t = String::from("@1"))]
-        reference_id: String,
+        reference_id: Option<String>,
     },
     /// Move start of a task to end of other (tistart)
     TiStart { id: String, start_time: String },
@@ -111,6 +111,10 @@ fn main() {
         Commands::TaStart { filter } => {
             task::task_start(filter);
         }
+        Commands::TaStop { filter } => {
+            task::task_stop(filter, true);
+        }
+
         Commands::TaAnnotate { filter, annotation } => {
             actions::annotate("task", filter, annotation);
         }
@@ -119,24 +123,16 @@ fn main() {
             manipulation_id,
             reference_id,
         } => {
-            timew::time_move(
-                &timew::TimewAction::End,
-                vec![manipulation_id, reference_id],
-            )
-            .unwrap();
+            timew::time_move(&timew::TimewAction::End, manipulation_id, reference_id).unwrap();
         }
         Commands::TiStartCorrection {
             manipulation_id,
             reference_id,
         } => {
-            timew::time_move(
-                &timew::TimewAction::Start,
-                vec![manipulation_id, reference_id],
-            )
-            .unwrap();
+            timew::time_move(&timew::TimewAction::Start, manipulation_id, reference_id).unwrap();
         }
         Commands::TiStart { id, start_time } => {
-            timew::time_set(&timew::TimewAction::End, id, start_time).unwrap();
+            timew::time_set(&timew::TimewAction::Start, id, start_time).unwrap();
         }
         Commands::TiEnd { id, end_time } => {
             timew::time_set(&timew::TimewAction::End, id, end_time).unwrap();
