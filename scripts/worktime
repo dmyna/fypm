@@ -112,15 +112,15 @@ fi
 
 # ------------------- #
 # Change this based on your worktimes and actions to do at each worktime
-pdfw rm rule www.instagram.com
-pdfw add rule www.instagram.com
+bspasroot pdfw rm rule www.instagram.com
+bspasroot add rule www.instagram.com
 case $1 in
     "PreWork")
         define_values "PreWork" "#999" "#111" "08:30"
         ;;
     "Essentials")
         define_values "Essentials" "#f90" "#111" "10:00"
-        pdfw rm rule www.instagram.com
+        bspasroot pdfw rm rule www.instagram.com
         ;;
     "General")
         define_values "General" "#e00" "#111" "14:00"

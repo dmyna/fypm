@@ -2,6 +2,7 @@ use std::io::Error;
 //#region           External Imports
 use std::process::Command;
 use std::str;
+
 //#endregion
 //#region           Modules
 use crate::utils::structs;
@@ -13,10 +14,16 @@ pub enum TimewAction {
 }
 //#endregion
 //#region           Functions
-pub fn time_move(action: &TimewAction, ids: Vec<&String>) -> Result<(), Error> {
-    fn receive_time(action: &TimewAction, id: String) -> String {
+pub fn time_move(
+    action: &TimewAction,
+    manipulation_id: &String,
+    reference_id: &Option<String>,
+) -> Result<(), Error> {
+    let id_err = "Hey!! Are you trying to use a taskwarrior id? Specify with \"@\"!";
+
+    fn receive_time(action: &TimewAction, id: &String) -> String {
         let get_task_info = Command::new("timew")
-            .args([id, String::from("export")])
+            .args([id.to_string(), String::from("export")])
             .output()
             .expect("Failed to get timew json!");
 
@@ -33,10 +40,39 @@ pub fn time_move(action: &TimewAction, ids: Vec<&String>) -> Result<(), Error> {
         }
     }
 
-    let received_id = ids.get(0).unwrap();
-    let time = receive_time(&action, ids.get(1).unwrap().to_string());
+    let time: String;
 
-    time_set(&action, *received_id, &time)
+    if let Some(id) = reference_id {
+        if !manipulation_id.starts_with("@") || !id.starts_with("@") {
+            panic!("{}", id_err);
+        }
+
+        time = receive_time(&action, id);
+    } else {
+        if !manipulation_id.starts_with("@") {
+            panic!("{}", id_err);
+        }
+
+        let id_number = manipulation_id
+            .trim_start_matches("@")
+            .parse::<usize>()
+            .unwrap();
+        let final_number: usize;
+
+        if let TimewAction::Start = action {
+            final_number = id_number + 2;
+        } else {
+            if id_number >= 3 {
+                final_number = id_number - 2;
+            } else {
+                panic!("You're trying to omit the second id, but the first id is less than 3!");
+            }
+        }
+
+        time = receive_time(&action, &format!("@{}", final_number));
+    }
+
+    time_set(&action, manipulation_id, &time)
 }
 pub fn time_set(
     received_action: &TimewAction,
@@ -58,18 +94,16 @@ pub fn time_set(
     }
 
     let execute = Command::new("timew")
-        .args([
-            "modify",
-            &action,
-            received_id,
-            time,
-            ":adjust",
-        ])
+        .args(["modify", &action, received_id, time, ":adjust"])
         .output();
 
     match execute {
         Ok(output) => {
-            println!("{}", str::from_utf8(&output.stdout).unwrap());
+            if output.status.success() {
+                println!("{}", str::from_utf8(&output.stdout).unwrap());
+            } else {
+                eprintln!("{}", str::from_utf8(&output.stderr).unwrap());
+            }
 
             Ok(())
         }
@@ -100,7 +134,11 @@ pub fn track(
 
         match execute {
             Ok(output) => {
-                println!("{}", str::from_utf8(&output.stdout).unwrap());
+                if output.status.success() {
+                    println!("{}", str::from_utf8(&output.stdout).unwrap());
+                } else {
+                    eprintln!("{}", str::from_utf8(&output.stderr).unwrap());
+                }
             }
             Err(e) => eprintln!("Failed to execute timew command, error: {}", e),
         }
@@ -131,7 +169,7 @@ pub fn track(
             &truncated_description,
             &task_json.wt,
             ":adjust",
-            &task_json.r#type
+            &task_json.r#type,
         ];
 
         if let Some(style) = &task_json.style {
@@ -151,7 +189,11 @@ pub fn track(
 
         match execute {
             Ok(output) => {
-                println!("{}", str::from_utf8(&output.stdout).unwrap());
+                if output.status.success() {
+                    println!("{}", str::from_utf8(&output.stdout).unwrap());
+                } else {
+                    eprintln!("{}", str::from_utf8(&output.stderr).unwrap());
+                }
             }
             Err(e) => eprintln!("Failed to execute timew command, error: {}", e),
         }

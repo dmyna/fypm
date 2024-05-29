@@ -1,6 +1,6 @@
 #!/bin/zsh
 
-actio() {
+action() {
     TASK_UUID="$1"
     TASK_DESCRIPTION="$2"
     SELECTED=$(esch "$TASK_DESCRIPTION" "Start" 5 --pass-when-wait)

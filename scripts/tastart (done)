@@ -1,12 +1,13 @@
+# shellcheck disable=SC1071
 #!/bin/zsh
 
 LAST_TASK_PATH=/tmp/.last_task
+FILTER=$1
 
 inform_filter() {
     echo "This was the filter inserted: '$FILTER'"
 }
 
-FILTER=$1
 
 if [[ "$FILTER" == "" ]]; then
     echo "You must insert a filter!"

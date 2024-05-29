@@ -20,5 +20,5 @@ else
         exit 1
     fi
 
-    task "$(tgetid 'Time without specific use' WT:Quantify)" start
+    tastart "$(task 'Time without specific use' WT:Quantify! uuids)"
 fi

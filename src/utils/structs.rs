@@ -35,3 +35,6 @@ pub struct TimeWarriorExported {
     pub end: Option<String>,
     pub tags: Option<Vec<String>>,
 }
+pub struct GetJsonByFilterOptions {
+    pub quantity: Option<usize>,
+}
