@@ -3,7 +3,6 @@ use std::{fs, process::Command};
 //#endregion
 //#region           Modules
 use crate::func::actions::*;
-use crate::subcommands::task;
 use crate::utils::constants::{DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH};
 use crate::utils::err::FypmErrorKind;
 use crate::utils::get;
@@ -32,8 +31,8 @@ pub fn task_stop(filter_option: &Option<String>, start_control_task: bool) {
         task_start(&"(description.is:'Time without specific use' and WT:Quantify! and TYPE:Continuous)".to_string());
     }
 }
-pub fn task_start(filter: &String) {
-    let mut filter = match_special_aliases(filter);
+pub fn task_start(received_filter: &String) {
+    let mut filter = match_special_aliases(received_filter);
     let filter_json = get::get_json_by_filter(&filter, DEFAULT_GET_JSON_OPTIONS).unwrap();
     let filter_length = filter_json.len();
 
@@ -65,6 +64,7 @@ pub fn task_start(filter: &String) {
                 FypmErrorKind::TooMuchArgs => {
                     panic!("There are more than one task active! Fix it >:(.");
                 }
+                FypmErrorKind::NoTasksFound => {}
                 e => {
                     panic!("Unexpected error: {:?}", e);
                 }
@@ -82,7 +82,7 @@ pub fn task_start(filter: &String) {
             .output()
             .unwrap();
 
-        fs::write(LAST_TASK_PATH, filter.as_bytes()).unwrap();
+        fs::write(LAST_TASK_PATH, received_filter.as_bytes()).unwrap();
     }
 }
 //#endregion
