@@ -55,15 +55,21 @@ update_filters() {
             WT=$1
 
             BASESTR="(WT:$WT or WT:AllDay) and ($ESSENTSTR or $GOALSTR or $ALARMSTR)"
-
-            if [[ -n "$2" ]]; then
-                echo "($BASESTR and $2)"
-            else
-                echo "($BASESTR)"
-            fi
+            echo "($BASESTR)"
         }
 
-        WORKTIME_FILTER="$(mount_wt_filter "$WT")"
+        if [[ "$WT" == "Break" ]] || [[ "$WT" == "PreSleep" ]]; then
+            FILTER1=$(mount_wt_filter Break)
+            FILTER2=$(mount_wt_filter PreSleep)
+
+            if [[ ! "$WT" == "PreSleep" ]]; then
+                WORKTIME_FILTER="$FILTER1"
+            else
+                WORKTIME_FILTER="$FILTER1 or $FILTER2"
+            fi
+	    else
+            WORKTIME_FILTER="$(mount_wt_filter "$WT")"
+        fi
 
         HABIT_FILTER="($DUE_FILTER and WT:AllDay and (status.not:recurring and status.not:waiting))"
         MAIN_FILTER="($TW_FILTER or $WORKTIME_FILTER) and status:pending"
@@ -79,7 +85,7 @@ update_filters() {
     #update $VIT_CFG_LINE $WT
     update $TWUI_CFG_LINE $WT
 }
-update_vit_session() {
+update_vit_twui_session() {
     if tmux has-session -t TaskWarrior 2>/dev/null; then
         tmux send-keys -t TaskWarrior:0.0 "$VIEWER_QUIT" C-m
         sleep 1
@@ -137,6 +143,6 @@ esac
 # ------------------- #
 
 
-#update_vit_session
+update_vit_twui_session
 
 polybar-msg cmd restart
