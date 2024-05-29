@@ -26,7 +26,7 @@ pub fn get_json_by_filter(
             } else if parsed_json.len() < quantity {
                 return Err(FypmError {
                     message: format!("Not enough tasks! (expected: {})", quantity.to_string()),
-                    kind: FypmErrorKind::NotEnoughArgs,
+                    kind: FypmErrorKind::NoTasksFound,
                 });
             }
         }
