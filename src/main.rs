@@ -132,7 +132,7 @@ fn main() {
             timew::time_move(&timew::TimewAction::Start, manipulation_id, reference_id).unwrap();
         }
         Commands::TiStart { id, start_time } => {
-            timew::time_set(&timew::TimewAction::End, id, start_time).unwrap();
+            timew::time_set(&timew::TimewAction::Start, id, start_time).unwrap();
         }
         Commands::TiEnd { id, end_time } => {
             timew::time_set(&timew::TimewAction::End, id, end_time).unwrap();
