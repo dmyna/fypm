@@ -118,7 +118,7 @@ pub fn match_inforelat_and_sequence(filter_json: &TaskWarriorExported) -> Result
                     // Loop until find a pending task or there is no next task
 
                     while status == "completed" {
-                        if let Some(next_task) = &filter_json.seq_next {
+                        if let Some(next_task) = &next_json[0].seq_next {
                             next_json = get::get_json_by_filter(&next_task, DEFAULT_GET_JSON_OPTIONS)?;
                             status = next_json[0].status.as_str();
                         } else {
