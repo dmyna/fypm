@@ -84,7 +84,7 @@ update_filters() {
     #update $VIT_CFG_LINE $WT
     update $TWUI_CFG_LINE $WT
 }
-update_vit_session() {
+update_vit_twui_session() {
     if tmux has-session -t TaskWarrior 2>/dev/null; then
         tmux send-keys -t TaskWarrior:0.0 "$VIEWER_QUIT" C-m
         sleep 1
@@ -149,6 +149,6 @@ esac
 # ------------------- #
 
 
-#update_vit_session
+update_vit_twui_session
 
 polybar-msg cmd restart
