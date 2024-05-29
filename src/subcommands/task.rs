@@ -31,8 +31,8 @@ pub fn task_stop(filter_option: &Option<String>, start_control_task: bool) {
         task_start(&"(description.is:'Time without specific use' and WT:Quantify! and TYPE:Continuous)".to_string());
     }
 }
-pub fn task_start(received_filter: &String) {
-    let mut filter = match_special_aliases(received_filter);
+pub fn task_start(filter: &String) {
+    let mut filter = match_special_aliases(filter);
     let filter_json = get::get_json_by_filter(&filter, DEFAULT_GET_JSON_OPTIONS).unwrap();
     let filter_length = filter_json.len();
 
@@ -72,6 +72,8 @@ pub fn task_start(received_filter: &String) {
         } else {
             let active_task_uuid = &active_tasks.unwrap()[0].uuid;
 
+            fs::write(LAST_TASK_PATH, active_task_uuid.as_bytes()).unwrap();
+
             println!("Stopping active task with uuid: {}", active_task_uuid);
             task_stop(&Some(active_task_uuid.to_string()), false);
         }
@@ -81,8 +83,6 @@ pub fn task_start(received_filter: &String) {
             .args([filter.as_str(), "start"])
             .output()
             .unwrap();
-
-        fs::write(LAST_TASK_PATH, received_filter.as_bytes()).unwrap();
     }
 }
 //#endregion
