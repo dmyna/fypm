@@ -1,6 +1,7 @@
 //#region           Crates
 use clap::{Parser, Subcommand};
 use lazy_static::lazy_static;
+use utils::enums::TimewAction;
 use std::env;
 //#endregion
 //#region           Modules
@@ -10,7 +11,7 @@ mod subcommands;
 mod utils;
 
 use crate::subcommands::{daemon, init_day, instance, task, timew, worktime};
-use func::actions;
+use func::action;
 //#endregion
 //#region           Structs && Enums
 #[derive(Parser)]
@@ -125,26 +126,26 @@ fn main() {
         }
 
         Commands::TaAnnotate { filter, annotation } => {
-            actions::annotate("task", filter, annotation);
+            action::annotate("task", filter, annotation);
         }
 
         Commands::TiEndCorrection {
             manipulation_id,
             reference_id,
         } => {
-            timew::time_move(&timew::TimewAction::End, manipulation_id, reference_id).unwrap();
+            timew::time_move(&TimewAction::End, manipulation_id, reference_id).unwrap();
         }
         Commands::TiStartCorrection {
             manipulation_id,
             reference_id,
         } => {
-            timew::time_move(&timew::TimewAction::Start, manipulation_id, reference_id).unwrap();
+            timew::time_move(&TimewAction::Start, manipulation_id, reference_id).unwrap();
         }
         Commands::TiStart { id, start_time } => {
-            timew::time_set(&timew::TimewAction::Start, id, start_time).unwrap();
+            timew::time_set(&TimewAction::Start, id, start_time).unwrap();
         }
         Commands::TiEnd { id, end_time } => {
-            timew::time_set(&timew::TimewAction::End, id, end_time).unwrap();
+            timew::time_set(&TimewAction::End, id, end_time).unwrap();
         }
 
         Commands::TiTrack {
@@ -155,7 +156,7 @@ fn main() {
             timew::track(id, start_time, end_time).unwrap();
         }
         Commands::TiAnnotate { filter, annotation } => {
-            actions::annotate("timew", filter, annotation);
+            action::annotate("timew", filter, annotation);
         }
     }
 }

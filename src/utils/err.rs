@@ -6,7 +6,8 @@ pub enum FypmErrorKind {
     NotEnoughArgs,
     NoTasksFound,
     WrongInitialization,
-    ProblemWithStoredTask
+    ProblemWithStoredTask,
+    InvalidInput,
 }
 
 #[derive(Debug)]

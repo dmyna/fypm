@@ -20,9 +20,8 @@ define_values() {
     update_filters "$4"
 }
 update_filters() {
-
-    local TWUI_CFG_LINE
     local WT
+    local FINAL_TIME=$1
 
     WT=$WORKTIME
     FINAL_TIME=$1
@@ -48,7 +47,7 @@ update_filters() {
             WT=$1
             BASESTR="(WT:$WT or WT:AllDay) and ($ESSENTSTR or $GOALSTR or $ALARMSTR)"
 
-                echo "($BASESTR)"
+            echo "($BASESTR)"
         }
 
         if [[ "$WT" == "Break" ]] || [[ "$WT" == "PreSleep" ]]; then
@@ -69,7 +68,7 @@ update_filters() {
         FINAL_FILTER="($MAIN_FILTER) or $HABIT_FILTER"
 
         REGEX="s/$TWUI_CFG_LINE.*/$TWUI_CFG_LINE=$FINAL_FILTER/"
-
+        
         sed -i "$REGEX" ~/.taskrc
 
         #update-vit-taskrc

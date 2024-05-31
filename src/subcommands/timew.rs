@@ -3,15 +3,15 @@ use std::io::Error;
 use std::process::Command;
 use std::str;
 
+use crate::func::parser;
+use crate::utils::constants::DEFAULT_GET_JSON_OPTIONS;
+use crate::utils::enums::TimewAction;
 //#endregion
 //#region           Modules
-use crate::utils::structs;
+use crate::utils::{get, structs};
 //#endregion
 //#region           Enums
-pub enum TimewAction {
-    Start,
-    End,
-}
+
 //#endregion
 //#region           Functions
 pub fn time_move(
@@ -21,25 +21,6 @@ pub fn time_move(
 ) -> Result<(), Error> {
     let id_err = "Hey!! Are you trying to use a taskwarrior id? Specify with \"@\"!";
 
-    fn receive_time(action: &TimewAction, id: &String) -> String {
-        let get_task_info = Command::new("timew")
-            .args([id.to_string(), String::from("export")])
-            .output()
-            .expect("Failed to get timew json!");
-
-        let str_json = str::from_utf8(&get_task_info.stdout).unwrap();
-        let tasks_json: Vec<structs::TimeWarriorExported> =
-            serde_json::from_str(str_json).expect("Failed to parse received json!");
-
-        let task_json = tasks_json.get(0).unwrap();
-
-        if let TimewAction::Start = action {
-            task_json.end.clone().expect("No end id provided!")
-        } else {
-            task_json.start.clone()
-        }
-    }
-
     let time: String;
 
     if let Some(id) = reference_id {
@@ -47,7 +28,7 @@ pub fn time_move(
             panic!("{}", id_err);
         }
 
-        time = receive_time(&action, id);
+        time = get::get_timew_time(id, &action);
     } else {
         if !manipulation_id.starts_with("@") {
             panic!("{}", id_err);
@@ -69,7 +50,7 @@ pub fn time_move(
             }
         }
 
-        time = receive_time(&action, &format!("@{}", final_number));
+        time = get::get_timew_time(&format!("@{}", final_number), &action);
     }
 
     time_set(&action, manipulation_id, &time)
@@ -77,7 +58,7 @@ pub fn time_move(
 pub fn time_set(
     received_action: &TimewAction,
     received_id: &String,
-    time: &String,
+    received_time: &String,
 ) -> Result<(), Error> {
     if !received_id.starts_with("@") {
         panic!("Hey!! Are you trying to use a taskwarrior id? Specify with \"@\"!");
@@ -92,9 +73,14 @@ pub fn time_set(
             action.push_str("end");
         }
     }
+    let mut time: String = received_time.to_string();
+
+    if time.starts_with("@") {
+        time = parser::match_special_timing_properties(received_time).unwrap();
+    }
 
     let execute = Command::new("timew")
-        .args(["modify", &action, received_id, time, ":adjust"])
+        .args(["modify", &action, received_id, &time, ":adjust"])
         .output();
 
     match execute {
@@ -113,21 +99,32 @@ pub fn time_set(
 pub fn track(
     received_id: &String,
     received_start_time: &String,
-    receved_final_time: &String,
+    received_end_time: &String,
 ) -> Result<(), Error> {
-    let get_task_info = Command::new("task")
-        .args([&received_id, "export"])
-        .output()
-        .expect("Failed to get task json!");
+    let id = parser::match_special_aliases(received_id);
+
+    let mut start_time = received_start_time.to_string();
+    let mut end_time = received_end_time.to_string();
+
+    {
+        if received_start_time.starts_with("@") {
+            start_time = parser::match_special_timing_properties(received_start_time).unwrap();
+        }
+        if received_end_time.starts_with("@") {
+            end_time = parser::match_special_timing_properties(received_end_time).unwrap();
+        }
+    }
+
+    dbg!(&start_time, &end_time);
 
     if received_id.starts_with("@") {
         let execute = Command::new("timew")
             .args([
                 &String::from("continue"),
-                received_id,
-                received_start_time,
+                &received_id,
+                &start_time,
                 &String::from("-"),
-                receved_final_time,
+                &end_time,
                 &String::from(":adjust"),
             ])
             .output();
@@ -144,11 +141,9 @@ pub fn track(
         }
     } else {
         let max_description_length = 25;
-        let str_json = str::from_utf8(&get_task_info.stdout).unwrap();
-        let tasks_json = serde_json::from_str::<Vec<structs::TaskWarriorExported>>(str_json)
-            .expect("Failed to parse received json!");
 
-        let task_json = tasks_json.get(0).unwrap();
+        let get_task_json = get::get_json_by_filter(&id, DEFAULT_GET_JSON_OPTIONS).unwrap();
+        let task_json = get_task_json.get(0).unwrap();
 
         let mut truncated_description = String::new();
         if &task_json.description.len() > &25 {
@@ -162,9 +157,9 @@ pub fn track(
 
         let mut args = vec![
             "track",
-            received_start_time,
+            &start_time,
             "-",
-            receved_final_time,
+            &end_time,
             &task_json.uuid,
             &truncated_description,
             &task_json.wt,

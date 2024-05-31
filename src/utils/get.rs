@@ -1,10 +1,9 @@
 use std::{process::Command, str};
 
 use super::{
-    constants::DEFAULT_GET_JSON_OPTIONS,
-    err::{FypmError, FypmErrorKind},
+    constants::DEFAULT_GET_JSON_OPTIONS, enums::TimewAction, err::{FypmError, FypmErrorKind}, structs
 };
-use crate::utils::structs::{GetJsonByFilterOptions, TaskWarriorExported};
+use crate::utils::structs::{GetJsonByFilterOptions, TaskWarriorExported, TimeWarriorExported};
 
 pub fn get_json_by_filter(
     filter: &String,
@@ -39,7 +38,7 @@ pub fn get_json_by_filter(
 }
 pub fn get_current_task_json() -> Result<TaskWarriorExported, FypmError> {
     let get_task = get_json_by_filter(&"+ACTIVE".to_string(), DEFAULT_GET_JSON_OPTIONS)?;
-    let active_task =  get_task.get(0);
+    let active_task = get_task.get(0);
 
     if active_task.is_none() {
         return Err(FypmError {
@@ -48,5 +47,27 @@ pub fn get_current_task_json() -> Result<TaskWarriorExported, FypmError> {
         });
     } else {
         return Ok(active_task.unwrap().clone());
+    }
+}
+pub fn get_timew_json_by_filter(
+    filter: &String,
+) -> Result<Vec<TimeWarriorExported>, serde_json::Error> {
+    let get_task_info = Command::new("timew")
+        .args([String::from("export"), filter.to_string()])
+        .output()
+        .expect("Failed to get timew json!");
+
+    let str_json = str::from_utf8(&get_task_info.stdout).unwrap();
+
+    serde_json::from_str::<Vec<structs::TimeWarriorExported>>(str_json)
+}
+pub fn get_timew_time(id: &String, action: &TimewAction) -> String {
+    let get_task_json = get_timew_json_by_filter(id).unwrap();
+    let task_json = get_task_json.get(0).unwrap();
+
+    if let TimewAction::Start = action {
+        task_json.end.clone().expect("No end id provided!")
+    } else {
+        task_json.start.clone()
     }
 }

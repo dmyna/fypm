@@ -2,7 +2,8 @@
 use std::{fs, process::Command};
 //#endregion
 //#region           Modules
-use crate::func::actions::*;
+use crate::func::action::*;
+use crate::func::parser;
 use crate::utils::constants::{CONTROL_TASK, DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH};
 use crate::utils::err::FypmErrorKind;
 use crate::utils::get;
@@ -30,7 +31,7 @@ pub fn task_stop(filter_option: &Option<String>, start_control_task: bool) {
     }
 }
 pub fn task_start(filter: &String) {
-    let mut filter = match_special_aliases(filter);
+    let mut filter = parser::match_special_aliases(filter);
     let filter_json = get::get_json_by_filter(&filter, DEFAULT_GET_JSON_OPTIONS).unwrap();
     let filter_length = filter_json.len();
 
