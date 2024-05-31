@@ -165,7 +165,7 @@ pub fn track(
             received_start_time,
             "-",
             receved_final_time,
-            &task_json.uuid[..8],
+            &task_json.uuid,
             &truncated_description,
             &task_json.wt,
             ":adjust",
