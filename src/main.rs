@@ -51,6 +51,12 @@ pub enum Commands {
     TaStart { filter: String },
     /// Stop a task (tastop)
     TaStop { filter: Option<String> },
+    /// Mark a task as done (tadone)
+    TaDone {
+        tasks_to_done: Option<String>,
+        #[arg(short = 's', long = "start")]
+        tastart_filter: Option<String>
+    },
 
     /// Anotate on timewarrior task (tin)
     TiAnnotate { filter: String, annotation: String },
@@ -113,6 +119,9 @@ fn main() {
         }
         Commands::TaStop { filter } => {
             task::task_stop(filter, true);
+        }
+        Commands::TaDone { tasks_to_done, tastart_filter } => {
+            task::task_done(tasks_to_done, tastart_filter);
         }
 
         Commands::TaAnnotate { filter, annotation } => {

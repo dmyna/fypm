@@ -3,7 +3,7 @@ use std::{fs, process::Command};
 //#endregion
 //#region           Modules
 use crate::func::actions::*;
-use crate::utils::constants::{DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH};
+use crate::utils::constants::{CONTROL_TASK, DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH};
 use crate::utils::err::FypmErrorKind;
 use crate::utils::get;
 //#endregion
@@ -15,10 +15,9 @@ pub fn task_stop(filter_option: &Option<String>, start_control_task: bool) {
     if let Some(filter) = filter_option {
         final_filter = filter.to_string();
     } else {
-        let active_tasks =
-            get::get_json_by_filter(&"+ACTIVE".to_string(), DEFAULT_GET_JSON_OPTIONS).unwrap();
+        let active_tasks = get::get_current_task_json().unwrap();
 
-        final_filter = active_tasks[0].uuid.to_string();
+        final_filter = active_tasks.uuid.to_string();
     }
 
     Command::new("task")
@@ -27,8 +26,7 @@ pub fn task_stop(filter_option: &Option<String>, start_control_task: bool) {
         .unwrap();
 
     if start_control_task {
-        // !DEV: Switch this string for a dynamic system
-        task_start(&"(description.is:'Time without specific use' and WT:Quantify! and TYPE:Continuous)".to_string());
+        task_start(&CONTROL_TASK.to_string());
     }
 }
 pub fn task_start(filter: &String) {
@@ -55,7 +53,7 @@ pub fn task_start(filter: &String) {
     }
 
     {
-        let active_tasks = get::get_json_by_filter(&"+ACTIVE".to_string(), DEFAULT_GET_JSON_OPTIONS);
+        let active_tasks = get::get_current_task_json();
 
         if active_tasks.is_err() {
             let err = active_tasks.unwrap_err();
@@ -70,7 +68,7 @@ pub fn task_start(filter: &String) {
                 }
             }
         } else {
-            let active_task_uuid = &active_tasks.unwrap()[0].uuid;
+            let active_task_uuid = &active_tasks.unwrap().uuid;
 
             fs::write(LAST_TASK_PATH, active_task_uuid.as_bytes()).unwrap();
 
@@ -81,6 +79,42 @@ pub fn task_start(filter: &String) {
         println!("Starting task with uuid: {}", filter);
         Command::new("task")
             .args([filter.as_str(), "start"])
+            .output()
+            .unwrap();
+    }
+}
+pub fn task_done(filter: &Option<String>, tastart_filter: &Option<String>) {
+    if let Some(filter) = filter {
+        let task_json = get::get_json_by_filter(filter, None).unwrap();
+
+        if let Some(tastart_filter) = tastart_filter {
+            task_start(tastart_filter);
+        } else {
+            let current_task = get::get_current_task_json().unwrap();
+
+            for task in &task_json {
+                if task.uuid == current_task.uuid {
+                    task_start(&CONTROL_TASK.to_string());
+                    break;
+                }
+            }
+        }
+
+        Command::new("task")
+            .args([filter, "done"])
+            .output()
+            .unwrap();
+    } else {
+        let current_task = get::get_current_task_json().unwrap();
+
+        if let Some(tastart_filter) = filter {
+            task_start(tastart_filter);
+        } else {
+            task_start(&CONTROL_TASK.to_string());
+        }
+
+        Command::new("task")
+            .args([current_task.uuid.as_str(), "done"])
             .output()
             .unwrap();
     }

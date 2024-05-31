@@ -3,10 +3,11 @@ use std::fs;
 use std::str;
 use std::process::Command;
 use std::io::{Error, ErrorKind};
+use crate::utils::constants::CONTROL_TASK;
 //#region           Modules
 use crate::utils::get;
+use crate::utils::structs::TaskWarriorExported;
 use crate::utils::err::{FypmError, FypmErrorKind};
-use crate::utils::structs::{TaskWarriorExported};
 use crate::utils::constants::{DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH};
 
 //#endregion
@@ -39,7 +40,7 @@ pub fn match_special_aliases(filter: &String) -> String {
         // Last Task
         "last" => receive_last_task().unwrap(),
         // Time without specific use
-        "t" => "5c847c7e-c7eb-44f6-ad7e-29cc989c8854".to_string(),
+        "t" => CONTROL_TASK.to_string(),
         // Lost time
         "l" => "1469ac5d-78ab-463d-bf77-f56a9f042f48".to_string(),
         // Rest and breaks

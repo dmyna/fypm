@@ -1,6 +1,9 @@
 use std::{process::Command, str};
 
-use super::err::{FypmError, FypmErrorKind};
+use super::{
+    constants::DEFAULT_GET_JSON_OPTIONS,
+    err::{FypmError, FypmErrorKind},
+};
 use crate::utils::structs::{GetJsonByFilterOptions, TaskWarriorExported};
 
 pub fn get_json_by_filter(
@@ -33,4 +36,17 @@ pub fn get_json_by_filter(
     }
 
     Ok(parsed_json)
+}
+pub fn get_current_task_json() -> Result<TaskWarriorExported, FypmError> {
+    let get_task = get_json_by_filter(&"+ACTIVE".to_string(), DEFAULT_GET_JSON_OPTIONS)?;
+    let active_task =  get_task.get(0);
+
+    if active_task.is_none() {
+        return Err(FypmError {
+            message: "There is no active task!".to_string(),
+            kind: FypmErrorKind::NoTasksFound,
+        });
+    } else {
+        return Ok(active_task.unwrap().clone());
+    }
 }
