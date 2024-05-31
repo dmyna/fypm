@@ -7,5 +7,5 @@ if [[ "$(cat /tmp/.current_tmxs_tasks)" == "TaskWarrior" ]]; then
 elif [[ "$(cat /tmp/.current_tmxs_tasks)" == "TimeWarrior" ]]; then
     alacritty --config-file "$CONFIG" --title "TimeWarrior" -e tmxs-tasks
 else
-    alacritty --config-file "$CONFIG" --option 'font.size=9' --title "TaskWarrior" -e tmxs-tasks
+    alacritty --config-file "$CONFIG" --option 'font.size=9' --title "TaskWarrior" --command tmxs-tasks "$@"
 fi

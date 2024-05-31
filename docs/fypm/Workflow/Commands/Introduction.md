@@ -11,7 +11,6 @@ _verify_active_tasks_
 _verify_alarm_tasks_
 _verify_eventual_tasks_
 _verify_overdue_
-_verify_projs_
 taadd
 taadd-anm
 taadd-bok

@@ -1,8 +1,9 @@
 #!/bin/zsh
 
-VIEWER='twui'
-VIEWER_QUIT='q'
+VIEWER='wvit'
+VIEWER_QUIT=':q'
 LAST_WT_PATH=/var/tmp/.last_work_time
+TWUI_CFG_LINE='report.next.filter'
 
 define_values() {
     local CURRENT_WT
@@ -19,27 +20,20 @@ define_values() {
     update_filters "$4"
 }
 update_filters() {
-    local VIT_CFG_LINE
+
     local TWUI_CFG_LINE
     local WT
 
     WT=$WORKTIME
     FINAL_TIME=$1
 
-    VIT_CFG_LINE='report.wlist.filter'
-    TWUI_CFG_LINE='report.next.filter'
 
     update() {
-        local CFG_LINE
         local WORKTIME_FILTER
         local HABIT_FILTER
         local MAIN_FILTER
         local FINAL_FILTER
         local REGEX
-        local WT
-
-        CFG_LINE=$1
-        WT=$2
 
         mount_wt_filter() {
             local WT
@@ -74,15 +68,14 @@ update_filters() {
         MAIN_FILTER="($TW_FILTER or $WORKTIME_FILTER) and status:pending"
         FINAL_FILTER="($MAIN_FILTER) or $HABIT_FILTER"
 
-        REGEX="s/$CFG_LINE.*/$CFG_LINE=$FINAL_FILTER/"
+        REGEX="s/$TWUI_CFG_LINE.*/$TWUI_CFG_LINE=$FINAL_FILTER/"
 
         sed -i "$REGEX" ~/.taskrc
 
         #update-vit-taskrc
     }
 
-    #update $VIT_CFG_LINE $WT
-    update $TWUI_CFG_LINE $WT
+    update
 }
 update_vit_twui_session() {
     if tmux has-session -t TaskWarrior 2>/dev/null; then
@@ -109,15 +102,16 @@ fi
 
 # ------------------- #
 # Change this based on your worktimes and actions to do at each worktime
-bspasroot pdfw rm rule www.instagram.com
-bspasroot add rule www.instagram.com
+bspasroot sudo -v
+sudo pdfw rm rule www.instagram.com
+sudo pdfw add rule www.instagram.com
 case $1 in
     "PreWork")
         define_values "PreWork" "#999" "#111" "08:30"
         ;;
     "Essentials")
         define_values "Essentials" "#f90" "#111" "10:00"
-        bspasroot pdfw rm rule www.instagram.com
+        sudo pdfw rm rule www.instagram.com
         ;;
     "General")
         define_values "General" "#e00" "#111" "14:00"

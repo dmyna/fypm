@@ -5,7 +5,7 @@ TRM_COLS=225
 TRM_LINES=55
 TASK="TaskWarrior"
 TIMEW="TimeWarrior"
-VIEWER="twui"
+VIEWER="wvit"
 
 
 write_env() {
@@ -17,10 +17,11 @@ read_env() {
 
 open_taskwarrior() {
     write_env "$TASK"
-    
+
     if ! tmux has-session -t "$TASK"; then
         tmux new-session -d -s "$TASK" -x "$TRM_COLS" -y "$TRM_LINES"
         tmux split-window -t "$TASK" -h -l 30%
+        tmux split-window -t "$TASK":0.0 -v -l 30%
         tmux send-keys -t "$TASK":0.0 "$VIEWER" C-m
     fi
 
@@ -34,7 +35,7 @@ open_timewarrior() {
 
     tmux new-session -d -s "$TIMEW" -x "$TRM_COLS" -y "$TRM_LINES"
     tmux send-keys -t "$TIMEW":0.0 'tils' C-m
-    
+
     tmux attach-session -t "$TIMEW"
 
     write_env "$TASK"
