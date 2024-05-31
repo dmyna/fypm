@@ -108,7 +108,7 @@ pub fn task_done(filter: &Option<String>, tastart_filter: &Option<String>) {
     } else {
         let current_task = get::get_current_task_json().unwrap();
 
-        if let Some(tastart_filter) = filter {
+        if let Some(tastart_filter) = tastart_filter {
             task_start(tastart_filter);
         } else {
             task_start(&CONTROL_TASK.to_string());
