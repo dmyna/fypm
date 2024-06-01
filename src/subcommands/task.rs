@@ -5,12 +5,16 @@ use std::{fs, process::Command};
 use crate::func::action::*;
 use crate::func::parser;
 use crate::utils::constants::{CONTROL_TASK, DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH};
+use crate::utils::err::FypmError;
 use crate::utils::err::FypmErrorKind;
 use crate::utils::get;
 //#endregion
 //#region           Implementation
 
-pub fn task_stop(filter_option: &Option<String>, start_control_task: bool) {
+pub fn task_stop(
+    filter_option: &Option<String>,
+    start_control_task: bool,
+) -> Result<(), FypmError> {
     let final_filter: String;
 
     if let Some(filter) = filter_option {
@@ -27,10 +31,12 @@ pub fn task_stop(filter_option: &Option<String>, start_control_task: bool) {
         .unwrap();
 
     if start_control_task {
-        task_start(&CONTROL_TASK.to_string());
+        task_start(&CONTROL_TASK.to_string())?;
     }
+
+    Ok(())
 }
-pub fn task_start(filter: &String) {
+pub fn task_start(filter: &String) -> Result<(), FypmError> {
     let mut filter = parser::match_special_aliases(filter);
     let filter_json = get::get_json_by_filter(&filter, DEFAULT_GET_JSON_OPTIONS).unwrap();
     let filter_length = filter_json.len();
@@ -60,7 +66,7 @@ pub fn task_start(filter: &String) {
             let err = active_tasks.unwrap_err();
 
             match err.kind {
-                FypmErrorKind::TooMuchArgs => {
+                FypmErrorKind::TooMuchTasks => {
                     panic!("There are more than one task active! Fix it >:(.");
                 }
                 FypmErrorKind::NoTasksFound => {}
@@ -70,11 +76,10 @@ pub fn task_start(filter: &String) {
             }
         } else {
             let active_task_uuid = &active_tasks.unwrap().uuid;
-
             fs::write(LAST_TASK_PATH, active_task_uuid.as_bytes()).unwrap();
 
             println!("Stopping active task with uuid: {}", active_task_uuid);
-            task_stop(&Some(active_task_uuid.to_string()), false);
+            task_stop(&Some(active_task_uuid.to_string()), false).unwrap();
         }
 
         println!("Starting task with uuid: {}", filter);
@@ -82,20 +87,25 @@ pub fn task_start(filter: &String) {
             .args([filter.as_str(), "start"])
             .output()
             .unwrap();
+
+        Ok(())
     }
 }
-pub fn task_done(filter: &Option<String>, tastart_filter: &Option<String>) {
+pub fn task_done(
+    filter: &Option<String>,
+    tastart_filter: &Option<String>,
+) -> Result<(), FypmError> {
     if let Some(filter) = filter {
-        let task_json = get::get_json_by_filter(filter, None).unwrap();
+        let task_json = get::get_json_by_filter(filter, None)?;
 
         if let Some(tastart_filter) = tastart_filter {
-            task_start(tastart_filter);
+            task_start(tastart_filter)?;
         } else {
-            let current_task = get::get_current_task_json().unwrap();
+            let current_task = get::get_current_task_json()?;
 
             for task in &task_json {
                 if task.uuid == current_task.uuid {
-                    task_start(&CONTROL_TASK.to_string());
+                    task_start(&CONTROL_TASK.to_string())?;
                     break;
                 }
             }
@@ -106,12 +116,12 @@ pub fn task_done(filter: &Option<String>, tastart_filter: &Option<String>) {
             .output()
             .unwrap();
     } else {
-        let current_task = get::get_current_task_json().unwrap();
+        let current_task = get::get_current_task_json()?;
 
         if let Some(tastart_filter) = tastart_filter {
-            task_start(tastart_filter);
+            task_start(tastart_filter)?;
         } else {
-            task_start(&CONTROL_TASK.to_string());
+            task_start(&CONTROL_TASK.to_string())?;
         }
 
         Command::new("task")
@@ -119,5 +129,7 @@ pub fn task_done(filter: &Option<String>, tastart_filter: &Option<String>) {
             .output()
             .unwrap();
     }
+
+    Ok(())
 }
 //#endregion

@@ -1,7 +1,7 @@
 use daemonize::Daemonize;
 use std::fs;
 
-pub fn init_daemon(action: &String, name: &String) -> Result<(), Box<dyn std::error::Error>> {
+pub fn init_daemon(action: &String, name: &String) {
     let tmp_file_name = "/tmp/rpms_daemon";
 
     struct Actions;
@@ -29,6 +29,4 @@ pub fn init_daemon(action: &String, name: &String) -> Result<(), Box<dyn std::er
         "stop" => Actions::kill(),
         _ => unreachable!(),
     };
-
-    Ok(())
 }

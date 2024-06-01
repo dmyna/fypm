@@ -1,3 +1,0 @@
-#!/bin/bash
-
-timew modify end $1 $2 :adjust "${@:3}"

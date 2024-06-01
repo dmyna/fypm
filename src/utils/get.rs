@@ -23,7 +23,7 @@ pub fn get_json_by_filter(
             if parsed_json.len() > quantity {
                 return Err(FypmError {
                     message: format!("Too much tasks! (expected: {})", quantity.to_string()),
-                    kind: FypmErrorKind::TooMuchArgs,
+                    kind: FypmErrorKind::TooMuchTasks,
                 });
             } else if parsed_json.len() < quantity {
                 return Err(FypmError {

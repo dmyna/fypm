@@ -1,24 +1,20 @@
-use std::io::Error;
 //#region           External Imports
 use std::process::Command;
 use std::str;
-
+//#endregion
+//#region           Modules
 use crate::func::parser;
 use crate::utils::constants::DEFAULT_GET_JSON_OPTIONS;
 use crate::utils::enums::TimewAction;
-//#endregion
-//#region           Modules
-use crate::utils::{get, structs};
-//#endregion
-//#region           Enums
-
+use crate::utils::err::FypmError;
+use crate::utils::get;
 //#endregion
 //#region           Functions
 pub fn time_move(
     action: &TimewAction,
     manipulation_id: &String,
     reference_id: &Option<String>,
-) -> Result<(), Error> {
+) -> Result<(), FypmError> {
     let id_err = "Hey!! Are you trying to use a taskwarrior id? Specify with \"@\"!";
 
     let inverted_action: &TimewAction;
@@ -70,7 +66,7 @@ pub fn time_set(
     received_action: &TimewAction,
     received_id: &String,
     received_time: &String,
-) -> Result<(), Error> {
+) -> Result<(), FypmError> {
     if !received_id.starts_with("@") {
         panic!("Hey!! Are you trying to use a taskwarrior id? Specify with \"@\"!");
     }
@@ -104,14 +100,14 @@ pub fn time_set(
 
             Ok(())
         }
-        Err(e) => Err(e),
+        Err(e) => panic!("Failed to execute timew command, error: {}", e),
     }
 }
 pub fn track(
     received_id: &String,
     received_start_time: &String,
     received_end_time: &String,
-) -> Result<(), Error> {
+) -> Result<(), FypmError> {
     let id = parser::match_special_aliases(received_id);
 
     let mut start_time = received_start_time.to_string();
@@ -205,8 +201,11 @@ pub fn track(
 
     Ok(())
 }
-pub fn replace(received_original_id: &String, received_replacement_id: &String) -> Result<(), Error> {
-    if ! received_original_id.starts_with("@") {
+pub fn replace(
+    received_original_id: &String,
+    received_replacement_id: &String,
+) -> Result<(), FypmError> {
+    if !received_original_id.starts_with("@") {
         panic!("Hey!! The second argument should be a timewarrior id! Specify with \"@\"!");
     }
 

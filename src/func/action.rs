@@ -11,13 +11,15 @@ use crate::utils::constants::{DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH};
 
 //#endregion
 //#region           Implementation
-pub fn annotate(command: &str, id: &String, annotation: &String) {
+pub fn annotate(command: &str, id: &String, annotation: &String) -> Result<(), FypmError> {
     let execute = Command::new("timew")
         .args([command, id, annotation])
         .output()
         .unwrap();
 
     println!("{}", str::from_utf8(&execute.stdout).unwrap());
+
+    Ok(())
 }
 
 pub fn receive_last_task() -> Result<String, Error> {
