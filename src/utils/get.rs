@@ -66,8 +66,8 @@ pub fn get_timew_time(id: &String, action: &TimewAction) -> String {
     let task_json = get_task_json.get(0).unwrap();
 
     if let TimewAction::Start = action {
-        task_json.end.clone().expect("No end id provided!")
-    } else {
         task_json.start.clone()
+    } else {
+        task_json.end.clone().unwrap_or("now".to_string())
     }
 }

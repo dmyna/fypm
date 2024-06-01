@@ -3,6 +3,7 @@
 VIEWER='wvit'
 VIEWER_QUIT=':q'
 LAST_WT_PATH=/var/tmp/.last_work_time
+CURRENT_WORKTIME_PATH=/var/tmp/.worktime_filter
 TWUI_CFG_LINE='report.next.filter'
 
 define_values() {
@@ -70,6 +71,8 @@ update_filters() {
         REGEX="s/$TWUI_CFG_LINE.*/$TWUI_CFG_LINE=$FINAL_FILTER/"
         
         sed -i "$REGEX" ~/.taskrc
+
+        echo "$FINAL_FILTER" > $CURRENT_WORKTIME_PATH
 
         #update-vit-taskrc
     }

@@ -76,7 +76,7 @@ calculate_time() {
         tan "$SLEEP_TASK_UUID" "Pure Sleep: $((TIME_IN_BED - BEFORE_ASLEEP_TIME)) (min)"
         tan "$SLEEP_TASK_UUID" "Sleep Points: $SLEEP_POINTS"
 
-        tadone "$SLEEP_TASK_UUID"
+        fypm ta-done "$SLEEP_TASK_UUID"
     else
         echo "No sleep task found!"
     fi

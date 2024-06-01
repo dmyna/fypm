@@ -21,6 +21,17 @@ pub fn time_move(
 ) -> Result<(), Error> {
     let id_err = "Hey!! Are you trying to use a taskwarrior id? Specify with \"@\"!";
 
+    let inverted_action: &TimewAction;
+
+    match action {
+        TimewAction::Start => {
+            inverted_action = &TimewAction::End;
+        }
+        TimewAction::End => {
+            inverted_action = &TimewAction::Start;
+        }
+    }
+
     let time: String;
 
     if let Some(id) = reference_id {
@@ -28,7 +39,7 @@ pub fn time_move(
             panic!("{}", id_err);
         }
 
-        time = get::get_timew_time(id, &action);
+        time = get::get_timew_time(id, &inverted_action);
     } else {
         if !manipulation_id.starts_with("@") {
             panic!("{}", id_err);
@@ -50,7 +61,7 @@ pub fn time_move(
             }
         }
 
-        time = get::get_timew_time(&format!("@{}", final_number), &action);
+        time = get::get_timew_time(&format!("@{}", final_number), &inverted_action);
     }
 
     time_set(&action, manipulation_id, &time)
@@ -114,8 +125,6 @@ pub fn track(
             end_time = parser::match_special_timing_properties(received_end_time).unwrap();
         }
     }
-
-    dbg!(&start_time, &end_time);
 
     if received_id.starts_with("@") {
         let execute = Command::new("timew")

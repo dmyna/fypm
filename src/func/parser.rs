@@ -1,6 +1,6 @@
 use std::process::Command;
 
-use chrono::{DateTime, Local};
+use chrono::{DateTime, Local, Offset, ParseError};
 use regex::Regex;
 
 use super::action;
@@ -11,6 +11,26 @@ use crate::utils::{
     get,
 };
 
+pub fn transform_dates_to_iso(received_time: String) -> Result<String, ParseError> {
+    let transformed_time_str = Regex::new(r"(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z")
+        .unwrap()
+        .replace(&received_time, "$1-$2-$3 T $4:$5:$6 Z")
+        .replace(" ", "")
+        .to_string();
+    // I put this space because dates the day case wasn't showing.
+    // Dates like "20240101T000000Z" were showing as "2024-01-00:00:00".
+
+    let parsed_time_str = DateTime::parse_from_rfc3339(&transformed_time_str.as_str())?;
+
+    let local_offset = Local::now().offset().fix();
+
+    let final_time = parsed_time_str
+        .with_timezone(&local_offset)
+        .format("%Y-%m-%dT%H:%M:%S")
+        .to_string();
+
+    Ok(final_time)
+}
 pub fn match_special_aliases(filter: &String) -> String {
     match filter.as_str() {
         // Last Task
@@ -62,19 +82,11 @@ pub fn match_special_timing_properties(id: &String) -> Result<String, FypmError>
                 });
             }
 
-
             let received_time = get::get_timew_time(&id.to_string(), &action);
-            // TODO: this generate an error!
-            // dbg!(&received_time);
-            // let transformed_time_str = Regex::new(r"(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z")
-            //     .unwrap()
-            //     .replace(&received_time, "$1-$2-$3 T$4:$5:$6")
-            //     .replace(" ", "").to_string();
-            // dbg!(&transformed_time_str.as_str());
-            // let parsed_time_str = DateTime::parse_from_str(&transformed_time_str, "%Y-%m-%dT%H:%M:%S").unwrap();
-            // let converted_time = parsed_time_str.with_timezone(&Local::now().timezone());
 
-            Ok(received_time.to_string())
+            let parsed_time = transform_dates_to_iso(received_time).unwrap();
+
+            Ok(parsed_time)
         } else if properties.count() > 2 {
             Err(FypmError {
                 message: concat!(
