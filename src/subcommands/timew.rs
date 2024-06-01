@@ -205,4 +205,14 @@ pub fn track(
 
     Ok(())
 }
+pub fn replace(received_original_id: &String, received_replacement_id: &String) -> Result<(), Error> {
+    if ! received_original_id.starts_with("@") {
+        panic!("Hey!! The second argument should be a timewarrior id! Specify with \"@\"!");
+    }
+
+    let start_time = get::get_timew_time(received_original_id, &TimewAction::Start);
+    let end_time = get::get_timew_time(received_original_id, &TimewAction::End);
+
+    track(received_replacement_id, &start_time, &end_time)
+}
 //#endregion

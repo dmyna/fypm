@@ -1,8 +1,8 @@
 //#region           Crates
 use clap::{Parser, Subcommand};
 use lazy_static::lazy_static;
-use utils::enums::TimewAction;
 use std::env;
+use utils::enums::TimewAction;
 //#endregion
 //#region           Modules
 mod func;
@@ -56,7 +56,7 @@ pub enum Commands {
     TaDone {
         tasks_to_done: Option<String>,
         #[arg(short = 's', long = "start")]
-        tastart_filter: Option<String>
+        tastart_filter: Option<String>,
     },
 
     /// Anotate on timewarrior task (tin)
@@ -82,6 +82,11 @@ pub enum Commands {
         id: String,
         start_time: String,
         end_time: String,
+    },
+    /// Quickly replace a log with just ids (tirep)
+    TiReplace {
+        original_id: String,
+        replacement_id: String,
     },
 }
 //#endregion
@@ -121,7 +126,10 @@ fn main() {
         Commands::TaStop { filter } => {
             task::task_stop(filter, true);
         }
-        Commands::TaDone { tasks_to_done, tastart_filter } => {
+        Commands::TaDone {
+            tasks_to_done,
+            tastart_filter,
+        } => {
             task::task_done(tasks_to_done, tastart_filter);
         }
 
@@ -147,7 +155,6 @@ fn main() {
         Commands::TiEnd { id, end_time } => {
             timew::time_set(&TimewAction::End, id, end_time).unwrap();
         }
-
         Commands::TiTrack {
             id,
             start_time,
@@ -155,6 +162,14 @@ fn main() {
         } => {
             timew::track(id, start_time, end_time).unwrap();
         }
+
+        Commands::TiReplace {
+            original_id,
+            replacement_id
+        } => {
+            timew::replace( original_id, replacement_id).unwrap();
+        }
+
         Commands::TiAnnotate { filter, annotation } => {
             action::annotate("timew", filter, annotation);
         }
