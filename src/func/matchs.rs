@@ -1,7 +1,7 @@
-use crate::utils::err::FypmError;
-use crate::utils::enums::{Commands, TimewAction};
 use crate::func::action;
 use crate::subcommands::{daemon, init_day, instance, task, timew, worktime};
+use crate::utils::enums::{Commands, TimewAction};
+use crate::utils::err::FypmError;
 
 pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
     match command {
@@ -10,15 +10,15 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
         Commands::Worktime { action, actionargs } => todo!(),
         Commands::Instance { action, actionargs } => todo!(),
 
+
         Commands::TaStart { filter } => task::task_start(filter),
         Commands::TaStop { filter } => task::task_stop(filter, true),
         Commands::TaDone {
             tasks_to_done,
             tastart_filter,
         } => task::task_done(tasks_to_done, tastart_filter),
-        Commands::TaAnnotate { filter, annotation } => {
-            action::annotate("task", filter, annotation)
-        }
+        Commands::TaAnnotate { filter, annotation } => action::annotate("task", filter, annotation),
+        Commands::TaStatistic { name, no_parents } => task::task_statistic(name, no_parents),
 
         Commands::TiEndCorrection {
             manipulation_id,

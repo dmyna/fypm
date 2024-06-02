@@ -6,11 +6,11 @@ use super::{
 use crate::utils::structs::{GetJsonByFilterOptions, TaskWarriorExported, TimeWarriorExported};
 
 pub fn get_json_by_filter(
-    filter: &String,
+    filter: &str,
     options: Option<GetJsonByFilterOptions>,
 ) -> Result<Vec<TaskWarriorExported>, FypmError> {
     let get_json = Command::new("task")
-        .args([filter.as_str(), "export"])
+        .args([filter, "export"])
         .output()
         .unwrap()
         .stdout;

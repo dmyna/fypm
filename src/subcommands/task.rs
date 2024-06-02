@@ -2,9 +2,9 @@
 use std::{fs, process::Command};
 //#endregion
 //#region           Modules
-use crate::func::action::*;
-use crate::func::parser;
+use crate::func::{action::*, list, parser};
 use crate::utils::constants::{CONTROL_TASK, DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH};
+use crate::utils::enums;
 use crate::utils::err::FypmError;
 use crate::utils::err::FypmErrorKind;
 use crate::utils::get;
@@ -128,6 +128,21 @@ pub fn task_done(
             .args([current_task.uuid.as_str(), "done"])
             .output()
             .unwrap();
+    }
+
+    Ok(())
+}
+pub fn task_statistic(
+    command: &enums::StatisticsCommands,
+    no_parents: &bool,
+) -> Result<(), FypmError> {
+    match command {
+        enums::StatisticsCommands::Deleted => {
+            list::deleted_tasks(no_parents)?;
+        }
+        enums::StatisticsCommands::Pending => {
+            list::pending_tasks(no_parents)?;
+        }
     }
 
     Ok(())
