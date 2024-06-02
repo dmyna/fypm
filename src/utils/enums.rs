@@ -25,7 +25,16 @@ pub enum Commands {
     /// Initialize day by setting first tasks of the day
     InitDay,
 
-
+    /// Add a task to taskwarrior (taadd)
+    TaAdd {
+        description: String,
+        project: String,
+        style: String,
+        r#type: String,
+        other_args: Option<Vec<String>>,
+        #[arg(short = 'y', long)]
+        skip_confirmation: bool
+    },
 
     /// Anotate on taskwarrior task (tan)
     TaAnnotate { filter: String, annotation: String },

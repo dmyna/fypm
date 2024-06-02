@@ -1,8 +1,10 @@
 //#region           Crates
+use dialoguer::Confirm;
 use std::{fs, process::Command};
+
 //#endregion
 //#region           Modules
-use crate::func::{action::*, list, parser};
+use crate::func::{action::*, list, matchs, parser};
 use crate::utils::constants::{CONTROL_TASK, DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH};
 use crate::utils::enums;
 use crate::utils::err::FypmError;
@@ -144,6 +146,53 @@ pub fn task_statistic(
             list::pending_tasks(no_parents)?;
         }
     }
+
+    Ok(())
+}
+pub fn task_add(
+    description: &String,
+    project: &String,
+    style: &String,
+    r#type: &String,
+    other_args: &Option<Vec<String>>,
+    skip_confirmation: &bool,
+) -> Result<(), FypmError> {
+    if !*skip_confirmation {
+        println!("These are the args:");
+        println!("      description: {}", description);
+        println!("      project: {}", project);
+        println!("      STYLE: {}", style);
+        println!("      TYPE: {}, ", r#type);
+        println!(
+            "      others: {}",
+            other_args.as_ref().unwrap_or(&vec![]).join(" ")
+        );
+
+        let confirmation = Confirm::new()
+            .with_prompt("Do you want to continue?")
+            .interact()
+            .unwrap();
+
+        if !confirmation {
+            return Ok(());
+        }
+    }
+
+    let mut args = vec![
+        "add".to_string(),
+        description.to_string(),
+        format!("project:{}", project),
+        format!("STYLE:{}", style),
+        format!("TYPE:{}", r#type),
+    ];
+
+    if let Some(other_args) = other_args {
+        args.extend(other_args.clone());
+    }
+
+    let execute = Command::new("task").args(args).output();
+
+    matchs::match_exec_command(execute).unwrap();
 
     Ok(())
 }

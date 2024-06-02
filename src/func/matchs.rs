@@ -2,6 +2,8 @@ use crate::func::action;
 use crate::subcommands::{daemon, init_day, instance, task, timew, worktime};
 use crate::utils::enums::{Commands, TimewAction};
 use crate::utils::err::FypmError;
+use std::io::Error;
+use std::str;
 
 pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
     match command {
@@ -10,6 +12,21 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
         Commands::Worktime { action, actionargs } => todo!(),
         Commands::Instance { action, actionargs } => todo!(),
 
+        Commands::TaAdd {
+            description,
+            project,
+            style,
+            r#type,
+            other_args,
+            skip_confirmation,
+        } => task::task_add(
+            description,
+            project,
+            style,
+            r#type,
+            other_args,
+            skip_confirmation,
+        ),
 
         Commands::TaStart { filter } => task::task_start(filter),
         Commands::TaStop { filter } => task::task_stop(filter, true),
@@ -43,6 +60,26 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
         } => timew::replace(original_id, replacement_id),
         Commands::TiAnnotate { filter, annotation } => {
             action::annotate("timew", filter, annotation)
+        }
+    }
+}
+pub fn match_exec_command(
+    executed_command: Result<std::process::Output, Error>,
+) -> Result<(), Error> {
+    match executed_command {
+        Ok(output) => {
+            if output.status.success() {
+                println!("{}", str::from_utf8(&output.stdout).unwrap());
+            } else {
+                eprintln!("{}", str::from_utf8(&output.stderr).unwrap());
+            }
+
+            Ok(())
+        }
+        Err(e) => {
+            eprintln!("Failed to execute timew command, error: {}", e);
+
+            Err(e)
         }
     }
 }
