@@ -87,9 +87,9 @@ update_filters() {
 }
 update_vit_twui_session() {
     if tmux has-session -t TaskWarrior 2>/dev/null; then
-        tmux send-keys -t TaskWarrior:0.0 "$VIEWER_QUIT" C-m
+        tmux send-keys -t TaskWarrior:1.1 "$VIEWER_QUIT" C-m
         sleep 1
-        tmux send-keys -t TaskWarrior:0.0 "$VIEWER" C-m
+        tmux send-keys -t TaskWarrior:1.1 "$VIEWER" C-m
     else
         xdotool mousemove 2400 450
         bspc desktop -f "^5"
