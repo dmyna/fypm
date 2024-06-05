@@ -55,8 +55,7 @@ main() {
         MOTHER_DESC="$DESCRIPTION"
     fi
 
-    MOTHER_UUID=$(yes | taadd -y "$MOTHER_DESC" "$PROJECT" Dionysian Objective +Sequence "+ST_$TAG" "+$TYPE" | get_uuid)
-
+    MOTHER_UUID=$(fypm ta-add -y "$MOTHER_DESC" "$PROJECT" Dionysian Objective +Sequence "+ST_$TAG" "+$TYPE" | get_uuid)
     for ((i=$INITIAL; i <= $LAST; i++)); do
         if [[ "$TYPE" == "Book" ]]; then
             DESCRIPTION="Capítulo $i"
@@ -68,7 +67,7 @@ main() {
             fi
         fi
 
-        ARGS=("$MOTHER_UUID" "$DESCRIPTION" "+ST_$TAG" "STYLE:Dionysian" "+Sequence" "+$TYPE")
+        ARGS=("$MOTHER_UUID" "$DESCRIPTION" "Dionysian" "+ST_$TAG" "+Sequence" "+$TYPE")
 
         if [[ $i -eq $INITIAL ]]; then
             if [[ -n $LAST_TEMP_ID ]]; then

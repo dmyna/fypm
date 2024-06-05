@@ -1,24 +1,30 @@
 //#region           Crates
+use dialoguer::Confirm;
 use std::{fs, process::Command};
+
 //#endregion
 //#region           Modules
-use crate::func::actions::*;
-use crate::utils::constants::{DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH};
+use crate::func::{action::*, list, matchs, parser};
+use crate::utils::constants::{CONTROL_TASK, DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH};
+use crate::utils::enums;
+use crate::utils::err::FypmError;
 use crate::utils::err::FypmErrorKind;
 use crate::utils::get;
 //#endregion
 //#region           Implementation
 
-pub fn task_stop(filter_option: &Option<String>, start_control_task: bool) {
+pub fn task_stop(
+    filter_option: &Option<String>,
+    start_control_task: bool,
+) -> Result<(), FypmError> {
     let final_filter: String;
 
     if let Some(filter) = filter_option {
         final_filter = filter.to_string();
     } else {
-        let active_tasks =
-            get::get_json_by_filter(&"+ACTIVE".to_string(), DEFAULT_GET_JSON_OPTIONS).unwrap();
+        let active_tasks = get::get_current_task_json().unwrap();
 
-        final_filter = active_tasks[0].uuid.to_string();
+        final_filter = active_tasks.uuid.to_string();
     }
 
     Command::new("task")
@@ -27,12 +33,13 @@ pub fn task_stop(filter_option: &Option<String>, start_control_task: bool) {
         .unwrap();
 
     if start_control_task {
-        // !DEV: Switch this string for a dynamic system
-        task_start(&"(description.is:'Time without specific use' and WT:Quantify! and TYPE:Continuous)".to_string());
+        task_start(&CONTROL_TASK.to_string())?;
     }
+
+    Ok(())
 }
-pub fn task_start(filter: &String) {
-    let mut filter = match_special_aliases(filter);
+pub fn task_start(filter: &String) -> Result<(), FypmError> {
+    let mut filter = parser::match_special_aliases(filter);
     let filter_json = get::get_json_by_filter(&filter, DEFAULT_GET_JSON_OPTIONS).unwrap();
     let filter_length = filter_json.len();
 
@@ -55,13 +62,13 @@ pub fn task_start(filter: &String) {
     }
 
     {
-        let active_tasks = get::get_json_by_filter(&"+ACTIVE".to_string(), DEFAULT_GET_JSON_OPTIONS);
+        let active_tasks = get::get_current_task_json();
 
         if active_tasks.is_err() {
             let err = active_tasks.unwrap_err();
 
             match err.kind {
-                FypmErrorKind::TooMuchArgs => {
+                FypmErrorKind::TooMuchTasks => {
                     panic!("There are more than one task active! Fix it >:(.");
                 }
                 FypmErrorKind::NoTasksFound => {}
@@ -70,12 +77,11 @@ pub fn task_start(filter: &String) {
                 }
             }
         } else {
-            let active_task_uuid = &active_tasks.unwrap()[0].uuid;
-
+            let active_task_uuid = &active_tasks.unwrap().uuid;
             fs::write(LAST_TASK_PATH, active_task_uuid.as_bytes()).unwrap();
 
             println!("Stopping active task with uuid: {}", active_task_uuid);
-            task_stop(&Some(active_task_uuid.to_string()), false);
+            task_stop(&Some(active_task_uuid.to_string()), false).unwrap();
         }
 
         println!("Starting task with uuid: {}", filter);
@@ -83,6 +89,111 @@ pub fn task_start(filter: &String) {
             .args([filter.as_str(), "start"])
             .output()
             .unwrap();
+
+        Ok(())
     }
+}
+pub fn task_done(
+    filter: &Option<String>,
+    tastart_filter: &Option<String>,
+) -> Result<(), FypmError> {
+    if let Some(filter) = filter {
+        let task_json = get::get_json_by_filter(filter, None)?;
+
+        if let Some(tastart_filter) = tastart_filter {
+            task_start(tastart_filter)?;
+        } else {
+            let current_task = get::get_current_task_json()?;
+
+            for task in &task_json {
+                if task.uuid == current_task.uuid {
+                    task_start(&CONTROL_TASK.to_string())?;
+                    break;
+                }
+            }
+        }
+
+        Command::new("task")
+            .args([filter, "done"])
+            .output()
+            .unwrap();
+    } else {
+        let current_task = get::get_current_task_json()?;
+
+        if let Some(tastart_filter) = tastart_filter {
+            task_start(tastart_filter)?;
+        } else {
+            task_start(&CONTROL_TASK.to_string())?;
+        }
+
+        Command::new("task")
+            .args([current_task.uuid.as_str(), "done"])
+            .output()
+            .unwrap();
+    }
+
+    Ok(())
+}
+pub fn task_statistic(
+    command: &enums::StatisticsCommands,
+    no_parents: &bool,
+) -> Result<(), FypmError> {
+    match command {
+        enums::StatisticsCommands::Deleted => {
+            list::deleted_tasks(no_parents)?;
+        }
+        enums::StatisticsCommands::Pending => {
+            list::pending_tasks(no_parents)?;
+        }
+    }
+
+    Ok(())
+}
+pub fn task_add(
+    description: &String,
+    project: &String,
+    style: &String,
+    r#type: &String,
+    other_args: &Option<Vec<String>>,
+    skip_confirmation: &bool,
+) -> Result<(), FypmError> {
+    if !*skip_confirmation {
+        println!("These are the args:");
+        println!("      description: {}", description);
+        println!("      project: {}", project);
+        println!("      STYLE: {}", style);
+        println!("      TYPE: {}, ", r#type);
+        println!(
+            "      others: {}",
+            other_args.as_ref().unwrap_or(&vec![]).join(" ")
+        );
+
+        let confirmation = Confirm::new()
+            .with_prompt("Do you want to continue?")
+            .interact()
+            .unwrap();
+
+        if !confirmation {
+            return Ok(());
+        }
+    }
+
+    let mut args = vec![
+        "add".to_string(),
+        description.to_string(),
+        format!("project:{}", project),
+        format!("STYLE:{}", style),
+        format!("TYPE:{}", r#type),
+    ];
+
+    if let Some(other_args) = other_args {
+        args.extend(other_args.clone());
+    }
+
+    let execute = Command::new("task").args(args).output();
+
+    matchs::match_exec_command(execute).unwrap();
+
+    Ok(())
 }
 //#endregion

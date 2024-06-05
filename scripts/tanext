@@ -32,7 +32,7 @@ verify_args() {
 }
 
 main() {
-    tadone -s "$NEXT"
+    fypm ta-done -s "$NEXT"
 
     task "$MOTHER_UUID" modify SEQ_CURRENT:"$NEXT"
 }

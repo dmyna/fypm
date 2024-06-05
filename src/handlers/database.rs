@@ -1,7 +1,5 @@
 //#region           Crates
-use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::fs;
 use std::io::{Error, ErrorKind};
 use std::path::Path;
@@ -9,7 +7,7 @@ use std::path::Path;
 //#region           Modules
 use crate::DB_PATH;
 use crate::utils::write;
-use crate::utils::read::{self, toml};
+use crate::utils::read;
 //#endregion
 //#region           Structs
 #[derive(Serialize, Deserialize)]
@@ -64,8 +62,6 @@ impl DBHandler {
                             DB_PATH.to_string()
                         );
                     }
-
-                    
 
                     Ok(self)
                 }

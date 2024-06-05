@@ -14,7 +14,7 @@ main() {
     FAILED=$(task "+Failed" export | jq -r 'length')
     ABANDONED=$(task "+Abandoned" export | jq -r 'length')
     NOCONTROL=$(task "+NoControl" export | jq -r 'length')
-    
+
     echo "All archived tasks: $ARCHIVED"
     echo "All failed tasks: $FAILED"
     echo "All abandoned tasks: $ABANDONED"

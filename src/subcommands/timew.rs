@@ -1,42 +1,30 @@
-use std::io::Error;
 //#region           External Imports
 use std::process::Command;
 use std::str;
-
 //#endregion
 //#region           Modules
-use crate::utils::structs;
-//#endregion
-//#region           Enums
-pub enum TimewAction {
-    Start,
-    End,
-}
+use crate::func::parser;
+use crate::utils::constants::DEFAULT_GET_JSON_OPTIONS;
+use crate::utils::enums::TimewAction;
+use crate::utils::err::FypmError;
+use crate::utils::get;
 //#endregion
 //#region           Functions
 pub fn time_move(
     action: &TimewAction,
     manipulation_id: &String,
     reference_id: &Option<String>,
-) -> Result<(), Error> {
+) -> Result<(), FypmError> {
     let id_err = "Hey!! Are you trying to use a taskwarrior id? Specify with \"@\"!";
 
-    fn receive_time(action: &TimewAction, id: &String) -> String {
-        let get_task_info = Command::new("timew")
-            .args([id.to_string(), String::from("export")])
-            .output()
-            .expect("Failed to get timew json!");
+    let inverted_action: &TimewAction;
 
-        let str_json = str::from_utf8(&get_task_info.stdout).unwrap();
-        let tasks_json: Vec<structs::TimeWarriorExported> =
-            serde_json::from_str(str_json).expect("Failed to parse received json!");
-
-        let task_json = tasks_json.get(0).unwrap();
-
-        if let TimewAction::Start = action {
-            task_json.end.clone().expect("No end id provided!")
-        } else {
-            task_json.start.clone()
+    match action {
+        TimewAction::Start => {
+            inverted_action = &TimewAction::End;
+        }
+        TimewAction::End => {
+            inverted_action = &TimewAction::Start;
         }
     }
 
@@ -47,7 +35,7 @@ pub fn time_move(
             panic!("{}", id_err);
         }
 
-        time = receive_time(&action, id);
+        time = get::get_timew_time(id, &inverted_action);
     } else {
         if !manipulation_id.starts_with("@") {
             panic!("{}", id_err);
@@ -69,7 +57,7 @@ pub fn time_move(
             }
         }
 
-        time = receive_time(&action, &format!("@{}", final_number));
+        time = get::get_timew_time(&format!("@{}", final_number), &inverted_action);
     }
 
     time_set(&action, manipulation_id, &time)
@@ -77,8 +65,8 @@ pub fn time_move(
 pub fn time_set(
     received_action: &TimewAction,
     received_id: &String,
-    time: &String,
-) -> Result<(), Error> {
+    received_time: &String,
+) -> Result<(), FypmError> {
     if !received_id.starts_with("@") {
         panic!("Hey!! Are you trying to use a taskwarrior id? Specify with \"@\"!");
     }
@@ -92,9 +80,14 @@ pub fn time_set(
             action.push_str("end");
         }
     }
+    let mut time: String = received_time.to_string();
+
+    if time.starts_with("@") {
+        time = parser::match_special_timing_properties(received_time).unwrap();
+    }
 
     let execute = Command::new("timew")
-        .args(["modify", &action, received_id, time, ":adjust"])
+        .args(["modify", &action, received_id, &time, ":adjust"])
         .output();
 
     match execute {
@@ -107,27 +100,36 @@ pub fn time_set(
 
             Ok(())
         }
-        Err(e) => Err(e),
+        Err(e) => panic!("Failed to execute timew command, error: {}", e),
     }
 }
 pub fn track(
     received_id: &String,
     received_start_time: &String,
-    receved_final_time: &String,
-) -> Result<(), Error> {
-    let get_task_info = Command::new("task")
-        .args([&received_id, "export"])
-        .output()
-        .expect("Failed to get task json!");
+    received_end_time: &String,
+) -> Result<(), FypmError> {
+    let id = parser::match_special_aliases(received_id);
+
+    let mut start_time = received_start_time.to_string();
+    let mut end_time = received_end_time.to_string();
+
+    {
+        if received_start_time.starts_with("@") {
+            start_time = parser::match_special_timing_properties(received_start_time).unwrap();
+        }
+        if received_end_time.starts_with("@") {
+            end_time = parser::match_special_timing_properties(received_end_time).unwrap();
+        }
+    }
 
     if received_id.starts_with("@") {
         let execute = Command::new("timew")
             .args([
                 &String::from("continue"),
-                received_id,
-                received_start_time,
+                &received_id,
+                &start_time,
                 &String::from("-"),
-                receved_final_time,
+                &end_time,
                 &String::from(":adjust"),
             ])
             .output();
@@ -144,11 +146,9 @@ pub fn track(
         }
     } else {
         let max_description_length = 25;
-        let str_json = str::from_utf8(&get_task_info.stdout).unwrap();
-        let tasks_json = serde_json::from_str::<Vec<structs::TaskWarriorExported>>(str_json)
-            .expect("Failed to parse received json!");
 
-        let task_json = tasks_json.get(0).unwrap();
+        let get_task_json = get::get_json_by_filter(&id, DEFAULT_GET_JSON_OPTIONS).unwrap();
+        let task_json = get_task_json.get(0).unwrap();
 
         let mut truncated_description = String::new();
         if &task_json.description.len() > &25 {
@@ -162,10 +162,10 @@ pub fn track(
 
         let mut args = vec![
             "track",
-            received_start_time,
+            &start_time,
             "-",
-            receved_final_time,
-            &task_json.uuid[..8],
+            &end_time,
+            &task_json.uuid,
             &truncated_description,
             &task_json.wt,
             ":adjust",
@@ -200,5 +200,18 @@ pub fn track(
     }
 
     Ok(())
+}
+pub fn replace(
+    received_original_id: &String,
+    received_replacement_id: &String,
+) -> Result<(), FypmError> {
+    if !received_original_id.starts_with("@") {
+        panic!("Hey!! The second argument should be a timewarrior id! Specify with \"@\"!");
+    }
+
+    let start_time = get::get_timew_time(received_original_id, &TimewAction::Start);
+    let end_time = get::get_timew_time(received_original_id, &TimewAction::End);
+
+    track(received_replacement_id, &start_time, &end_time)
 }
 //#endregion

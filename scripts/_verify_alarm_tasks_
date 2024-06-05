@@ -8,7 +8,7 @@ action() {
     if [[ "$SELECTED" == "action" ]]; then
         alacritty \
                 --config-file="$BSPDIR"/alacritty/alacritty.toml \
-                --command zsh -c "tastart $TASK_UUID; echo 'Press any key to exit!'; read" & disown
+                --command zsh -c "fypm ta-start $TASK_UUID; echo 'Press any key to exit!'; read" & disown
         sleep 10s
     elif [[ "$SELECTED" =~ ^[0-9]+ ]]; then
         sleep "$SELECTED"

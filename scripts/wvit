@@ -1,0 +1,7 @@
+#!/bin/zsh
+WORKTIME_FILTER=/var/tmp/.worktime_filter
+
+main() {
+    vit $(cat $WORKTIME_FILTER)
+}
+main

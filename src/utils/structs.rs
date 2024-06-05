@@ -1,4 +1,4 @@
-#[derive(serde::Deserialize, Debug)]
+#[derive(Clone, serde::Deserialize, Debug)]
 #[allow(unused)]
 pub struct TaskWarriorExported {
     pub id: u32,

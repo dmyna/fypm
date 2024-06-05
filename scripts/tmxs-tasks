@@ -5,7 +5,7 @@ TRM_COLS=225
 TRM_LINES=55
 TASK="TaskWarrior"
 TIMEW="TimeWarrior"
-VIEWER="twui"
+VIEWER="wvit"
 
 
 write_env() {
@@ -17,11 +17,13 @@ read_env() {
 
 open_taskwarrior() {
     write_env "$TASK"
-    
+
     if ! tmux has-session -t "$TASK"; then
         tmux new-session -d -s "$TASK" -x "$TRM_COLS" -y "$TRM_LINES"
         tmux split-window -t "$TASK" -h -l 50%
+
         tmux send-keys -t "$TASK":1.1 "$VIEWER" C-m
+        tmux send-keys -t "$TASK":1.2 'perpetue_cmd taproj -l' C-m
     fi
 
     # bspc desktop -l monocle
@@ -34,7 +36,6 @@ open_timewarrior() {
 
     tmux new-session -d -s "$TIMEW" -x "$TRM_COLS" -y "$TRM_LINES"
     tmux send-keys -t "$TIMEW":1 'tils' C-m
-    
     tmux attach-session -t "$TIMEW"
 
     write_env "$TASK"

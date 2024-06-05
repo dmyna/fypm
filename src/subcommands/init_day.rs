@@ -36,7 +36,7 @@ fn get_sleep_awake_date() -> String {
     if file.is_ok() {
         let mut content = String::new();
 
-        io::Read::read_to_string(&mut file.unwrap(), &mut content);
+        io::Read::read_to_string(&mut file.unwrap(), &mut content).unwrap();
 
         let object = serde_json::from_str::<ShutdownCache>(&content).unwrap();
 

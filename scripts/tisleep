@@ -71,12 +71,12 @@ calculate_time() {
     if [[ -n "$SLEEP_TASK_UUID" ]]; then
         _ask_dialog "Do you want to record this in the sleep task?" || return
 
-        tan "$SLEEP_TASK_UUID" "Time In Bed: $TIME_IN_BED (min)"
-        tan "$SLEEP_TASK_UUID" "Time Before Asleep: $BEFORE_ASLEEP_TIME (min)"
-        tan "$SLEEP_TASK_UUID" "Pure Sleep: $((TIME_IN_BED - BEFORE_ASLEEP_TIME)) (min)"
-        tan "$SLEEP_TASK_UUID" "Sleep Points: $SLEEP_POINTS"
+        yes no | task "$SLEEP_TASK_UUID" annotate "Time In Bed: $TIME_IN_BED (min)"
+        yes no | task "$SLEEP_TASK_UUID" annotate "Time Before Asleep: $BEFORE_ASLEEP_TIME (min)"
+        yes no | task "$SLEEP_TASK_UUID" annotate "Pure Sleep: $((TIME_IN_BED - BEFORE_ASLEEP_TIME)) (min)"
+        yes no | task "$SLEEP_TASK_UUID" annotate "Sleep Points: $SLEEP_POINTS"
 
-        tadone "$SLEEP_TASK_UUID"
+        fypm ta-done "$SLEEP_TASK_UUID"
     else
         echo "No sleep task found!"
     fi
