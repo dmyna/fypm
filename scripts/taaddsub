@@ -1,18 +1,18 @@
 #!/bin/zsh
-# $1 = Main task ID 
+# $1 = Main task ID
 # $2 = Sub task description
 # ${@:3} = Other attributes
 MAIN_TASK_ID=$1
 
 if [[ $# -eq 2 ]]; then
     SUBTASK_ID=$2
-    
+
     # Change the TYPE of that task
     task "$SUBTASK_ID" modify TYPE:SubTask
 elif [[ $# -gt 2 ]]; then
     PROJECT=$(task "$MAIN_TASK_ID" _projects)
 
-    SUBTASK_ID=$(taadd -y "$2" "$PROJECT" "$3" \
+    SUBTASK_ID=$(fypm ta-add -y "$2" "$PROJECT" "$3" \
         SubTask ${@:4} | grep 'Created task' | grep -o '[0-9]\+')
     echo "Created task $SUBTASK_ID."
 else

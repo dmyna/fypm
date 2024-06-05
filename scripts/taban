@@ -67,7 +67,7 @@ main() {
     TASKS_LENGHT=$(task "$FILTER" count)
 
     if [[ -n "$ANNOTATION" ]]; then
-        yes | tan "$FILTER" "$ANNOTATION"
+        yes | fypm ta-annotate "$FILTER" "$ANNOTATION"
     fi
 
     if [[ "$ABANDONED" == "true" ]]; then

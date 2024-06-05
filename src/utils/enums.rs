@@ -1,5 +1,4 @@
 use clap::{Subcommand, ValueEnum};
-use clap::ArgAction;
 
 #[derive(Subcommand)]
 pub enum Commands {
@@ -21,7 +20,6 @@ pub enum Commands {
         #[arg(long)]
         actionargs: Vec<String>,
     },
-
     /// Initialize day by setting first tasks of the day
     InitDay,
 
@@ -33,9 +31,8 @@ pub enum Commands {
         r#type: String,
         other_args: Option<Vec<String>>,
         #[arg(short = 'y', long)]
-        skip_confirmation: bool
+        skip_confirmation: bool,
     },
-
     /// Anotate on taskwarrior task (tan)
     TaAnnotate { filter: String, annotation: String },
     /// Start a task (tastart)
@@ -48,13 +45,12 @@ pub enum Commands {
         #[arg(short = 's', long = "start")]
         tastart_filter: Option<String>,
     },
-
     /// Get statistics from taskwarrior
     TaStatistic {
         name: StatisticsCommands,
         /// Exclude recurring tasks from the count
         #[arg(short, long)]
-        no_parents: bool
+        no_parents: bool,
     },
 
     /// Anotate on timewarrior task (tin)
@@ -91,7 +87,7 @@ pub enum Commands {
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 pub enum StatisticsCommands {
     Deleted,
-    Pending
+    Pending,
 }
 pub enum TimewAction {
     Start,
