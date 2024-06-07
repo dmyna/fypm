@@ -1,10 +1,11 @@
 //#region           Crates
 use dialoguer::Confirm;
-use std::{fs, process::Command};
+use regex::Regex;
+use std::{fs, process::Command, str};
 
 //#endregion
 //#region           Modules
-use crate::func::{action::*, list, matchs, parser};
+use crate::func::{action::*, list, parser};
 use crate::utils::constants::{CONTROL_TASK, DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH};
 use crate::utils::enums;
 use crate::utils::err::FypmError;
@@ -156,7 +157,8 @@ pub fn task_add(
     r#type: &String,
     other_args: &Option<Vec<String>>,
     skip_confirmation: &bool,
-) -> Result<(), FypmError> {
+    return_uuid: &bool,
+) -> Result<enums::TaskAddReturn, FypmError> {
     if !*skip_confirmation {
         println!("These are the args:");
         println!("      description: {}", description);
@@ -174,11 +176,12 @@ pub fn task_add(
             .unwrap();
 
         if !confirmation {
-            return Ok(());
+            return Ok(enums::TaskAddReturn::Default(()));
         }
     }
 
     let mut args = vec![
+        "rc.verbose=new-uuid".to_string(),
         "add".to_string(),
         description.to_string(),
         format!("project:{}", project),
@@ -192,8 +195,42 @@ pub fn task_add(
 
     let execute = Command::new("task").args(args).output();
 
-    matchs::match_exec_command(execute).unwrap();
+    let uuid: String;
+    {
+        let regex = Regex::new(
+            r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
+        )
+        .unwrap();
 
-    Ok(())
+        if let Ok(output) = execute {
+            if output.status.success() {
+                let stdout = str::from_utf8(&output.stdout).unwrap();
+
+                if let Some(captured) = regex.captures(stdout) {
+                    uuid = captured[0].to_string();
+                } else {
+                    println!("No created tasks!");
+                    panic!("{}", stdout)
+                }
+            } else {
+                panic!(
+                    "An error occurred trying to create a task: {}",
+                    str::from_utf8(&output.stderr).unwrap()
+                );
+            }
+        } else {
+            let error = execute.unwrap_err();
+
+            panic!("An error occurred trying to create a task: {}", error);
+        }
+    }
+
+    println!("Created task with uuid: {}!", uuid);
+
+    if *return_uuid {
+        Ok(enums::TaskAddReturn::UUID(uuid))
+    } else {
+        Ok(enums::TaskAddReturn::Default(()))
+    }
 }
 //#endregion

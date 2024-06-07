@@ -93,3 +93,8 @@ pub enum TimewAction {
     Start,
     End,
 }
+
+pub enum TaskAddReturn {
+    UUID(String),
+    Default(())
+}

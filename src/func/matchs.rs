@@ -1,6 +1,6 @@
 use crate::func::action;
 use crate::subcommands::{daemon, init_day, instance, task, timew, worktime};
-use crate::utils::enums::{Commands, TimewAction};
+use crate::utils::enums::{self, Commands, TimewAction};
 use crate::utils::err::FypmError;
 use std::io::Error;
 use std::str;
@@ -19,14 +19,22 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
             r#type,
             other_args,
             skip_confirmation,
-        } => task::task_add(
-            description,
-            project,
-            style,
-            r#type,
-            other_args,
-            skip_confirmation,
-        ),
+        } => {
+            let execute = task::task_add(
+                description,
+                project,
+                style,
+                r#type,
+                other_args,
+                skip_confirmation,
+                &false,
+            );
+
+            match execute.unwrap() {
+                enums::TaskAddReturn::UUID(_) => Ok(()),
+                enums::TaskAddReturn::Default(_) => Ok(()),
+            }
+        }
 
         Commands::TaStart { filter } => task::task_start(filter),
         Commands::TaStop { filter } => task::task_stop(filter, true),
@@ -77,7 +85,7 @@ pub fn match_exec_command(
             Ok(())
         }
         Err(e) => {
-            eprintln!("Failed to execute timew command, error: {}", e);
+            eprintln!("Failed to execute command, error: {}", e);
 
             Err(e)
         }

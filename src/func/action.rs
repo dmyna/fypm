@@ -8,7 +8,6 @@ use crate::utils::get;
 use crate::utils::structs::TaskWarriorExported;
 use crate::utils::err::{FypmError, FypmErrorKind};
 use crate::utils::constants::{DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH};
-
 //#endregion
 //#region           Implementation
 pub fn annotate(command: &str, id: &String, annotation: &String) -> Result<(), FypmError> {
