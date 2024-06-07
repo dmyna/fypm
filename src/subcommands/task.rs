@@ -57,7 +57,7 @@ pub fn task_start(filter: &String) -> Result<(), FypmError> {
     filter = match_inforelat_and_sequence(&filter_json[0]).unwrap();
 
     {
-        // !DEV: Implement tascripts in Rust later
+        //. DEV: Implement tascripts in Rust later
 
         Command::new("tascripts").args([&filter]).output().unwrap();
     }
@@ -237,16 +237,17 @@ pub fn task_add_sub(
     mother_task: &String,
     other_args: &Vec<String>,
     skip_confirmation: &bool,
-) -> Result<(), FypmError> {
-    let subtask: &String;
+    return_uuid: &bool,
+) -> Result<enums::TaskAddReturn, FypmError> {
+    let subtask: String;
 
     let get_mother_task_json = get::get_json_by_filter(mother_task, DEFAULT_GET_JSON_OPTIONS)?;
     let mother_task_json = get_mother_task_json.get(0).unwrap();
 
     if other_args.len() == 1 {
-        subtask = other_args.get(0).unwrap();
+        subtask = other_args.get(0).unwrap().clone();
 
-        let get_subtask_uuid = get::get_uuids_by_filter(subtask, DEFAULT_GET_JSON_OPTIONS)?;
+        let get_subtask_uuid = get::get_uuids_by_filter(&subtask, DEFAULT_GET_JSON_OPTIONS)?;
         let subtask_uuid = get_subtask_uuid.get(0).unwrap();
 
         Command::new("task")
@@ -273,7 +274,7 @@ pub fn task_add_sub(
         )?;
 
         match create_task {
-            enums::TaskAddReturn::UUID(_) => subtask = other_args.get(0).unwrap(),
+            enums::TaskAddReturn::UUID(uuid) => subtask = uuid,
             enums::TaskAddReturn::Default(_) => {
                 panic!("task_add is returning void with return_uuid setted as true!")
             }
@@ -290,7 +291,7 @@ pub fn task_add_sub(
 
     Command::new("task")
         .args([
-            subtask,
+            &subtask,
             &"modify".to_string(),
             &format!("MOTHER:{}", mother_task_json.uuid),
         ])
@@ -300,6 +301,153 @@ pub fn task_add_sub(
         "Subtask added to its MOTHER '{}'!",
         mother_task_json.description
     );
+
+    if *return_uuid {
+        Ok(enums::TaskAddReturn::UUID(subtask))
+    } else {
+        Ok(enums::TaskAddReturn::Default(()))
+    }
+}
+pub fn task_add_seq(
+    seq_type: &String,
+    style: &String,
+    description: &String,
+    project: &String,
+    tag: &String,
+    initial_number: &usize,
+    last_number: &usize,
+    season: &Option<String>,
+    last_season_id: &Option<String>,
+) -> Result<(), FypmError> {
+    let mother_task_uuid: String;
+    let mother_description: String;
+    let final_tag = format!("+ST_{}", tag);
+    let final_tag_type = format!("+{}", seq_type);
+
+    if let Some(season) = season {
+        mother_description = format!("{} (Season {})", description, season)
+    } else {
+        mother_description = format!("{}", description);
+    }
+
+    {
+        let create_task = task_add(
+            &mother_description,
+            &project.to_string(),
+            &style,
+            &"Objective".to_string(),
+            &Some(vec![
+                "+Sequence".to_string(),
+                final_tag.clone(),
+                final_tag_type.clone(),
+            ]),
+            &true,
+            &true,
+        )?;
+
+        match create_task {
+            enums::TaskAddReturn::UUID(uuid) => mother_task_uuid = uuid,
+            enums::TaskAddReturn::Default(_) => {
+                panic!("task_add is returning void with return_uuid setted as true!")
+            }
+        }
+    }
+
+    let mut previous_task_uuid: String = "".to_string();
+
+    for i in *initial_number..=*last_number {
+        let mother_task_uuid = &mother_task_uuid;
+        let mut subtask_description: String;
+
+        if seq_type == &"Book".to_string() {
+            subtask_description = format!("Chapter {}", i);
+        } else {
+            if let Some(season) = season {
+                subtask_description = format!("S{}E{}", season, i);
+            } else {
+                subtask_description = format!("E{}", i);
+            }
+        }
+
+
+        let mut args = vec![
+            mother_task_uuid.clone(),
+            subtask_description.clone(),
+            style.clone(),
+            final_tag.clone(),
+            final_tag_type.clone(),
+            "+Sequence".to_string(),
+        ];
+
+        if i == *initial_number {
+            if let Some(last_season_id) = last_season_id {
+                let get_last_season_json =
+                    get::get_json_by_filter(&last_season_id, DEFAULT_GET_JSON_OPTIONS).unwrap();
+                let last_season_json = get_last_season_json.get(0).unwrap();
+
+                args.push(format!("SEQ_PREVIOUS:{}", last_season_json.uuid));
+            }
+
+            let current_task_uuid = task_add_sub(&mother_task_uuid, &args, &true, &true).unwrap();
+
+            match current_task_uuid {
+                enums::TaskAddReturn::UUID(uuid) => {
+                    if let Some(last_season_id) = last_season_id {
+                        Command::new("task")
+                            .args([
+                                last_season_id,
+                                &"modify".to_string(),
+                                &format!("SEQ_PREVIOUS:{}", uuid),
+                            ])
+                            .output()
+                            .unwrap();
+                    }
+
+                    Command::new("task")
+                        .args([
+                            mother_task_uuid,
+                            &"modify".to_string(),
+                            &format!("SEQ_CURRENT:{}", uuid),
+                        ])
+                        .output()
+                        .unwrap();
+
+                    previous_task_uuid = uuid;
+                }
+                _ => {}
+            }
+        } else {
+            if previous_task_uuid == "".to_string() {
+                panic!("previous_task_uuid is empty!");
+            }
+
+            let current_task_uuid = task_add_sub(&mother_task_uuid, &args, &true, &true).unwrap();
+
+            match current_task_uuid {
+                enums::TaskAddReturn::UUID(uuid) => {
+                    Command::new("task")
+                        .args([
+                            &uuid,
+                            &"modify".to_string(),
+                            &format!("SEQ_PREVIOUS:{}", previous_task_uuid),
+                        ])
+                        .output()
+                        .unwrap();
+                    Command::new("task")
+                        .args([
+                            previous_task_uuid,
+                            "modify".to_string(),
+                            format!("SEQ_NEXT:{}", &uuid),
+                        ])
+                        .output()
+                        .unwrap();
+
+                    previous_task_uuid = uuid;
+                }
+                _ => {}
+            }
+        }
+    }
 
     Ok(())
 }
