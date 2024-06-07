@@ -35,6 +35,11 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
                 enums::TaskAddReturn::Default(_) => Ok(()),
             }
         }
+        Commands::TaAddSub {
+            mother_task,
+            other_args,
+            skip_confirmation,
+        } => task::task_add_sub(mother_task, other_args, skip_confirmation),
 
         Commands::TaStart { filter } => task::task_start(filter),
         Commands::TaStop { filter } => task::task_stop(filter, true),

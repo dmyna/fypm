@@ -33,6 +33,15 @@ pub enum Commands {
         #[arg(short = 'y', long)]
         skip_confirmation: bool,
     },
+    /// Add a subtask to a objective task (taaddsub)
+    TaAddSub {
+        mother_task: String,
+        /// The args to be passed to taadd (description and STYLE or simply more than 1 parameter)
+        /// or the existent subtask (1 parameter)
+        other_args: Vec<String>,
+        #[arg(short = 'y', long)]
+        skip_confirmation: bool,
+    },
     /// Anotate on taskwarrior task (tan)
     TaAnnotate { filter: String, annotation: String },
     /// Start a task (tastart)
@@ -96,5 +105,5 @@ pub enum TimewAction {
 
 pub enum TaskAddReturn {
     UUID(String),
-    Default(())
+    Default(()),
 }

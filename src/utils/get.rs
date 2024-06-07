@@ -1,7 +1,10 @@
 use std::{process::Command, str};
 
 use super::{
-    constants::DEFAULT_GET_JSON_OPTIONS, enums::TimewAction, err::{FypmError, FypmErrorKind}, structs
+    constants::DEFAULT_GET_JSON_OPTIONS,
+    enums::TimewAction,
+    err::{FypmError, FypmErrorKind},
+    structs,
 };
 use crate::utils::structs::{GetJsonByFilterOptions, TaskWarriorExported, TimeWarriorExported};
 
@@ -70,4 +73,37 @@ pub fn get_timew_time(id: &String, action: &TimewAction) -> String {
     } else {
         task_json.end.clone().unwrap_or("now".to_string())
     }
+}
+pub fn get_uuids_by_filter(
+    filter: &str,
+    options: Option<GetJsonByFilterOptions>,
+) -> Result<Vec<String>, FypmError> {
+    let uuids = String::from_utf8_lossy(
+        &Command::new("task")
+            .args([filter, "_uuids"])
+            .output()
+            .unwrap()
+            .stdout,
+    )
+    .lines()
+    .map(|line| line.to_string())
+    .collect::<Vec<String>>();
+
+    if let Some(options) = options {
+        if let Some(quantity) = options.quantity {
+            if uuids.len() > quantity {
+                return Err(FypmError {
+                    message: format!("Too much tasks! (expected: {})", quantity.to_string()),
+                    kind: FypmErrorKind::TooMuchTasks,
+                });
+            } else if uuids.len() < quantity {
+                return Err(FypmError {
+                    message: format!("Not enough tasks! (expected: {})", quantity.to_string()),
+                    kind: FypmErrorKind::NoTasksFound,
+                });
+            }
+        }
+    }
+
+    Ok(uuids)
 }

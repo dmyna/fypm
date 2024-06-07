@@ -233,4 +233,74 @@ pub fn task_add(
         Ok(enums::TaskAddReturn::Default(()))
     }
 }
+pub fn task_add_sub(
+    mother_task: &String,
+    other_args: &Vec<String>,
+    skip_confirmation: &bool,
+) -> Result<(), FypmError> {
+    let subtask: &String;
+
+    let get_mother_task_json = get::get_json_by_filter(mother_task, DEFAULT_GET_JSON_OPTIONS)?;
+    let mother_task_json = get_mother_task_json.get(0).unwrap();
+
+    if other_args.len() == 1 {
+        subtask = other_args.get(0).unwrap();
+
+        let get_subtask_uuid = get::get_uuids_by_filter(subtask, DEFAULT_GET_JSON_OPTIONS)?;
+        let subtask_uuid = get_subtask_uuid.get(0).unwrap();
+
+        Command::new("task")
+            .args([subtask_uuid.as_str(), "modify", "TYPE:SubTask"])
+            .output()
+            .unwrap();
+    } else if other_args.len() >= 2 {
+        let project: &String;
+
+        if let Some(project_arg) = &mother_task_json.project {
+            project = project_arg;
+        } else {
+            panic!("The specified mother doesn't have a project setted... Are you writing this stuff right?");
+        }
+
+        let create_task = task_add(
+            other_args.get(0).unwrap(),
+            project,
+            other_args.get(1).unwrap(),
+            &"SubTask".to_string(),
+            &other_args.get(2..).map(|x| x.to_vec()),
+            skip_confirmation,
+            &true,
+        )?;
+
+        match create_task {
+            enums::TaskAddReturn::UUID(_) => subtask = other_args.get(0).unwrap(),
+            enums::TaskAddReturn::Default(_) => {
+                panic!("task_add is returning void with return_uuid setted as true!")
+            }
+        }
+    } else {
+        panic!("You specified a wrong number of arguments! You don't know how to read documentation, do you? :P");
+    }
+
+    Command::new("task")
+        .args([mother_task.as_str(), "modify", "STATE:Info", "+MOTHER"])
+        .output()
+        .unwrap();
+    println!("Mother task setted.");
+
+    Command::new("task")
+        .args([
+            subtask,
+            &"modify".to_string(),
+            &format!("MOTHER:{}", mother_task_json.uuid),
+        ])
+        .output()
+        .unwrap();
+    println!(
+        "Subtask added to its MOTHER '{}'!",
+        mother_task_json.description
+    );
+
+    Ok(())
+}
 //#endregion
