@@ -33,7 +33,7 @@ main() {
             fi
             ;;
         -a)
-            yes | taadd "Project Marker" $PROJECT ' ' Continuous +Ghost STATE:Info
+            fypm ta-add -y "Project Marker" $PROJECT ' ' Continuous +Ghost STATE:Info
             # add colors feature later
             ;;
         -c)

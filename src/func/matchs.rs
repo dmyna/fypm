@@ -1,6 +1,6 @@
 use crate::func::action;
-use crate::subcommands::{daemon, init_day, instance, task, timew, worktime};
-use crate::utils::enums::{Commands, TimewAction};
+use crate::subcommands::{task, timew};
+use crate::utils::enums::{self, Commands, TimewAction};
 use crate::utils::err::FypmError;
 use std::io::Error;
 use std::str;
@@ -19,13 +19,54 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
             r#type,
             other_args,
             skip_confirmation,
-        } => task::task_add(
-            description,
-            project,
-            style,
-            r#type,
+        } => {
+            let execute = task::task_add(
+                description,
+                project,
+                style,
+                r#type,
+                other_args,
+                skip_confirmation,
+                &false,
+            );
+
+            match execute.unwrap() {
+                _ => Ok(()),
+            }
+        }
+        Commands::TaAddSub {
+            mother_task,
             other_args,
             skip_confirmation,
+        } => {
+            let execute =
+                task::task_add_sub(mother_task, other_args, skip_confirmation, &false).unwrap();
+
+            match execute {
+                _ => Ok(()),
+            }
+        }
+
+        Commands::TaAddSeq {
+            seq_type,
+            style,
+            description,
+            project,
+            tag,
+            initial_number,
+            last_number,
+            season,
+            last_season_id,
+        } => task::task_add_seq(
+            seq_type,
+            style,
+            description,
+            project,
+            tag,
+            initial_number,
+            last_number,
+            season,
+            last_season_id,
         ),
 
         Commands::TaStart { filter } => task::task_start(filter),
@@ -77,7 +118,7 @@ pub fn match_exec_command(
             Ok(())
         }
         Err(e) => {
-            eprintln!("Failed to execute timew command, error: {}", e);
+            eprintln!("Failed to execute command, error: {}", e);
 
             Err(e)
         }

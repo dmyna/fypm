@@ -235,7 +235,7 @@ fn update_vit_taskrc() {
 fn update_filter(current_wt: &String, cfg_line: &str) -> () {
     let config_file_path = dirs::home_dir().unwrap().join(".taskrc");
 
-    // !DEV
+    //. DEV
     // transform this: "(GOAL.after:$(date +%Y-%m-01) and GOAL.before:now and TYPE:Objective)"
 
     let goal_string = "(GOAL.before:now and due.before:eom and TYPE:Objective)";

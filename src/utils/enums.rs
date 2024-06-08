@@ -33,6 +33,33 @@ pub enum Commands {
         #[arg(short = 'y', long)]
         skip_confirmation: bool,
     },
+    /// Add a subtask to a objective task (taadd-sub)
+    TaAddSub {
+        mother_task: String,
+        /// The args to be passed to taadd (description and STYLE or simply more than 1 parameter)
+        /// or the existent subtask (1 parameter)
+        other_args: Vec<String>,
+        #[arg(short = 'y', long)]
+        skip_confirmation: bool,
+    },
+    /// Add a sequence of tasks (taadd-seq)
+    TaAddSeq {
+        seq_type: String,
+        style: String,
+        description: String,
+        project: String,
+        /// An uniq [a-Z][0-9]{4} identifier to the sequence
+        /// (it's recommended to use a tag that remembers the task).
+        tag: String,
+        /// The number of the first SubTask
+        initial_number: usize,
+        /// The number of the last SubTask
+        last_number: usize,
+        season: Option<String>,
+        /// Inform the number of the last sequence task to link
+        /// its last subtask with the first subtask of the new sequence
+        last_season_id: Option<String>
+    },
     /// Anotate on taskwarrior task (tan)
     TaAnnotate { filter: String, annotation: String },
     /// Start a task (tastart)
@@ -92,4 +119,9 @@ pub enum StatisticsCommands {
 pub enum TimewAction {
     Start,
     End,
+}
+
+pub enum TaskAddReturn {
+    UUID(String),
+    Default(()),
 }
