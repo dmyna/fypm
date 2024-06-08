@@ -1,22 +1,30 @@
 //#region           Crates
 use std::fs;
-use std::str;
-use std::process::Command;
 use std::io::{Error, ErrorKind};
+use std::process::Command;
+use std::process::Stdio;
+use std::str;
+
 //#region           Modules
+use crate::utils::constants::{DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH};
+use crate::utils::err::{FypmError, FypmErrorKind};
 use crate::utils::get;
 use crate::utils::structs::TaskWarriorExported;
-use crate::utils::err::{FypmError, FypmErrorKind};
-use crate::utils::constants::{DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH};
 //#endregion
 //#region           Implementation
-pub fn annotate(command: &str, id: &String, annotation: &String) -> Result<(), FypmError> {
-    let execute = Command::new("timew")
-        .args([command, id, annotation])
+pub fn annotate(command: &str, filter: &String, annotation: &String) -> Result<(), FypmError> {
+    Command::new(command)
+        .args([
+            "rc.recurrence.confirmation=off",
+            "rc.confirmation=off",
+            filter,
+            "annotate",
+            annotation,
+        ])
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
         .output()
         .unwrap();
-
-    println!("{}", str::from_utf8(&execute.stdout).unwrap());
 
     Ok(())
 }
@@ -57,7 +65,9 @@ pub fn verify_if_is_divisory(filter_json: &TaskWarriorExported) -> Result<(), Er
 
     Ok(())
 }
-pub fn match_inforelat_and_sequence(filter_json: &TaskWarriorExported) -> Result<String, FypmError> {
+pub fn match_inforelat_and_sequence(
+    filter_json: &TaskWarriorExported,
+) -> Result<String, FypmError> {
     let state = &filter_json.state;
     let r#type = &filter_json.r#type;
 
@@ -76,20 +86,23 @@ pub fn match_inforelat_and_sequence(filter_json: &TaskWarriorExported) -> Result
         let inforelat = &filter_json.inforelat;
 
         if let Some(inforelat) = inforelat {
-            let new_filter_json = get::get_json_by_filter(&inforelat, DEFAULT_GET_JSON_OPTIONS).unwrap();
+            let new_filter_json =
+                get::get_json_by_filter(&inforelat, DEFAULT_GET_JSON_OPTIONS).unwrap();
 
             return match_inforelat_and_sequence(&new_filter_json[0]);
         } else {
             if is_sequence {
                 if let Some(next_task) = &filter_json.seq_current {
-                    let mut next_json = get::get_json_by_filter(&next_task, DEFAULT_GET_JSON_OPTIONS)?;
+                    let mut next_json =
+                        get::get_json_by_filter(&next_task, DEFAULT_GET_JSON_OPTIONS)?;
                     let mut status = next_json[0].status.as_str();
 
                     // Loop until find a pending task or there is no next task
 
                     while status == "completed" {
                         if let Some(next_task) = &next_json[0].seq_next {
-                            next_json = get::get_json_by_filter(&next_task, DEFAULT_GET_JSON_OPTIONS)?;
+                            next_json =
+                                get::get_json_by_filter(&next_task, DEFAULT_GET_JSON_OPTIONS)?;
                             status = next_json[0].status.as_str();
                         } else {
                             return Err(FypmError {

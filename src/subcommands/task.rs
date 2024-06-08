@@ -2,6 +2,7 @@ use chrono::{DateTime, Datelike, Local, NaiveDate};
 //#region           Crates
 use dialoguer::Confirm;
 use regex::Regex;
+use std::process::Stdio;
 use std::{fs, process::Command, str};
 
 //#endregion
@@ -116,7 +117,10 @@ pub fn task_done(
         }
 
         Command::new("task")
-            .args([filter, "done"])
+            .args(["rc.recurrence.confirmation=off", filter, "done"])
+            .stdin(Stdio::inherit())
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
             .output()
             .unwrap();
     } else {
@@ -129,7 +133,14 @@ pub fn task_done(
         }
 
         Command::new("task")
-            .args([current_task.uuid.as_str(), "done"])
+            .args([
+                "rc.confirmation=off",
+                "rc.recurrence.confirmation=off",
+                current_task.uuid.as_str(),
+                "done",
+            ])
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
             .output()
             .unwrap();
     }

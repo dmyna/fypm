@@ -34,7 +34,7 @@ open_session() {
         tmux send-keys -t "$SESSION":0.1 "perpetue_cmd $TAGOALS" C-m
         tmux send-keys -t "$SESSION":0.3 "perpetue_cmd $CAL" C-m
         tmux send-keys -t "$SESSION":0.4 "perpetue_cmd $PROJS" C-m
-        
+
         tmux select-pane -t "$SESSION":0.2
         tmux attach-session -t "$SESSION"
     fi
