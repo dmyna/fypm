@@ -1,6 +1,6 @@
 use crate::func::action;
 use crate::subcommands::{task, timew};
-use crate::utils::enums::{self, Commands, TimewAction};
+use crate::utils::enums::{Commands, TimewAction};
 use crate::utils::err::FypmError;
 use std::io::Error;
 use std::str;
@@ -27,7 +27,6 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
                 r#type,
                 other_args,
                 skip_confirmation,
-                &false,
             );
 
             match execute.unwrap() {
@@ -39,14 +38,10 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
             other_args,
             skip_confirmation,
         } => {
-            let execute =
-                task::task_add_sub(mother_task, other_args, skip_confirmation, &false).unwrap();
+            let execute = task::task_add_sub(mother_task, other_args, skip_confirmation).unwrap();
 
-            match execute {
-                _ => Ok(()),
-            }
+            Ok(())
         }
-
         Commands::TaAddSeq {
             seq_type,
             style,
@@ -68,6 +63,22 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
             season,
             last_season_id,
         ),
+        Commands::TaAddBrth {
+            birthday_person,
+            date,
+        } => {
+            task::task_add_brth(birthday_person, date)?;
+
+            Ok(())
+        }
+        Commands::TaAddPl {
+            playlist_name,
+            length,
+        } => {
+            task::task_add_pl(playlist_name, length)?;
+
+            Ok(())
+        }
 
         Commands::TaStart { filter } => task::task_start(filter),
         Commands::TaStop { filter } => task::task_stop(filter, true),

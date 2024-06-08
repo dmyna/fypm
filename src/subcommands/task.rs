@@ -1,3 +1,4 @@
+use chrono::{DateTime, Datelike, Local, NaiveDate};
 //#region           Crates
 use dialoguer::Confirm;
 use regex::Regex;
@@ -157,8 +158,7 @@ pub fn task_add(
     r#type: &String,
     other_args: &Option<Vec<String>>,
     skip_confirmation: &bool,
-    return_uuid: &bool,
-) -> Result<enums::TaskAddReturn, FypmError> {
+) -> Result<String, FypmError> {
     if !*skip_confirmation {
         println!("These are the args:");
         println!("      description: {}", description);
@@ -176,7 +176,10 @@ pub fn task_add(
             .unwrap();
 
         if !confirmation {
-            return Ok(enums::TaskAddReturn::Default(()));
+            return Err(FypmError {
+                message: "Aborted".to_string(),
+                kind: FypmErrorKind::Aborted,
+            });
         }
     }
 
@@ -227,18 +230,13 @@ pub fn task_add(
 
     println!("Created task with uuid: {}!", uuid);
 
-    if *return_uuid {
-        Ok(enums::TaskAddReturn::UUID(uuid))
-    } else {
-        Ok(enums::TaskAddReturn::Default(()))
-    }
+    Ok(uuid)
 }
 pub fn task_add_sub(
     mother_task: &String,
     other_args: &Vec<String>,
     skip_confirmation: &bool,
-    return_uuid: &bool,
-) -> Result<enums::TaskAddReturn, FypmError> {
+) -> Result<String, FypmError> {
     let subtask: String;
 
     let get_mother_task_json = get::get_json_by_filter(mother_task, DEFAULT_GET_JSON_OPTIONS)?;
@@ -263,22 +261,16 @@ pub fn task_add_sub(
             panic!("The specified mother doesn't have a project setted... Are you writing this stuff right?");
         }
 
-        let create_task = task_add(
+        let uuid = task_add(
             other_args.get(0).unwrap(),
             project,
             other_args.get(1).unwrap(),
             &"SubTask".to_string(),
             &other_args.get(2..).map(|x| x.to_vec()),
             skip_confirmation,
-            &true,
         )?;
 
-        match create_task {
-            enums::TaskAddReturn::UUID(uuid) => subtask = uuid,
-            enums::TaskAddReturn::Default(_) => {
-                panic!("task_add is returning void with return_uuid setted as true!")
-            }
-        }
+        subtask = uuid;
     } else {
         panic!("You specified a wrong number of arguments! You don't know how to read documentation, do you? :P");
     }
@@ -302,11 +294,7 @@ pub fn task_add_sub(
         mother_task_json.description
     );
 
-    if *return_uuid {
-        Ok(enums::TaskAddReturn::UUID(subtask))
-    } else {
-        Ok(enums::TaskAddReturn::Default(()))
-    }
+    Ok(subtask)
 }
 pub fn task_add_seq(
     seq_type: &String,
@@ -331,7 +319,7 @@ pub fn task_add_seq(
     }
 
     {
-        let create_task = task_add(
+        let uuid = task_add(
             &mother_description,
             &project.to_string(),
             &style,
@@ -342,22 +330,16 @@ pub fn task_add_seq(
                 final_tag_type.clone(),
             ]),
             &true,
-            &true,
         )?;
 
-        match create_task {
-            enums::TaskAddReturn::UUID(uuid) => mother_task_uuid = uuid,
-            enums::TaskAddReturn::Default(_) => {
-                panic!("task_add is returning void with return_uuid setted as true!")
-            }
-        }
+        mother_task_uuid = uuid;
     }
 
     let mut previous_task_uuid: String = "".to_string();
 
     for i in *initial_number..=*last_number {
         let mother_task_uuid = &mother_task_uuid;
-        let mut subtask_description: String;
+        let subtask_description: String;
 
         if seq_type == &"Book".to_string() {
             subtask_description = format!("Chapter {}", i);
@@ -368,7 +350,6 @@ pub fn task_add_seq(
                 subtask_description = format!("E{}", i);
             }
         }
-
 
         let mut args = vec![
             mother_task_uuid.clone(),
@@ -388,67 +369,126 @@ pub fn task_add_seq(
                 args.push(format!("SEQ_PREVIOUS:{}", last_season_json.uuid));
             }
 
-            let current_task_uuid = task_add_sub(&mother_task_uuid, &args, &true, &true).unwrap();
+            let current_task_uuid = task_add_sub(&mother_task_uuid, &args, &true).unwrap();
 
-            match current_task_uuid {
-                enums::TaskAddReturn::UUID(uuid) => {
-                    if let Some(last_season_id) = last_season_id {
-                        Command::new("task")
-                            .args([
-                                last_season_id,
-                                &"modify".to_string(),
-                                &format!("SEQ_PREVIOUS:{}", uuid),
-                            ])
-                            .output()
-                            .unwrap();
-                    }
-
-                    Command::new("task")
-                        .args([
-                            mother_task_uuid,
-                            &"modify".to_string(),
-                            &format!("SEQ_CURRENT:{}", uuid),
-                        ])
-                        .output()
-                        .unwrap();
-
-                    previous_task_uuid = uuid;
-                }
-                _ => {}
+            if let Some(last_season_id) = last_season_id {
+                Command::new("task")
+                    .args([
+                        last_season_id,
+                        &"modify".to_string(),
+                        &format!("SEQ_PREVIOUS:{}", current_task_uuid),
+                    ])
+                    .output()
+                    .unwrap();
             }
+
+            Command::new("task")
+                .args([
+                    mother_task_uuid,
+                    &"modify".to_string(),
+                    &format!("SEQ_CURRENT:{}", current_task_uuid),
+                ])
+                .output()
+                .unwrap();
+
+            previous_task_uuid = current_task_uuid;
         } else {
             if previous_task_uuid == "".to_string() {
                 panic!("previous_task_uuid is empty!");
             }
 
-            let current_task_uuid = task_add_sub(&mother_task_uuid, &args, &true, &true).unwrap();
+            let current_task_uuid = task_add_sub(&mother_task_uuid, &args, &true).unwrap();
 
-            match current_task_uuid {
-                enums::TaskAddReturn::UUID(uuid) => {
-                    Command::new("task")
-                        .args([
-                            &uuid,
-                            &"modify".to_string(),
-                            &format!("SEQ_PREVIOUS:{}", previous_task_uuid),
-                        ])
-                        .output()
-                        .unwrap();
-                    Command::new("task")
-                        .args([
-                            previous_task_uuid,
-                            "modify".to_string(),
-                            format!("SEQ_NEXT:{}", &uuid),
-                        ])
-                        .output()
-                        .unwrap();
+            Command::new("task")
+                .args([
+                    &current_task_uuid,
+                    &"modify".to_string(),
+                    &format!("SEQ_PREVIOUS:{}", previous_task_uuid),
+                ])
+                .output()
+                .unwrap();
+            Command::new("task")
+                .args([
+                    previous_task_uuid,
+                    "modify".to_string(),
+                    format!("SEQ_NEXT:{}", &current_task_uuid),
+                ])
+                .output()
+                .unwrap();
 
-                    previous_task_uuid = uuid;
-                }
-                _ => {}
-            }
+            previous_task_uuid = current_task_uuid;
         }
     }
 
     Ok(())
+}
+pub fn task_add_brth(birthday_person: &String, date: &String) -> Result<String, FypmError> {
+    let current_year = Local::now().year().to_string();
+
+    let date =
+        DateTime::parse_from_rfc3339(format!("{}-{}T23:59:59Z", current_year, date).as_str())
+            .unwrap()
+            .date_naive();
+
+    let current_date = Local::now().date_naive();
+
+    let mut final_date: String = "".to_string();
+
+    if current_date <= date {
+        final_date = date.to_string();
+    } else {
+        let add_a_year = date.with_year(date.year() + 1);
+
+        if let Some(new_date) = add_a_year {
+            final_date = new_date.to_string();
+        }
+    }
+
+    let uuid = task_add(
+        &format!("{}'s Birthday", birthday_person),
+        &"Social.Events".to_string(),
+        &"Dionysian".to_string(),
+        &"Event".to_string(),
+        &Some(vec![
+            "WT:AllDay!".to_string(),
+            "recur:yearly".to_string(),
+            format!("GOAL:{}T00:00:00", &final_date),
+            format!("due:{}T23:59:59", &final_date),
+        ]),
+        &true,
+    )?;
+
+    Ok(uuid)
+    //Ok(uuid)
+}
+pub fn task_add_pl(playlist_name: &String, length: &u16) -> Result<String, FypmError> {
+    let style = "Dionysian".to_string();
+
+    let mother_uuid = task_add(
+        &playlist_name,
+        &"Music.Playlist".to_string(),
+        &style,
+        &"Objective".to_string(),
+        &None,
+        &true,
+    )?;
+
+    task_add_sub(
+        &mother_uuid,
+        &vec!["Cover".to_string(), style.clone()],
+        &true,
+    )?;
+    task_add_sub(
+        &mother_uuid,
+        &vec!["Description".to_string(), style.clone()],
+        &true,
+    )?;
+    task_add_sub(
+        &mother_uuid,
+        &vec![format!("Songs ({})", length), style],
+        &true,
+    )?;
+
+    Ok(mother_uuid)
 }
 //#endregion

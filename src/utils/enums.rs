@@ -60,6 +60,18 @@ pub enum Commands {
         /// its last subtask with the first subtask of the new sequence
         last_season_id: Option<String>
     },
+    /// Add a birthday event (taadd-brth)
+    TaAddBrth {
+        birthday_person: String,
+        /// Format: MM-DD
+        date: String,
+    },
+    /// Add a playlist task (taadd-pl)
+    TaAddPl {
+        playlist_name: String,
+        /// Quantity of songs that you wish to add to the playlist
+        length: u16,
+    },
     /// Anotate on taskwarrior task (tan)
     TaAnnotate { filter: String, annotation: String },
     /// Start a task (tastart)
@@ -119,9 +131,4 @@ pub enum StatisticsCommands {
 pub enum TimewAction {
     Start,
     End,
-}
-
-pub enum TaskAddReturn {
-    UUID(String),
-    Default(()),
 }
