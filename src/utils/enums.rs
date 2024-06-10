@@ -58,7 +58,7 @@ pub enum Commands {
         season: Option<String>,
         /// Inform the number of the last sequence task to link
         /// its last subtask with the first subtask of the new sequence
-        last_season_id: Option<String>
+        last_season_id: Option<String>,
     },
     /// Add a birthday event (taadd-brth)
     TaAddBrth {
@@ -90,6 +90,14 @@ pub enum Commands {
         /// Exclude recurring tasks from the count
         #[arg(short, long)]
         no_parents: bool,
+    },
+
+    /// List tasks by date in a separate day/week style (tals-date)
+    TaLsDate {
+        property: String,
+        modifier: String,
+        /// To specify range, use: -- -<y|m|w> [year|month|week] OR <start_date> - <end_date> (where format is YYYY-MM-DD)
+        date_args: Option<Vec<String>>,
     },
 
     /// Anotate on timewarrior task (tin)

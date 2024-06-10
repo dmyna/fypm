@@ -1,13 +1,15 @@
-use chrono::{DateTime, Datelike, Local, NaiveDate};
+use chrono::{DateTime, Datelike, Duration, Local, NaiveDate, Weekday};
 //#region           Crates
 use dialoguer::Confirm;
 use regex::Regex;
 use std::process::Stdio;
+use std::str::FromStr;
 use std::{fs, process::Command, str};
 
 //#endregion
 //#region           Modules
-use crate::func::{action::*, list, parser};
+use crate::func::{action::*, date, list, parser};
+use crate::handlers::date::NaiveDateIter;
 use crate::utils::constants::{CONTROL_TASK, DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH};
 use crate::utils::enums;
 use crate::utils::err::FypmError;
@@ -501,5 +503,74 @@ pub fn task_add_pl(playlist_name: &String, length: &u16) -> Result<String, FypmE
     )?;
 
     Ok(mother_uuid)
+}
+
+pub fn task_ls_date(
+    property: &String,
+    modifier: &String,
+    date_args: &Vec<String>,
+) -> Result<(), FypmError> {
+    let verbose: &str = "rc.verbose=false";
+    let sort = format!("rc.report.{modifier}.sort={property}");
+    let divisory = "                            ";
+
+    let args_len = date_args.len();
+    if args_len > 3 {
+        panic!("You entered too many arguments to date_args!");
+    }
+
+    let initial_date: NaiveDate;
+    let final_date: NaiveDate;
+
+    if args_len == 3 {
+        let initial_date_str = date_args.get(0).unwrap();
+        let final_date_str = date_args.get(2).unwrap();
+
+        initial_date = NaiveDate::from_str(&initial_date_str).unwrap();
+        final_date = NaiveDate::from_str(&final_date_str).unwrap();
+    } else {
+        let option: &String = date_args.get(0).unwrap();
+
+        let mut option_arg: Option<&String> = None;
+
+        if args_len == 2 {
+            option_arg = Some(date_args.get(1).unwrap());
+        }
+
+        match option.as_str() {
+            "-y" | "--year" => {
+                [initial_date, final_date] = date::get_year(option_arg);
+            }
+            "-m" | "--month" => {
+                [initial_date, final_date] = date::get_month(option_arg);
+            }
+            "-w" | "--week" => {
+                [initial_date, final_date] = date::get_week(option_arg);
+            }
+            _ => {
+                panic!("You entered an invalid option to date_args!");
+            }
+        }
+    }
+
+    for date in NaiveDateIter::new(initial_date, final_date) {
+        let initial_day = date.format("%Y-%m-%d").to_string();
+        let final_day = (date + Duration::days(1)).format("%Y-%m-%d").to_string();
+
+        Command::new("task")
+            .args([
+                format!("{verbose}"), format!("{sort}"),
+                format!("({property}.after:{initial_day} or {property}:{initial_day}) and {property}.before:{final_day}"),
+                format!("{modifier}")])
+            .stdout(Stdio::inherit())
+            .output()
+            .unwrap();
+
+        if date.weekday() == Weekday::Sun {
+            println!("{divisory}");
+        }
+    }
+
+    Ok(())
 }
 //#endregion

@@ -80,6 +80,20 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
             Ok(())
         }
 
+        Commands::TaLsDate {
+            property,
+            modifier,
+            date_args,
+        } => {
+            if let Some(date_args) = date_args {
+                task::task_ls_date(property, modifier, date_args)?;
+            } else {
+                task::task_ls_date(property, modifier, &vec!["-w".to_string()])?;
+            }
+
+            Ok(())
+        }
+
         Commands::TaStart { filter } => task::task_start(filter),
         Commands::TaStop { filter } => task::task_stop(filter, true),
         Commands::TaDone {
