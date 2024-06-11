@@ -505,7 +505,7 @@ pub fn task_add_pl(playlist_name: &String, length: &u16) -> Result<String, FypmE
     Ok(mother_uuid)
 }
 
-pub fn task_ls_date(
+pub fn task_list_date(
     property: &String,
     modifier: &String,
     date_args: &Vec<String>,
@@ -573,7 +573,7 @@ pub fn task_ls_date(
 
     Ok(())
 }
-pub fn task_ls_mother_and_subtasks(
+pub fn task_list_mother_and_subtasks(
     modifier: &String,
     filter: &Vec<String>,
 ) -> Result<(), FypmError> {

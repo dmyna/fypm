@@ -1,4 +1,4 @@
-use chrono::{Datelike, Local, NaiveDate, Weekday};
+use chrono::{Datelike, Duration, Local, NaiveDate, Weekday};
 
 const INVALID_DATE_MSG: &str = "You entered a invalid date!";
 
@@ -67,7 +67,8 @@ pub fn get_week(week: Option<&String>) -> [NaiveDate; 2] {
         final_week = Local::now().iso_week().week();
     }
 
-    initial_date = NaiveDate::from_isoywd_opt(cur_year, final_week, Weekday::Mon).expect("Week not found!");
+    initial_date =
+        NaiveDate::from_isoywd_opt(cur_year, final_week, Weekday::Mon).expect("Week not found!");
 
     let get_final_date = NaiveDate::from_isoywd_opt(cur_year, final_week + 1, Weekday::Mon);
     if let Some(received_final_date) = get_final_date {
@@ -77,4 +78,16 @@ pub fn get_week(week: Option<&String>) -> [NaiveDate; 2] {
     }
 
     [initial_date, final_date]
+}
+pub fn match_aliases(date: &String) -> String {
+    match date.as_str() {
+        "today" => Local::now().format("%Y-%m-%d").to_string(),
+        "yesterday" => (Local::now() - Duration::days(1))
+            .format("%Y-%m-%d")
+            .to_string(),
+        "tomorrow" => (Local::now() + Duration::days(1))
+            .format("%Y-%m-%d")
+            .to_string(),
+        _ => date.to_string(),
+    }
 }

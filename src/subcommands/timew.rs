@@ -1,16 +1,18 @@
 //#region           External Imports
-use std::process::Command;
-use std::str;
+use chrono::{Duration, NaiveDate};
+use std::process::{Command, Stdio};
+use std::str::{self, FromStr};
+
 //#endregion
 //#region           Modules
-use crate::func::parser;
+use crate::func::{date, parser};
 use crate::utils::constants::DEFAULT_GET_JSON_OPTIONS;
 use crate::utils::enums::TimewAction;
 use crate::utils::err::FypmError;
 use crate::utils::get;
 //#endregion
 //#region           Functions
-pub fn time_move(
+pub fn move_log(
     action: &TimewAction,
     manipulation_id: &String,
     reference_id: &Option<String>,
@@ -60,9 +62,9 @@ pub fn time_move(
         time = get::get_timew_time(&format!("@{}", final_number), &inverted_action);
     }
 
-    time_set(&action, manipulation_id, &time)
+    set_log(&action, manipulation_id, &time)
 }
-pub fn time_set(
+pub fn set_log(
     received_action: &TimewAction,
     received_id: &String,
     received_time: &String,
@@ -213,5 +215,30 @@ pub fn replace(
     let end_time = get::get_timew_time(received_original_id, &TimewAction::End);
 
     track(received_replacement_id, &start_time, &end_time)
+}
+pub fn list(date: &String, aditional_filters: &Option<Vec<String>>) -> Result<(), FypmError> {
+    let initial_date = NaiveDate::from_str(&date::match_aliases(date)).unwrap();
+    let final_date = initial_date + Duration::days(1);
+
+    let mut args = Vec::new();
+
+    args.extend([
+        "summary".to_string(),
+        ":ids".to_string(),
+        initial_date.to_string(),
+        "-".to_string(),
+        final_date.to_string(),
+    ]);
+    if let Some(filters) = aditional_filters {
+        args.extend(filters.clone())
+    }
+
+    Command::new("timew")
+        .args(args)
+        .stdout(Stdio::inherit())
+        .output()
+        .unwrap();
+
+    Ok(())
 }
 //#endregion

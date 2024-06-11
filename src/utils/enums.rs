@@ -105,6 +105,13 @@ pub enum Commands {
         filter: Vec<String>,
     },
 
+    /// List logs for a day (tils)
+    TiLs {
+        #[arg(default_value_t = String::from("today"))]
+        date: String,
+        filters: Option<Vec<String>>
+    },
+
     /// Anotate on timewarrior task (tin)
     TiAnnotate { filter: String, annotation: String },
     /// Move start of a task to end of other (ticart)

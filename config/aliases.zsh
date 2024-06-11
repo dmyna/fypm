@@ -23,6 +23,7 @@ alias tistart="$PKG ti-start"
 alias tiend="$PKG ti-end"
 alias tir="$PKG ti-track"
 alias tirep="$PKG ti-replace"
+alias tils="$PKG ti-ls"
 
 # TaskWarrior
 alias talc="task const"

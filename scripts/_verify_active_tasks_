@@ -1,11 +1,12 @@
 #!/bin/zsh
 LOCK=/tmp/task.lock
+CONTROL_TASK_UUID='5c847c7e-c7eb-44f6-ad7e-29cc989c8854'
 
 action() {
     TASKS_LENGTH=$(task +ACTIVE export | jq -r '. | length')
 
     if [[ $TASKS_LENGTH -eq 0 ]]; then
-        tastart "$(tgetid "Time without specific use")"
+        tastart "$CONTROL_TASK_UUUID"
 
         LAST_TIMEW_END=$(timew export @2 | jq -r '.[0].end')
         CURRENT_TIMEW_START=$(timew export @1 | jq -r '.[0].start')

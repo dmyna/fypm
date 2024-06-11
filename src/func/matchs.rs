@@ -86,19 +86,18 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
             date_args,
         } => {
             if let Some(date_args) = date_args {
-                task::task_ls_date(property, modifier, date_args)?;
+                task::task_list_date(property, modifier, date_args)?;
             } else {
-                task::task_ls_date(property, modifier, &vec!["-w".to_string()])?;
+                task::task_list_date(property, modifier, &vec!["-w".to_string()])?;
             }
 
             Ok(())
         }
         Commands::TaLsMotAndSub { modifier, filter } => {
-            task::task_ls_mother_and_subtasks(modifier, filter)?;
+            task::task_list_mother_and_subtasks(modifier, filter)?;
 
             Ok(())
         }
-
         Commands::TaStart { filter } => task::task_start(filter),
         Commands::TaStop { filter } => task::task_stop(filter, true),
         Commands::TaDone {
@@ -108,18 +107,22 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
         Commands::TaAnnotate { filter, annotation } => action::annotate("task", filter, annotation),
         Commands::TaStatistic { name, no_parents } => task::task_statistic(name, no_parents),
 
+        Commands::TiLs { date, filters } => {
+            timew::list(date, filters)?;
+
+            Ok(())
+        }
+
         Commands::TiEndCorrection {
             manipulation_id,
             reference_id,
-        } => timew::time_move(&TimewAction::End, manipulation_id, reference_id),
+        } => timew::move_log(&TimewAction::End, manipulation_id, reference_id),
         Commands::TiStartCorrection {
             manipulation_id,
             reference_id,
-        } => timew::time_move(&TimewAction::Start, manipulation_id, reference_id),
-        Commands::TiStart { id, start_time } => {
-            timew::time_set(&TimewAction::Start, id, start_time)
-        }
-        Commands::TiEnd { id, end_time } => timew::time_set(&TimewAction::End, id, end_time),
+        } => timew::move_log(&TimewAction::Start, manipulation_id, reference_id),
+        Commands::TiStart { id, start_time } => timew::set_log(&TimewAction::Start, id, start_time),
+        Commands::TiEnd { id, end_time } => timew::set_log(&TimewAction::End, id, end_time),
         Commands::TiTrack {
             id,
             start_time,
