@@ -1,7 +1,7 @@
 #!/bin/zsh
 
-FILTERS_NAMES=("dio_mains")
-FILTERS=("(STYLE:Dionysian and project.not:Lazer.Watch and (TYPE:Continuous or TYPE:Objective or TYPE:Eventual))")
+FILTERS_NAMES=("dio_mains" "late_alarm")
+FILTERS=("(STYLE:Dionysian and project.not:Lazer.Watch and (TYPE:Continuous or TYPE:Objective or TYPE:Eventual))" "(ALARM.before:now -PARENT -COMPLETED -DELETED)")
 
 fgr="\e[38;2;"
 bld="\e[1m"

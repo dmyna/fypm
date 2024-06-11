@@ -3,6 +3,6 @@ EXEC="$@"
 SESSION="Alarm Warn"
 
 tmux new-session -d -s "$SESSION"
-tmux send-keys -t "$SESSION" "$EXEC" C-m
+tmux send-keys -t "$SESSION" 'taf late_alarm' C-m
 
 tmux attach-session -t "$SESSION"

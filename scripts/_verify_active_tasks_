@@ -3,7 +3,7 @@ LOCK=/tmp/task.lock
 
 action() {
     TASKS_LENGTH=$(task +ACTIVE export | jq -r '. | length')
-    
+
     if [[ $TASKS_LENGTH -eq 0 ]]; then
         tastart "$(tgetid "Time without specific use")"
 

@@ -1,0 +1,15 @@
+color.tag.Abandoned=bold
+color.tag.NoControl=bold
+
+color.tag.Divisory=underline rgb555 on rgb001
+color.tag.PARENT=on rgb430
+
+color.completed=on rgb030
+color.deleted=on rgb300
+color.scheduled=on rgb510
+color.overdue=bold on rgb100
+color.active=underline bold on rgb325
+
+color.uda.STYLE.Idle=rgb111
+color.uda.TYPE.SubTask=on rgb222
+color.tag.MOTHER=on rgb111

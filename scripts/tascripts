@@ -22,7 +22,7 @@ set_sound 100 75
 
 # Recurring Tasks Case
 case $(task "$1" export | jq -r '.[0].parent') in
-    "ae1e6f89-30d6-4ad7-8870-c20035db6f54")
+    "9d130a7c-6b6a-4a11-a571-d0178f5b8efb")
         before_executed
         vivaldi-stable --app=https://www.monkeytype.com
         set_sound 100

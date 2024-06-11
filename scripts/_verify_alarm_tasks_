@@ -28,7 +28,7 @@ inform_pending_tasks() {
     elif [[ "$SELECTED" == "action" ]]; then
         alacritty \
             --config-file="$BSPDIR"/alacritty/alacritty.toml \
-            --command tmxs-taalwarn _taallatels & disown
+            --command tmxs-taalwarn & disown
         sleep 5m
     fi
 }
