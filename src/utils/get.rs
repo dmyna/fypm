@@ -1,5 +1,7 @@
 use std::{process::Command, str};
 
+use itertools::join;
+
 use super::{
     constants::DEFAULT_GET_JSON_OPTIONS,
     enums::TimewAction,
@@ -106,4 +108,47 @@ pub fn get_uuids_by_filter(
     }
 
     Ok(uuids)
+}
+pub fn get_count_by_filter(filter: &String) -> Result<u32, FypmError> {
+    let mut tasks_count: u32 = 0;
+
+    let tasks_length = String::from_utf8(
+        Command::new("task")
+            .args([filter, &"count".to_string()])
+            .output()
+            .unwrap()
+            .stdout,
+    )
+    .unwrap();
+
+    if tasks_length != "" {
+        tasks_count = tasks_length.trim().parse::<u32>().unwrap();
+    }
+
+    Ok(tasks_count)
+}
+pub fn filter_by_modifier(modifier: &String) -> Result<String, FypmError> {
+    let cfg_key = format!("report.{modifier}.filter");
+
+    let get_configs = String::from_utf8(
+        Command::new("task")
+            .args(["show", cfg_key.as_str()])
+            .output()
+            .unwrap()
+            .stdout,
+    )
+    .unwrap();
+
+    let lines_with_config = get_configs
+        .split("\n")
+        .filter(|line| line.contains(cfg_key.as_str()))
+        .collect::<Vec<&str>>()
+        .join("\n");
+
+    let config = lines_with_config
+        .replace(cfg_key.as_str(), "")
+        .trim()
+        .to_string();
+
+    Ok(config)
 }

@@ -99,6 +99,11 @@ pub enum Commands {
         /// To specify range, use: -- -<y|m|w> [year|month|week] OR <start_date> - <end_date> (where format is YYYY-MM-DD)
         date_args: Option<Vec<String>>,
     },
+    /// List tasks with mothers and them subtasks agrouped (tamas)
+    TaLsMotAndSub {
+        modifier: String,
+        filter: Vec<String>,
+    },
 
     /// Anotate on timewarrior task (tin)
     TiAnnotate { filter: String, annotation: String },

@@ -573,4 +573,80 @@ pub fn task_ls_date(
 
     Ok(())
 }
+pub fn task_ls_mother_and_subtasks(
+    modifier: &String,
+    filter: &Vec<String>,
+) -> Result<(), FypmError> {
+    let modifier_filter: String;
+    let divisory_char = '─';
+    let mut tasks_count = 0;
+
+    if modifier != "all" {
+        modifier_filter = get::filter_by_modifier(modifier)?
+    } else {
+        modifier_filter = "".to_string();
+    }
+
+    let other_tasks_filter = &format!(
+        "((({}) {}) and MOTHER: and -MOTHER)",
+        filter.join(" "),
+        modifier_filter
+    );
+
+    {
+        let mothers_uuids = get::get_uuids_by_filter(
+            format!("(({}) and +MOTHER)", filter.join(" ")).as_str(),
+            None,
+        )?;
+
+        for mother_uuid in mothers_uuids {
+            let tasks_filter =
+                format!("((uuid:{mother_uuid} or MOTHER:{mother_uuid}) {modifier_filter})");
+
+            tasks_count += get::get_count_by_filter(&tasks_filter)?;
+
+            Command::new("task")
+                .args([
+                    tasks_filter.as_str(),
+                    "rc.verbose:false",
+                    format!("rc.report.{modifier}.sort=TYPE-,entry+").as_str(),
+                    format!("{modifier}").as_str(),
+                ])
+                .stdout(Stdio::inherit())
+                .output()
+                .unwrap();
+        }
+
+        tasks_count += get::get_count_by_filter(other_tasks_filter)?;
+    }
+
+    {
+        Command::new("task")
+            .args([
+                other_tasks_filter,
+                "rc.verbose:false",
+                format!("rc.report.{modifier}.sort=TYPE-,entry+").as_str(),
+                modifier,
+            ])
+            .stdout(Stdio::inherit())
+            .output()
+            .unwrap();
+
+        println!();
+        if let Some((terminal_size::Width(width), _)) = terminal_size::terminal_size() {
+            for _ in 0..width {
+                print!("{divisory_char}");
+            }
+        } else {
+            for _ in 0..30 {
+                print!("{divisory_char}");
+            }
+        }
+        println!();
+
+        println!("{} tasks found", tasks_count);
+    }
+
+    Ok(())
+}
 //#endregion

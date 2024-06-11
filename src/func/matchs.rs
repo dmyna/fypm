@@ -93,6 +93,11 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
 
             Ok(())
         }
+        Commands::TaLsMotAndSub { modifier, filter } => {
+            task::task_ls_mother_and_subtasks(modifier, filter)?;
+
+            Ok(())
+        }
 
         Commands::TaStart { filter } => task::task_start(filter),
         Commands::TaStop { filter } => task::task_stop(filter, true),

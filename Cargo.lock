@@ -393,6 +393,8 @@ dependencies = [
  "serde",
  "serde_json",
  "strfmt",
+ "terminal_size",
+ "tmux_interface",
  "toml",
  "uuid",
 ]
@@ -823,6 +825,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "terminal_size"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "21bebf2b7c9e0a515f6e0f8c51dc0f8e4696391e6f1ff30379559f8365fb0df7"
+dependencies = [
+ "rustix",
+ "windows-sys 0.48.0",
+]
+
+[[package]]
 name = "thiserror"
 version = "1.0.58"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -841,6 +853,12 @@ dependencies = [
  "quote",
  "syn",
 ]
+
+[[package]]
+name = "tmux_interface"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3885889703554d7b0dd515111432fc3b2f9cceb15b2139f9b12da73365299c05"
 
 [[package]]
 name = "toml"
