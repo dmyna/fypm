@@ -15,6 +15,7 @@ alias tadone="$PKG ta-done"
 alias tastat-del="$PKG ta-statistic deleted"
 alias tastat-pen="$PKG ta-statistic pending"
 alias tals-date="$PKG ta-ls-date"
+alias taban="$PKG ta-abandon"
 
 alias tin="$PKG ti-annotate"
 alias ticart="$PKG ti-start-correction"

@@ -8,7 +8,10 @@ use std::{fs, process::Command, str};
 
 //#endregion
 //#region           Modules
-use crate::func::{action::*, date, list, parser};
+use crate::func::{
+    action::{self, *},
+    date, list, parser,
+};
 use crate::handlers::date::NaiveDateIter;
 use crate::utils::constants::{CONTROL_TASK, DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH};
 use crate::utils::enums;
@@ -645,6 +648,89 @@ pub fn task_list_mother_and_subtasks(
         println!();
 
         println!("{} tasks found", tasks_count);
+    }
+
+    Ok(())
+}
+pub fn task_abandon(
+    tag: &enums::TaAbandonTags,
+    filter: &String,
+    annotation: &Option<String>,
+) -> Result<(), FypmError> {
+    if (tag == &enums::TaAbandonTags::Abandoned || tag == &enums::TaAbandonTags::NoControl)
+        && annotation.is_none()
+    {
+        panic!("You must specify an annotation when mark a task as NoControl or Abandoned!");
+    }
+
+    let mut confirmation = false;
+    {
+        let tasks = get::get_json_by_filter(filter, None)?;
+
+        let mut tasks_descriptions = Vec::new();
+        for task in tasks {
+            tasks_descriptions.push(task.description);
+        }
+
+        println!(
+            "These are the selected tasks: {}",
+            tasks_descriptions.join(" / ")
+        );
+
+        confirmation = Confirm::new()
+            .with_prompt("Do you want to continue?")
+            .interact()
+            .unwrap();
+    }
+
+    if confirmation {
+        let mut modify_args = Vec::new();
+        modify_args.extend([
+            "rc.recurrence.confirmation=off",
+            "rc.confirmation=off",
+            filter,
+            "modify",
+        ]);
+
+        match tag {
+            enums::TaAbandonTags::Archived => {
+                modify_args.extend(["+Archived"]);
+            }
+            enums::TaAbandonTags::Failed => {
+                modify_args.extend(["+Failed"]);
+            }
+            enums::TaAbandonTags::Abandoned => {
+                modify_args.extend(["+Abandoned"]);
+            }
+            enums::TaAbandonTags::NoControl => {
+                modify_args.extend(["+NoControl"]);
+            }
+        }
+
+        if let Some(annotation) = annotation {
+            action::annotate("task", filter, annotation, true)?;
+        }
+
+        Command::new("task")
+            .args(modify_args)
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
+            .output()
+            .unwrap();
+
+        Command::new("task")
+            .args([
+                "rc.confirmation=off",
+                "rc.recurrence.confirmation=off",
+                filter,
+                "delete",
+            ])
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
+            .output()
+            .unwrap();
+    } else {
+        println!("Aborting...");
     }
 
     Ok(())

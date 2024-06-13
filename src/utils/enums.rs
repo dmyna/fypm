@@ -74,6 +74,14 @@ pub enum Commands {
     },
     /// Anotate on taskwarrior task (tan)
     TaAnnotate { filter: String, annotation: String },
+    /// Abandon a task (taban)
+    TaAbandon {
+        #[arg(value_enum)]
+        tag: TaAbandonTags,
+        filter: String,
+        /// Required for 'abandoned' (a) and 'no-control' (n).
+        annotation: Option<String>
+    },
     /// Start a task (tastart)
     TaStart { filter: String },
     /// Stop a task (tastop)
@@ -84,7 +92,7 @@ pub enum Commands {
         #[arg(short = 's', long = "start")]
         tastart_filter: Option<String>,
     },
-    /// Get statistics from taskwarrior
+    /// Get statistics from taskwarrior (tastat-*)
     TaStatistic {
         name: StatisticsCommands,
         /// Exclude recurring tasks from the count
@@ -141,6 +149,22 @@ pub enum Commands {
         original_id: String,
         replacement_id: String,
     },
+}
+
+#[derive(ValueEnum, Clone, PartialEq)]
+pub enum TaAbandonTags {
+    /// Archive a task (alias: c)
+    #[value(alias = "c")]
+    Archived,
+    /// Abandon a task in Failed case (alias: f)
+    #[value(alias = "f")]
+    Failed,
+    /// Abandon a task in Abandoned case (alias: a)
+    #[value(alias = "a")]
+    Abandoned,
+    /// Abandon a task in NoControl case (alias: n)
+    #[value(alias = "n")]
+    NoControl
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]

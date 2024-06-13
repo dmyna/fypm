@@ -104,7 +104,8 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
             tasks_to_done,
             tastart_filter,
         } => task::task_done(tasks_to_done, tastart_filter),
-        Commands::TaAnnotate { filter, annotation } => action::annotate("task", filter, annotation),
+        Commands::TaAnnotate { filter, annotation } => action::annotate("task", filter, annotation, false),
+        Commands::TaAbandon { tag, filter, annotation } => task::task_abandon(tag, filter, annotation),
         Commands::TaStatistic { name, no_parents } => task::task_statistic(name, no_parents),
 
         Commands::TiLs { date, filters } => {
@@ -133,7 +134,7 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
             replacement_id,
         } => timew::replace(original_id, replacement_id),
         Commands::TiAnnotate { filter, annotation } => {
-            action::annotate("timew", filter, annotation)
+            action::annotate("timew", filter, annotation, false)
         }
     }
 }

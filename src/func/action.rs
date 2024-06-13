@@ -12,19 +12,33 @@ use crate::utils::get;
 use crate::utils::structs::TaskWarriorExported;
 //#endregion
 //#region           Implementation
-pub fn annotate(command: &str, filter: &String, annotation: &String) -> Result<(), FypmError> {
-    Command::new(command)
-        .args([
-            "rc.recurrence.confirmation=off",
-            "rc.confirmation=off",
-            filter,
-            "annotate",
-            annotation,
-        ])
+pub fn annotate(
+    command: &str,
+    filter: &String,
+    annotation: &String,
+    skip_confirmation: bool,
+) -> Result<(), FypmError> {
+    let mut args = Vec::new();
+    {
+        args.extend(["rc.recurrence.confirmation=off"]);
+
+        if skip_confirmation {
+            args.extend(["rc.confirmation=off"]);
+        }
+        args.extend([filter, "annotate", annotation]);
+    }
+
+    let mut binding = Command::new(command);
+    let mut execute = binding
+        .args(args)
         .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .output()
-        .unwrap();
+        .stderr(Stdio::inherit());
+
+    if !skip_confirmation {
+        execute = execute.stdin(Stdio::inherit());
+    }
+
+    execute.output().unwrap();
 
     Ok(())
 }
