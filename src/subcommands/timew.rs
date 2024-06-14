@@ -235,6 +235,7 @@ pub fn list(date: &String, aditional_filters: &Option<Vec<String>>) -> Result<()
 
     Command::new("timew")
         .args(args)
+        .stdin(Stdio::inherit())
         .stdout(Stdio::inherit())
         .output()
         .unwrap();
