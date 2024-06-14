@@ -20,7 +20,7 @@ verify_args() {
                 echo "There is no next task."
                 return 1
             fi
-            
+
             NEXT=$(task "$MOTHER_NEXT" export | jq -r '.[0].SEQ_CURRENT')
         else
             NEXT=$(echo "$CURRENT_TASKS_JSON" | jq -r '.[0].SEQ_NEXT')
