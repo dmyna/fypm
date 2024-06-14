@@ -7,11 +7,13 @@ use std::str;
 
 pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
     match command {
+        //#region               Systems
         Commands::InitDay => todo!(),
         Commands::Daemon { action, name } => todo!(),
         Commands::Worktime { action, actionargs } => todo!(),
         Commands::Instance { action, actionargs } => todo!(),
-
+        //#endregion
+        //#region               Task Subcommands
         Commands::TaAdd {
             description,
             project,
@@ -104,16 +106,36 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
             tasks_to_done,
             tastart_filter,
         } => task::task_done(tasks_to_done, tastart_filter),
-        Commands::TaAnnotate { filter, annotation } => action::annotate("task", filter, annotation, false),
-        Commands::TaAbandon { tag, filter, annotation } => task::task_abandon(tag, filter, annotation),
+        Commands::TaAnnotate { filter, annotation } => {
+            action::annotate("task", filter, annotation, false)
+        }
+        Commands::TaAbandon {
+            tag,
+            filter,
+            annotation,
+        } => task::task_abandon(tag, filter, annotation),
         Commands::TaStatistic { name, no_parents } => task::task_statistic(name, no_parents),
-
+        Commands::TaSchedule {
+            filter,
+            alarm_date,
+            due_date,
+            worktime,
+        } => task::task_schedule(filter, alarm_date, due_date, worktime),
+        Commands::TaUnschedule {
+            filter,
+            no_alarm,
+            no_due,
+            no_worktime,
+        } => task::task_unschedule(filter, no_alarm, no_due, no_worktime),
+        Commands::TaUnd { filter, unarchive } => task::task_und(filter, unarchive),
+        Commands::TaProject { action, arg } => task::task_project(action, arg),
+        //#endregion
+        //#region               Timew Subcommands
         Commands::TiLs { date, filters } => {
             timew::list(date, filters)?;
 
             Ok(())
         }
-
         Commands::TiEndCorrection {
             manipulation_id,
             reference_id,
@@ -135,7 +157,7 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
         } => timew::replace(original_id, replacement_id),
         Commands::TiAnnotate { filter, annotation } => {
             action::annotate("timew", filter, annotation, false)
-        }
+        } //#endregion
     }
 }
 pub fn match_exec_command(

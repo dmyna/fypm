@@ -1,6 +1,6 @@
 //#region           Crates
 use std::fs;
-use std::io::{Error, ErrorKind};
+use std::io::{Error, ErrorKind, Write};
 use std::process::Command;
 use std::process::Stdio;
 use std::str;
@@ -20,7 +20,7 @@ pub fn annotate(
 ) -> Result<(), FypmError> {
     let mut args = Vec::new();
     {
-        args.extend(["rc.recurrence.confirmation=off"]);
+        args.extend(["rc.verbose=0", "rc.recurrence.confirmation=off"]);
 
         if skip_confirmation {
             args.extend(["rc.confirmation=off"]);
@@ -34,7 +34,30 @@ pub fn annotate(
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit());
 
-    if !skip_confirmation {
+    if skip_confirmation {
+        execute = execute.stdin(Stdio::piped());
+
+        let get_count = Command::new("task")
+            .args(["rc.verbose=0", filter, "count"])
+            .output()
+            .unwrap();
+        let tasks_count = String::from_utf8(get_count.stdout)
+            .unwrap()
+            .trim()
+            .parse::<u32>()
+            .unwrap();
+
+        if tasks_count > 2 {
+            let mut child = execute.spawn().unwrap();
+
+            let mut stdin = child.stdin.take().unwrap();
+            stdin.write_all("all\n".as_bytes()).unwrap();
+
+            child.wait().unwrap();
+
+            return Ok(());
+        }
+    } else {
         execute = execute.stdin(Stdio::inherit());
     }
 

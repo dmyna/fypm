@@ -2,6 +2,7 @@ use clap::{Subcommand, ValueEnum};
 
 #[derive(Subcommand)]
 pub enum Commands {
+    //#region               Systems
     /// Manage daemon processes
     Daemon {
         action: String,
@@ -22,7 +23,8 @@ pub enum Commands {
     },
     /// Initialize day by setting first tasks of the day
     InitDay,
-
+    //#endregion
+    //#region               Task Subcommands
     /// Add a task to taskwarrior (taadd)
     TaAdd {
         description: String,
@@ -80,7 +82,7 @@ pub enum Commands {
         tag: TaAbandonTags,
         filter: String,
         /// Required for 'abandoned' (a) and 'no-control' (n).
-        annotation: Option<String>
+        annotation: Option<String>,
     },
     /// Start a task (tastart)
     TaStart { filter: String },
@@ -92,6 +94,36 @@ pub enum Commands {
         #[arg(short = 's', long = "start")]
         tastart_filter: Option<String>,
     },
+    TaSchedule {
+        filter: String,
+        alarm_date: String,
+        due_date: Option<String>,
+        /// Specify a worktime
+        #[arg(short = 'w', long = "worktime")]
+        worktime: Option<String>,
+    },
+    TaUnschedule {
+        filter: String,
+        #[arg(short = 'a', long)]
+        no_alarm: bool,
+        #[arg(short = 'd', long)]
+        no_due: bool,
+        #[arg(short = 'w', long)]
+        no_worktime: bool,
+    },
+    /// Set a task as pending, removing the "failed/abandoned/no-control" status or unarchiving it (taund)
+    TaUnd {
+        filter: String,
+        #[arg(short = 'c', long)]
+        unarchive: bool
+    },
+    TaProject {
+        #[arg(value_enum)]
+        action: TaProjectActions,
+        /// Project || Filter. Project is required in "a && c" options. Filter is optional in "l" flag.
+        #[arg(short, long)]
+        arg: Option<String>
+    },
     /// Get statistics from taskwarrior (tastat-*)
     TaStatistic {
         name: StatisticsCommands,
@@ -99,7 +131,6 @@ pub enum Commands {
         #[arg(short, long)]
         no_parents: bool,
     },
-
     /// List tasks by date in a separate day/week style (tals-date)
     TaLsDate {
         property: String,
@@ -112,14 +143,8 @@ pub enum Commands {
         modifier: String,
         filter: Vec<String>,
     },
-
-    /// List logs for a day (tils)
-    TiLs {
-        #[arg(default_value_t = String::from("today"))]
-        date: String,
-        filters: Option<Vec<String>>
-    },
-
+    //#endregion
+    //#region               Timew Subcommands
     /// Anotate on timewarrior task (tin)
     TiAnnotate { filter: String, annotation: String },
     /// Move start of a task to end of other (ticart)
@@ -149,8 +174,27 @@ pub enum Commands {
         original_id: String,
         replacement_id: String,
     },
+    /// List logs for a day (tils)
+    TiLs {
+        #[arg(default_value_t = String::from("today"))]
+        date: String,
+        filters: Option<Vec<String>>,
+    },
+    //#endregion
 }
 
+#[derive(ValueEnum, Clone, PartialEq)]
+pub enum TaProjectActions {
+    /// Add a project (alias: a)
+    #[value(alias = "a")]
+    Add,
+    /// List projects (alias: l)
+    #[value(alias = "l")]
+    List,
+    /// Archive a project (alias: c)
+    #[value(alias = "c")]
+    Archive
+}
 #[derive(ValueEnum, Clone, PartialEq)]
 pub enum TaAbandonTags {
     /// Archive a task (alias: c)
@@ -164,7 +208,7 @@ pub enum TaAbandonTags {
     Abandoned,
     /// Abandon a task in NoControl case (alias: n)
     #[value(alias = "n")]
-    NoControl
+    NoControl,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]

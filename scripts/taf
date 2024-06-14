@@ -20,7 +20,11 @@ verify_args() {
         return 1
     else
         FILTER="$1"
-        MODIFIER="$2"
+        if [[ -n $2 ]]; then
+            MODIFIER="$2"
+        else
+            MODIFIER="list"
+        fi
     fi
 }
 list_filters() {

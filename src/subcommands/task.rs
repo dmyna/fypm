@@ -2,10 +2,12 @@ use chrono::{DateTime, Datelike, Duration, Local, NaiveDate, Weekday};
 //#region           Crates
 use dialoguer::Confirm;
 use regex::Regex;
+use std::io::Write;
 use std::process::Stdio;
 use std::str::FromStr;
 use std::{fs, process::Command, str};
 
+use crate::func::dialog;
 //#endregion
 //#region           Modules
 use crate::func::{
@@ -14,7 +16,7 @@ use crate::func::{
 };
 use crate::handlers::date::NaiveDateIter;
 use crate::utils::constants::{CONTROL_TASK, DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH};
-use crate::utils::enums;
+use crate::utils::enums::{self, TaProjectActions};
 use crate::utils::err::FypmError;
 use crate::utils::err::FypmErrorKind;
 use crate::utils::get;
@@ -122,7 +124,7 @@ pub fn task_done(
         }
 
         Command::new("task")
-            .args(["rc.recurrence.confirmation=off", filter, "done"])
+            .args(["rc.recurrence.confirmation=0", filter, "done"])
             .stdin(Stdio::inherit())
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())
@@ -139,8 +141,8 @@ pub fn task_done(
 
         Command::new("task")
             .args([
-                "rc.confirmation=off",
-                "rc.recurrence.confirmation=off",
+                "rc.confirmation=0",
+                "rc.recurrence.confirmation=0",
                 current_task.uuid.as_str(),
                 "done",
             ])
@@ -513,7 +515,7 @@ pub fn task_list_date(
     modifier: &String,
     date_args: &Vec<String>,
 ) -> Result<(), FypmError> {
-    let verbose: &str = "rc.verbose=false";
+    let verbose: &str = "rc.verbose=0";
     let sort = format!("rc.report.{modifier}.sort={property}");
     let divisory = "                            ";
 
@@ -611,7 +613,7 @@ pub fn task_list_mother_and_subtasks(
             Command::new("task")
                 .args([
                     tasks_filter.as_str(),
-                    "rc.verbose:false",
+                    "rc.verbose=0",
                     format!("rc.report.{modifier}.sort=TYPE-,entry+").as_str(),
                     format!("{modifier}").as_str(),
                 ])
@@ -627,7 +629,7 @@ pub fn task_list_mother_and_subtasks(
         Command::new("task")
             .args([
                 other_tasks_filter,
-                "rc.verbose:false",
+                "rc.verbose=0",
                 format!("rc.report.{modifier}.sort=TYPE-,entry+").as_str(),
                 modifier,
             ])
@@ -662,32 +664,16 @@ pub fn task_abandon(
     {
         panic!("You must specify an annotation when mark a task as NoControl or Abandoned!");
     }
-
-    let mut confirmation = false;
-    {
-        let tasks = get::get_json_by_filter(filter, None)?;
-
-        let mut tasks_descriptions = Vec::new();
-        for task in tasks {
-            tasks_descriptions.push(task.description);
-        }
-
-        println!(
-            "These are the selected tasks: {}",
-            tasks_descriptions.join(" / ")
-        );
-
-        confirmation = Confirm::new()
-            .with_prompt("Do you want to continue?")
-            .interact()
-            .unwrap();
-    }
+    let tasks = get::get_json_by_filter(filter, None)?;
+    let tasks_count: usize = tasks.len();
+    let confirmation = dialog::verify_selected_tasks(&tasks)?;
 
     if confirmation {
         let mut modify_args = Vec::new();
         modify_args.extend([
-            "rc.recurrence.confirmation=off",
-            "rc.confirmation=off",
+            "rc.verbose=0",
+            "rc.recurrence.confirmation=0",
+            "rc.confirmation=0",
             filter,
             "modify",
         ]);
@@ -711,26 +697,254 @@ pub fn task_abandon(
             action::annotate("task", filter, annotation, true)?;
         }
 
-        Command::new("task")
-            .args(modify_args)
-            .stdout(Stdio::inherit())
-            .stderr(Stdio::inherit())
-            .output()
-            .unwrap();
+        let mut modify_binding = Command::new("task");
+        let modify_command = modify_binding.args(modify_args).stderr(Stdio::inherit());
 
-        Command::new("task")
+        let mut delete_binding = Command::new("task");
+        let delete_command = delete_binding
             .args([
-                "rc.confirmation=off",
-                "rc.recurrence.confirmation=off",
+                "rc.verbose=0",
+                "rc.confirmation=0",
+                "rc.recurrence.confirmation=0",
                 filter,
                 "delete",
             ])
             .stdout(Stdio::inherit())
-            .stderr(Stdio::inherit())
-            .output()
-            .unwrap();
+            .stderr(Stdio::inherit());
+
+        if tasks_count > 2 {
+            let mut modify_child = modify_command.stdin(Stdio::piped()).spawn().unwrap();
+
+            modify_child
+                .stdin
+                .take()
+                .unwrap()
+                .write_all("all\n".as_bytes())
+                .unwrap();
+            modify_child.wait().unwrap();
+
+            let mut delete_child = delete_command.stdin(Stdio::piped()).spawn().unwrap();
+
+            delete_child
+                .stdin
+                .take()
+                .unwrap()
+                .write_all("all\n".as_bytes())
+                .unwrap();
+            delete_child.wait().unwrap();
+        } else {
+            modify_command.output().unwrap();
+            delete_command.output().unwrap();
+        }
     } else {
         println!("Aborting...");
+    }
+
+    Ok(())
+}
+pub fn task_schedule(
+    filter: &String,
+    alarm_date: &String,
+    due_date: &Option<String>,
+    worktime: &Option<String>,
+) -> Result<(), FypmError> {
+    let tasks = get::get_json_by_filter(filter, None)?;
+    let tasks_count: usize = tasks.len();
+    let confirmation = dialog::verify_selected_tasks(&tasks)?;
+
+    if confirmation {
+        let mut modify_args = Vec::new();
+        modify_args.extend([
+            "rc.verbose=0".to_string(),
+            "rc.recurrence.confirmation=0".to_string(),
+            "rc.confirmation=0".to_string(),
+            filter.clone(),
+            "modify".to_string(),
+        ]);
+
+        if alarm_date != "cur" {
+            modify_args.extend([format!("ALARM:{}", alarm_date)]);
+        }
+        if let Some(due_date) = due_date {
+            modify_args.extend([format!("due:{}", due_date)]);
+        }
+        if let Some(worktime) = worktime {
+            modify_args.extend([format!("WT:{}", worktime)]);
+        }
+
+        let mut modify_binding = Command::new("task");
+        let modify_command = modify_binding
+            .args(modify_args)
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit());
+
+        if tasks_count > 2 {
+            let mut modify_child = modify_command.stdin(Stdio::piped()).spawn().unwrap();
+
+            modify_child
+                .stdin
+                .take()
+                .unwrap()
+                .write_all("all\n".as_bytes())
+                .unwrap();
+            modify_child.wait().unwrap();
+        } else {
+            modify_command.output().unwrap();
+        }
+    } else {
+        println!("Aborting...");
+    }
+
+    Ok(())
+}
+pub fn task_unschedule(
+    filter: &String,
+    no_alarm: &bool,
+    no_due: &bool,
+    no_worktime: &bool,
+) -> Result<(), FypmError> {
+    let tasks = get::get_json_by_filter(filter, None)?;
+    let tasks_count: usize = tasks.len();
+    let confirmation = dialog::verify_selected_tasks(&tasks)?;
+
+    if confirmation {
+        let mut modify_args = Vec::new();
+        modify_args.extend([
+            "rc.verbose=0",
+            "rc.recurrence.confirmation=0",
+            "rc.confirmation=0",
+            filter,
+            "modify",
+        ]);
+
+        if !*no_alarm {
+            modify_args.extend(["ALARM:"]);
+        }
+        if !*no_due {
+            modify_args.extend(["due:"]);
+        }
+        if !*no_worktime {
+            modify_args.extend(["WT:NonSched!"]);
+        }
+
+        let mut modify_binding = Command::new("task");
+        let modify_command = modify_binding
+            .args(modify_args)
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit());
+
+        if tasks_count > 2 {
+            let mut modify_child = modify_command.stdin(Stdio::piped()).spawn().unwrap();
+
+            modify_child
+                .stdin
+                .take()
+                .unwrap()
+                .write_all("all\n".as_bytes())
+                .unwrap();
+            modify_child.wait().unwrap();
+        } else {
+            modify_command.output().unwrap();
+        }
+    } else {
+        println!("Aborting...");
+    }
+
+    Ok(())
+}
+pub fn task_und(filter: &String, unarchive: &bool) -> Result<(), FypmError> {
+    let tasks = get::get_json_by_filter(filter, None)?;
+    let tasks_count: usize = tasks.len();
+    let confirmation = dialog::verify_selected_tasks(&tasks)?;
+
+    if confirmation {
+        let mut args = vec![
+            "rc.verbose=0",
+            "rc.confirmation=0",
+            "rc.recurrence.confirmation=0",
+            filter,
+            "modify",
+            "status:pending",
+        ];
+
+        if *unarchive {
+            args.extend(["-Archived"]);
+        } else {
+            args.extend(["-Failed", "-Abandoned", "-NoControl"]);
+        }
+
+        let mut modify_binding = Command::new("task");
+        let modify_command = modify_binding.args(args).stderr(Stdio::inherit());
+
+        if tasks_count > 2 {
+            let mut modify_child = modify_command.stdin(Stdio::piped()).spawn().unwrap();
+
+            modify_child
+                .stdin
+                .take()
+                .unwrap()
+                .write_all("all\n".as_bytes())
+                .unwrap();
+            modify_child.wait().unwrap();
+        } else {
+            modify_command.output().unwrap();
+        }
+    } else {
+        println!("Aborting...");
+    }
+
+    Ok(())
+}
+pub fn task_project(action: &TaProjectActions, arg: &Option<String>) -> Result<(), FypmError> {
+    match *action {
+        TaProjectActions::List => {
+            let mut args = Vec::new();
+
+            if let Some(filter) = arg {
+                args.extend([format!("project:{}", filter)]);
+            }
+
+            args.extend(["projects".to_string()]);
+
+            Command::new("task").args(args).output().unwrap();
+        }
+        TaProjectActions::Add => {
+            if let Some(project) = arg {
+                let confirmation: bool = Confirm::new()
+                    .with_prompt(format!("Do you want to add '{}' project?", project))
+                    .interact()
+                    .unwrap();
+
+                if confirmation {
+                    task_add(
+                        &"Project Marker".to_string(),
+                        project,
+                        &" ".to_string(),
+                        &"Continuous".to_string(),
+                        &Some(vec!["+FYPM".to_string()]),
+                        &true,
+                    )?;
+                }
+            } else {
+                panic!("Please provide a project name!");
+            }
+        }
+        TaProjectActions::Archive => {
+            if let Some(project) = arg {
+                let confirmation: bool = Confirm::new()
+                    .with_prompt(format!("Do you want to archive '{}' project?", project))
+                    .interact()
+                    .unwrap();
+
+                if confirmation {
+                    task_abandon(
+                        &enums::TaAbandonTags::Archived,
+                        &format!("(project:{} and -DELETED and -COMPLETED)", project),
+                        &None,
+                    )?;
+                }
+            }
+        }
     }
 
     Ok(())
