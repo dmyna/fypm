@@ -104,30 +104,29 @@ fi
 
 # ------------------- #
 # Change this based on your worktimes and actions to do at each worktime
-bspasroot sudo -v
-sudo pdfw rm rule www.instagram.com
-sudo pdfw add rule www.instagram.com
 case $1 in
     "PreWork")
-        define_values "PreWork" "#999" "#111" "08:30"
+        define_values "PreWork" "#999" "#111" "08:00"
         ;;
     "Essentials")
         define_values "Essentials" "#f90" "#111" "10:00"
-        sudo pdfw rm rule www.instagram.com
+        killall Discord
         ;;
     "General")
         define_values "General" "#e00" "#111" "14:00"
-        wmctrl -c "Discord"
         ;;
     "Calm")
         define_values "Calm" "#00e" "#eee" "18:00"
         ;;
     "PreSleep")
         define_values "PreSleep" "#999" "#111" "19:00"
-        wmctrl -c "Discord"
+        killall Discord
+        killall DiscordPTB
         ;;
     "Sleep")
         define_values "Sleep" "#fff" "#111" "06:00"
+        killall Discord
+        killall DiscordPTB
         ;;
     "Break")
         define_values "Break" "#fff" "#111"

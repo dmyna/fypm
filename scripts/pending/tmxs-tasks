@@ -24,7 +24,7 @@ open_taskwarrior() {
         tmux split-window -t "$TASK":0.0 -v -l 30%
 
         tmux send-keys -t "$TASK":0.0 "$VIEWER" C-m
-        tmux send-keys -t "$TASK":0.2 'perpetue_cmd taproj -l' C-m
+        tmux send-keys -t "$TASK":0.2 'perpetue_cmd fypm ta-project l' C-m
     fi
 
     bspc desktop -l monocle
