@@ -8,6 +8,7 @@ mod func;
 mod handlers;
 mod subcommands;
 mod utils;
+mod tests;
 
 use utils::enums::Commands;
 //#endregion

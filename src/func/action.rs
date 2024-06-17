@@ -80,8 +80,10 @@ pub fn receive_last_task() -> Result<String, Error> {
         ))
     }
 }
-pub fn verify_if_wt_is_allday(filter_json: &TaskWarriorExported) -> Result<(), Error> {
-    if filter_json.wt == "AllDay" {
+/// Verify if the task is allday.
+/// If true, it will return an error warning that you are trying to start a task that is AllDay.
+pub fn verify_if_wt_is_allday(json: &TaskWarriorExported) -> Result<(), Error> {
+    if json.wt == "AllDay" {
         Err(Error::new(
             ErrorKind::InvalidInput,
             "You are trying to start a task that is AllDay!".to_string(),
