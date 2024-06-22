@@ -98,9 +98,10 @@ esac
 
 # Projects Case
 case $(task "$1" export | jq -r '.[0].project') in
-    "CerebralLine.Reading")
-        set_sound 50
-	    vivaldi-stable https://eggsy.xyz/projects/premid/custom-status/
+
+    "PISM.III")
+        before_executed
+        obs open "" > /dev/null 2>&1 & disown
         after_executed
         ;;
     "Lazer.Watch")
@@ -110,7 +111,8 @@ case $(task "$1" export | jq -r '.[0].project') in
         after_executed
 esac
 
-# Tags Case
+# Tllatels
+# ags Case
 TAGS=$(task "$1" export | jq -r '.[0].tags')
 
 case "${TAGS[*]}" in

@@ -26,10 +26,11 @@ inform_pending_tasks() {
     if [[ -z "$SELECTED" ]]; then
         esch "$TITLE" "$ACT_MSG" 0
     elif [[ "$SELECTED" == "action" ]]; then
+        killall vivaldi
         alacritty \
             --config-file="$BSPDIR"/alacritty/alacritty.toml \
             --command tmxs-taalwarn _taallatels & disown
-        sleep 5m
+        sleep 1m
     fi
 }
 get_active_task() {

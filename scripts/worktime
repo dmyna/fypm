@@ -1,7 +1,7 @@
 #!/bin/zsh
 
-VIEWER='wvit'
-VIEWER_QUIT=':q'
+VIEWER='twui'
+VIEWER_QUIT='q'
 LAST_WT_PATH=/var/tmp/.last_work_time
 CURRENT_WORKTIME_PATH=/var/tmp/.worktime_filter
 TWUI_CFG_LINE='report.next.filter'
@@ -101,13 +101,11 @@ else
 fi
 
 
-# ------------------- #
 # Change this based on your worktimes and actions to do at each worktime
 bspasroot sudo -v
-sudo pdfw rm rule www.instagram.com
-sudo pdfw add rule www.instagram.com
->>>>>>> upstream/develop
+
 case $1 in
+
     "Highlevel")
         define_values "Highlevel" "#af0" "#111" "04:00"
         ;;
