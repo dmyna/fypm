@@ -46,7 +46,7 @@ pub enum Commands {
     },
     /// Add a sequence of tasks (taadd-seq)
     TaAddSeq {
-        seq_type: String,
+        seq_type: TaSequenceTypes,
         style: String,
         description: String,
         project: String,
@@ -209,6 +209,21 @@ pub enum TaAbandonTags {
     /// Abandon a task in NoControl case (alias: n)
     #[value(alias = "n")]
     NoControl,
+}
+#[derive(ValueEnum, Clone, PartialEq, strum_macros::Display)]
+pub enum TaSequenceTypes {
+    /// Create a book sequence
+    #[value(alias = "b")]
+    Book,
+    /// Create a serie sequence
+    #[value(alias = "s")]
+    Serie,
+    /// Create an anime sequence
+    #[value(alias = "a")]
+    Anime,
+    /// Create a manga sequence
+    #[value(alias = "yp")]
+    YTPlaylist,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]

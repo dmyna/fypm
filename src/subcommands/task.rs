@@ -16,7 +16,7 @@ use crate::func::{
 };
 use crate::handlers::date::NaiveDateIter;
 use crate::utils::constants::{CONTROL_TASK, DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH};
-use crate::utils::enums::{self, TaProjectActions};
+use crate::utils::enums::{self, TaProjectActions, TaSequenceTypes};
 use crate::utils::err::FypmError;
 use crate::utils::err::FypmErrorKind;
 use crate::utils::get;
@@ -315,7 +315,7 @@ pub fn task_add_sub(
     Ok(subtask)
 }
 pub fn task_add_seq(
-    seq_type: &String,
+    seq_type: &TaSequenceTypes,
     style: &String,
     description: &String,
     project: &String,
@@ -328,7 +328,7 @@ pub fn task_add_seq(
     let mother_task_uuid: String;
     let mother_description: String;
     let final_tag = format!("+ST_{}", tag);
-    let final_tag_type = format!("+{}", seq_type);
+    let final_tag_type = format!("+{}", seq_type.to_string());
 
     if let Some(season) = season {
         mother_description = format!("{} (Season {})", description, season)
@@ -359,18 +359,20 @@ pub fn task_add_seq(
         let mother_task_uuid = &mother_task_uuid;
         let subtask_description: String;
 
-        if seq_type == &"Book".to_string() {
-            subtask_description = format!("Chapter {}", i);
-        } else {
-            if let Some(season) = season {
-                subtask_description = format!("S{}E{}", season, i);
-            } else {
-                subtask_description = format!("E{}", i);
+        match seq_type {
+            TaSequenceTypes::Book => {
+                subtask_description = format!("Chapter {}", i);
+            }
+            _ => {
+                if let Some(season) = season {
+                    subtask_description = format!("S{}E{}", season, i);
+                } else {
+                    subtask_description = format!("E{}", i);
+                }
             }
         }
 
         let mut args = vec![
-            mother_task_uuid.clone(),
             subtask_description.clone(),
             style.clone(),
             final_tag.clone(),
