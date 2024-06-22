@@ -1,22 +1,67 @@
 //#region           Crates
 use std::fs;
-use std::str;
+use std::io::{Error, ErrorKind, Write};
 use std::process::Command;
-use std::io::{Error, ErrorKind};
+use std::process::Stdio;
+use std::str;
+
 //#region           Modules
+use crate::utils::constants::{DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH};
+use crate::utils::err::{FypmError, FypmErrorKind};
 use crate::utils::get;
 use crate::utils::structs::TaskWarriorExported;
-use crate::utils::err::{FypmError, FypmErrorKind};
-use crate::utils::constants::{DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH};
 //#endregion
 //#region           Implementation
-pub fn annotate(command: &str, id: &String, annotation: &String) -> Result<(), FypmError> {
-    let execute = Command::new("timew")
-        .args([command, id, annotation])
-        .output()
-        .unwrap();
+pub fn annotate(
+    command: &str,
+    filter: &String,
+    annotation: &String,
+    skip_confirmation: bool,
+) -> Result<(), FypmError> {
+    let mut args = Vec::new();
+    {
+        args.extend(["rc.verbose=0", "rc.recurrence.confirmation=off"]);
 
-    println!("{}", str::from_utf8(&execute.stdout).unwrap());
+        if skip_confirmation {
+            args.extend(["rc.confirmation=off"]);
+        }
+        args.extend([filter, "annotate", annotation]);
+    }
+
+    let mut binding = Command::new(command);
+    let mut execute = binding
+        .args(args)
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit());
+
+    if skip_confirmation {
+        execute = execute.stdin(Stdio::piped());
+
+        let get_count = Command::new("task")
+            .args(["rc.verbose=0", filter, "count"])
+            .output()
+            .unwrap();
+        let tasks_count = String::from_utf8(get_count.stdout)
+            .unwrap()
+            .trim()
+            .parse::<u32>()
+            .unwrap();
+
+        if tasks_count > 2 {
+            let mut child = execute.spawn().unwrap();
+
+            let mut stdin = child.stdin.take().unwrap();
+            stdin.write_all("all\n".as_bytes()).unwrap();
+
+            child.wait().unwrap();
+
+            return Ok(());
+        }
+    } else {
+        execute = execute.stdin(Stdio::inherit());
+    }
+
+    execute.output().unwrap();
 
     Ok(())
 }
@@ -35,8 +80,10 @@ pub fn receive_last_task() -> Result<String, Error> {
         ))
     }
 }
-pub fn verify_if_wt_is_allday(filter_json: &TaskWarriorExported) -> Result<(), Error> {
-    if filter_json.wt == "AllDay" {
+/// Verify if the task is allday.
+/// If true, it will return an error warning that you are trying to start a task that is AllDay.
+pub fn verify_if_wt_is_allday(json: &TaskWarriorExported) -> Result<(), Error> {
+    if json.wt == "AllDay" {
         Err(Error::new(
             ErrorKind::InvalidInput,
             "You are trying to start a task that is AllDay!".to_string(),
@@ -57,7 +104,9 @@ pub fn verify_if_is_divisory(filter_json: &TaskWarriorExported) -> Result<(), Er
 
     Ok(())
 }
-pub fn match_inforelat_and_sequence(filter_json: &TaskWarriorExported) -> Result<String, FypmError> {
+pub fn match_inforelat_and_sequence(
+    filter_json: &TaskWarriorExported,
+) -> Result<String, FypmError> {
     let state = &filter_json.state;
     let r#type = &filter_json.r#type;
 
@@ -76,20 +125,23 @@ pub fn match_inforelat_and_sequence(filter_json: &TaskWarriorExported) -> Result
         let inforelat = &filter_json.inforelat;
 
         if let Some(inforelat) = inforelat {
-            let new_filter_json = get::get_json_by_filter(&inforelat, DEFAULT_GET_JSON_OPTIONS).unwrap();
+            let new_filter_json =
+                get::get_json_by_filter(&inforelat, DEFAULT_GET_JSON_OPTIONS).unwrap();
 
             return match_inforelat_and_sequence(&new_filter_json[0]);
         } else {
             if is_sequence {
                 if let Some(next_task) = &filter_json.seq_current {
-                    let mut next_json = get::get_json_by_filter(&next_task, DEFAULT_GET_JSON_OPTIONS)?;
+                    let mut next_json =
+                        get::get_json_by_filter(&next_task, DEFAULT_GET_JSON_OPTIONS)?;
                     let mut status = next_json[0].status.as_str();
 
                     // Loop until find a pending task or there is no next task
 
                     while status == "completed" {
                         if let Some(next_task) = &next_json[0].seq_next {
-                            next_json = get::get_json_by_filter(&next_task, DEFAULT_GET_JSON_OPTIONS)?;
+                            next_json =
+                                get::get_json_by_filter(&next_task, DEFAULT_GET_JSON_OPTIONS)?;
                             status = next_json[0].status.as_str();
                         } else {
                             return Err(FypmError {

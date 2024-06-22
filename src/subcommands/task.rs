@@ -1,16 +1,25 @@
+use chrono::{DateTime, Datelike, Duration, Local, NaiveDate, Weekday};
 //#region           Crates
+use colored::*;
 use dialoguer::Confirm;
 use regex::Regex;
+use std::io::Write;
+use std::process::Stdio;
 use std::{fs, process::Command, str};
 
+use crate::func::{dialog, matchs};
 //#endregion
 //#region           Modules
-use crate::func::{action::*, list, parser};
+use crate::func::{
+    action::{self, *},
+    date, list, parser,
+};
+use crate::handlers::date::NaiveDateIter;
 use crate::utils::constants::{CONTROL_TASK, DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH};
-use crate::utils::enums;
+use crate::utils::enums::{self, TaProjectActions, TaSequenceTypes};
 use crate::utils::err::FypmError;
 use crate::utils::err::FypmErrorKind;
-use crate::utils::get;
+use crate::utils::{extract, get, term};
 //#endregion
 //#region           Implementation
 
@@ -115,7 +124,10 @@ pub fn task_done(
         }
 
         Command::new("task")
-            .args([filter, "done"])
+            .args(["rc.recurrence.confirmation=0", filter, "done"])
+            .stdin(Stdio::inherit())
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
             .output()
             .unwrap();
     } else {
@@ -128,7 +140,14 @@ pub fn task_done(
         }
 
         Command::new("task")
-            .args([current_task.uuid.as_str(), "done"])
+            .args([
+                "rc.confirmation=0",
+                "rc.recurrence.confirmation=0",
+                current_task.uuid.as_str(),
+                "done",
+            ])
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
             .output()
             .unwrap();
     }
@@ -157,8 +176,7 @@ pub fn task_add(
     r#type: &String,
     other_args: &Option<Vec<String>>,
     skip_confirmation: &bool,
-    return_uuid: &bool,
-) -> Result<enums::TaskAddReturn, FypmError> {
+) -> Result<String, FypmError> {
     if !*skip_confirmation {
         println!("These are the args:");
         println!("      description: {}", description);
@@ -176,7 +194,10 @@ pub fn task_add(
             .unwrap();
 
         if !confirmation {
-            return Ok(enums::TaskAddReturn::Default(()));
+            return Err(FypmError {
+                message: "Aborted".to_string(),
+                kind: FypmErrorKind::Aborted,
+            });
         }
     }
 
@@ -227,18 +248,13 @@ pub fn task_add(
 
     println!("Created task with uuid: {}!", uuid);
 
-    if *return_uuid {
-        Ok(enums::TaskAddReturn::UUID(uuid))
-    } else {
-        Ok(enums::TaskAddReturn::Default(()))
-    }
+    Ok(uuid)
 }
 pub fn task_add_sub(
     mother_task: &String,
     other_args: &Vec<String>,
     skip_confirmation: &bool,
-    return_uuid: &bool,
-) -> Result<enums::TaskAddReturn, FypmError> {
+) -> Result<String, FypmError> {
     let subtask: String;
 
     let get_mother_task_json = get::get_json_by_filter(mother_task, DEFAULT_GET_JSON_OPTIONS)?;
@@ -263,22 +279,16 @@ pub fn task_add_sub(
             panic!("The specified mother doesn't have a project setted... Are you writing this stuff right?");
         }
 
-        let create_task = task_add(
+        let uuid = task_add(
             other_args.get(0).unwrap(),
             project,
             other_args.get(1).unwrap(),
             &"SubTask".to_string(),
             &other_args.get(2..).map(|x| x.to_vec()),
             skip_confirmation,
-            &true,
         )?;
 
-        match create_task {
-            enums::TaskAddReturn::UUID(uuid) => subtask = uuid,
-            enums::TaskAddReturn::Default(_) => {
-                panic!("task_add is returning void with return_uuid setted as true!")
-            }
-        }
+        subtask = uuid;
     } else {
         panic!("You specified a wrong number of arguments! You don't know how to read documentation, do you? :P");
     }
@@ -302,14 +312,10 @@ pub fn task_add_sub(
         mother_task_json.description
     );
 
-    if *return_uuid {
-        Ok(enums::TaskAddReturn::UUID(subtask))
-    } else {
-        Ok(enums::TaskAddReturn::Default(()))
-    }
+    Ok(subtask)
 }
 pub fn task_add_seq(
-    seq_type: &String,
+    seq_type: &TaSequenceTypes,
     style: &String,
     description: &String,
     project: &String,
@@ -322,7 +328,7 @@ pub fn task_add_seq(
     let mother_task_uuid: String;
     let mother_description: String;
     let final_tag = format!("+ST_{}", tag);
-    let final_tag_type = format!("+{}", seq_type);
+    let final_tag_type = format!("+{}", seq_type.to_string());
 
     if let Some(season) = season {
         mother_description = format!("{} (Season {})", description, season)
@@ -331,7 +337,7 @@ pub fn task_add_seq(
     }
 
     {
-        let create_task = task_add(
+        let uuid = task_add(
             &mother_description,
             &project.to_string(),
             &style,
@@ -342,36 +348,31 @@ pub fn task_add_seq(
                 final_tag_type.clone(),
             ]),
             &true,
-            &true,
         )?;
 
-        match create_task {
-            enums::TaskAddReturn::UUID(uuid) => mother_task_uuid = uuid,
-            enums::TaskAddReturn::Default(_) => {
-                panic!("task_add is returning void with return_uuid setted as true!")
-            }
-        }
+        mother_task_uuid = uuid;
     }
 
     let mut previous_task_uuid: String = "".to_string();
 
     for i in *initial_number..=*last_number {
         let mother_task_uuid = &mother_task_uuid;
-        let mut subtask_description: String;
+        let subtask_description: String;
 
-        if seq_type == &"Book".to_string() {
-            subtask_description = format!("Chapter {}", i);
-        } else {
-            if let Some(season) = season {
-                subtask_description = format!("S{}E{}", season, i);
-            } else {
-                subtask_description = format!("E{}", i);
+        match seq_type {
+            TaSequenceTypes::Book => {
+                subtask_description = format!("Chapter {}", i);
+            }
+            _ => {
+                if let Some(season) = season {
+                    subtask_description = format!("S{}E{}", season, i);
+                } else {
+                    subtask_description = format!("E{}", i);
+                }
             }
         }
 
-
         let mut args = vec![
-            mother_task_uuid.clone(),
             subtask_description.clone(),
             style.clone(),
             final_tag.clone(),
@@ -388,63 +389,657 @@ pub fn task_add_seq(
                 args.push(format!("SEQ_PREVIOUS:{}", last_season_json.uuid));
             }
 
-            let current_task_uuid = task_add_sub(&mother_task_uuid, &args, &true, &true).unwrap();
+            let current_task_uuid = task_add_sub(&mother_task_uuid, &args, &true).unwrap();
 
-            match current_task_uuid {
-                enums::TaskAddReturn::UUID(uuid) => {
-                    if let Some(last_season_id) = last_season_id {
-                        Command::new("task")
-                            .args([
-                                last_season_id,
-                                &"modify".to_string(),
-                                &format!("SEQ_PREVIOUS:{}", uuid),
-                            ])
-                            .output()
-                            .unwrap();
-                    }
-
-                    Command::new("task")
-                        .args([
-                            mother_task_uuid,
-                            &"modify".to_string(),
-                            &format!("SEQ_CURRENT:{}", uuid),
-                        ])
-                        .output()
-                        .unwrap();
-
-                    previous_task_uuid = uuid;
-                }
-                _ => {}
+            if let Some(last_season_id) = last_season_id {
+                Command::new("task")
+                    .args([
+                        last_season_id,
+                        &"modify".to_string(),
+                        &format!("SEQ_PREVIOUS:{}", current_task_uuid),
+                    ])
+                    .output()
+                    .unwrap();
             }
+
+            Command::new("task")
+                .args([
+                    mother_task_uuid,
+                    &"modify".to_string(),
+                    &format!("SEQ_CURRENT:{}", current_task_uuid),
+                ])
+                .output()
+                .unwrap();
+
+            previous_task_uuid = current_task_uuid;
         } else {
             if previous_task_uuid == "".to_string() {
                 panic!("previous_task_uuid is empty!");
             }
 
-            let current_task_uuid = task_add_sub(&mother_task_uuid, &args, &true, &true).unwrap();
+            let current_task_uuid = task_add_sub(&mother_task_uuid, &args, &true).unwrap();
 
-            match current_task_uuid {
-                enums::TaskAddReturn::UUID(uuid) => {
-                    Command::new("task")
-                        .args([
-                            &uuid,
-                            &"modify".to_string(),
-                            &format!("SEQ_PREVIOUS:{}", previous_task_uuid),
-                        ])
-                        .output()
-                        .unwrap();
-                    Command::new("task")
-                        .args([
-                            previous_task_uuid,
-                            "modify".to_string(),
-                            format!("SEQ_NEXT:{}", &uuid),
-                        ])
-                        .output()
-                        .unwrap();
+            Command::new("task")
+                .args([
+                    &current_task_uuid,
+                    &"modify".to_string(),
+                    &format!("SEQ_PREVIOUS:{}", previous_task_uuid),
+                ])
+                .output()
+                .unwrap();
+            Command::new("task")
+                .args([
+                    previous_task_uuid,
+                    "modify".to_string(),
+                    format!("SEQ_NEXT:{}", &current_task_uuid),
+                ])
+                .output()
+                .unwrap();
 
-                    previous_task_uuid = uuid;
+            previous_task_uuid = current_task_uuid;
+        }
+    }
+
+    Ok(())
+}
+pub fn task_add_brth(birthday_person: &String, date: &String) -> Result<String, FypmError> {
+    let current_year = Local::now().year().to_string();
+
+    let date =
+        DateTime::parse_from_rfc3339(format!("{}-{}T23:59:59Z", current_year, date).as_str())
+            .unwrap()
+            .date_naive();
+
+    let current_date = Local::now().date_naive();
+
+    let mut final_date: String = "".to_string();
+
+    if current_date <= date {
+        final_date = date.to_string();
+    } else {
+        let add_a_year = date.with_year(date.year() + 1);
+
+        if let Some(new_date) = add_a_year {
+            final_date = new_date.to_string();
+        }
+    }
+
+    let uuid = task_add(
+        &format!("{}'s Birthday", birthday_person),
+        &"Social.Events".to_string(),
+        &"Dionysian".to_string(),
+        &"Event".to_string(),
+        &Some(vec![
+            "WT:AllDay!".to_string(),
+            "recur:yearly".to_string(),
+            format!("GOAL:{}T00:00:00", &final_date),
+            format!("due:{}T23:59:59", &final_date),
+        ]),
+        &true,
+    )?;
+
+    Ok(uuid)
+    //Ok(uuid)
+}
+pub fn task_add_pl(playlist_name: &String, length: &u16) -> Result<String, FypmError> {
+    let style = "Dionysian".to_string();
+
+    let mother_uuid = task_add(
+        &playlist_name,
+        &"Music.Playlist".to_string(),
+        &style,
+        &"Objective".to_string(),
+        &None,
+        &true,
+    )?;
+
+    task_add_sub(
+        &mother_uuid,
+        &vec!["Cover".to_string(), style.clone()],
+        &true,
+    )?;
+    task_add_sub(
+        &mother_uuid,
+        &vec!["Description".to_string(), style.clone()],
+        &true,
+    )?;
+    task_add_sub(
+        &mother_uuid,
+        &vec![format!("Songs ({})", length), style],
+        &true,
+    )?;
+
+    Ok(mother_uuid)
+}
+
+pub fn task_list_date(
+    property: &String,
+    modifier: &String,
+    date_args: &Vec<String>,
+) -> Result<(), FypmError> {
+    let verbose: &str = "rc.verbose=0";
+    let sort = format!("rc.report.{modifier}.sort={property}");
+    let divisory = "                            ";
+
+    let initial_date: NaiveDate;
+    let final_date: NaiveDate;
+
+    [initial_date, final_date] = extract::date_period(date_args);
+
+    for date in NaiveDateIter::new(initial_date, final_date) {
+        let initial_day = date.format("%Y-%m-%d").to_string();
+        let final_day = (date + Duration::days(1)).format("%Y-%m-%d").to_string();
+
+        Command::new("task")
+            .args([
+                format!("{verbose}"), format!("{sort}"),
+                format!("({property}.after:{initial_day} or {property}:{initial_day}) and {property}.before:{final_day}"),
+                format!("{modifier}")])
+            .stdout(Stdio::inherit())
+            .output()
+            .unwrap();
+
+        if date.weekday() == Weekday::Sun {
+            println!("{divisory}");
+        }
+    }
+
+    Ok(())
+}
+pub fn task_list_mother_and_subtasks(
+    modifier: &String,
+    filter: &Vec<String>,
+) -> Result<(), FypmError> {
+    let modifier_filter: String;
+
+    let mut tasks_count = 0;
+
+    if modifier != "all" {
+        modifier_filter = get::filter_by_modifier(modifier)?
+    } else {
+        modifier_filter = "".to_string();
+    }
+
+    let other_tasks_filter = &format!(
+        "((({}) {}) and MOTHER: and -MOTHER)",
+        filter.join(" "),
+        modifier_filter
+    );
+
+    {
+        let mothers_uuids = get::get_uuids_by_filter(
+            format!("(({}) and +MOTHER)", filter.join(" ")).as_str(),
+            None,
+        )?;
+
+        for mother_uuid in mothers_uuids {
+            let tasks_filter =
+                format!("((uuid:{mother_uuid} or MOTHER:{mother_uuid}) {modifier_filter})");
+
+            tasks_count += get::get_count_by_filter(&tasks_filter)?;
+
+            Command::new("task")
+                .args([
+                    tasks_filter.as_str(),
+                    "rc.verbose=0",
+                    format!("rc.report.{modifier}.sort=TYPE-,entry+").as_str(),
+                    format!("{modifier}").as_str(),
+                ])
+                .stdout(Stdio::inherit())
+                .output()
+                .unwrap();
+        }
+
+        tasks_count += get::get_count_by_filter(other_tasks_filter)?;
+    }
+
+    {
+        Command::new("task")
+            .args([
+                other_tasks_filter,
+                "rc.verbose=0",
+                format!("rc.report.{modifier}.sort=TYPE-,entry+").as_str(),
+                modifier,
+            ])
+            .stdout(Stdio::inherit())
+            .output()
+            .unwrap();
+
+        println!();
+
+        term::print_full_divisory();
+
+        println!();
+
+        println!("{} tasks found", tasks_count);
+    }
+
+    Ok(())
+}
+pub fn list_completion_score(date_args: &Vec<String>) -> Result<(), FypmError> {
+    let initial_date: NaiveDate;
+    let final_date: NaiveDate;
+
+    [initial_date, final_date] = extract::date_period(date_args);
+
+    let mut week_pending = 0;
+    let mut week_completed = 0;
+    let mut week_deleted = 0;
+    let mut week_total = 0;
+    for date in NaiveDateIter::new(initial_date, final_date) {
+        let initial_day = date.format("%Y-%m-%d").to_string();
+        let final_day = (date + Duration::days(1)).format("%Y-%m-%d").to_string();
+
+        let tasks_json = get::get_json_by_filter(format!("((due.after:{initial_day} or due:{initial_day}) and due.before:{final_day}) and +INSTANCE").as_str(), None)?;
+
+        let pending_count = tasks_json
+            .iter()
+            .filter(|task| task.status.as_str() == "pending")
+            .count();
+        week_pending += pending_count;
+
+        let completed_count = tasks_json
+            .iter()
+            .filter(|task| task.status.as_str() == "completed")
+            .count();
+        week_completed += completed_count;
+
+        let deleted_count = tasks_json
+            .iter()
+            .filter(|task| task.status.as_str() == "deleted")
+            .count();
+        week_deleted += deleted_count;
+
+        let total_count = pending_count + completed_count + deleted_count;
+        week_total += total_count;
+
+        let no_pend_count = total_count - pending_count;
+
+        if total_count == 0 {
+            continue;
+        }
+
+        {
+            println!(
+                "{}: {} {} {}",
+                initial_day.bold(),
+                pending_count.to_string().cyan(),
+                completed_count.to_string().bright_green(),
+                deleted_count.to_string().bright_red()
+            );
+
+            if pending_count > 0 {
+                print!(
+                    "              - ({} / {}) -> {}%",
+                    no_pend_count.to_string().bright_black(),
+                    total_count.to_string().bright_black(),
+                    ((pending_count * 100) / total_count)
+                        .to_string()
+                        .bright_black(),
+                );
+            } else {
+                print!(
+                    "              - ({}) ->",
+                    total_count.to_string().bright_black(),
+                );
+            }
+
+            print!(
+                " {}% {}%",
+                ((completed_count * 100) / total_count)
+                    .to_string()
+                    .bright_green(),
+                ((deleted_count * 100) / total_count)
+                    .to_string()
+                    .bright_red()
+            );
+
+            if date == Local::now().date_naive() {
+                print!(
+                    "                    {}",
+                    "<───── TODAY".bright_white().bold()
+                );
+            }
+
+            println!();
+            println!();
+
+            if date.weekday() == Weekday::Sun || date == final_date {
+                term::print_full_divisory();
+
+                println!(
+                    "{}: {} {} {}",
+                    "Week Status".to_string().bold(),
+                    week_pending.to_string().cyan(),
+                    week_completed.to_string().bright_green(),
+                    week_deleted.to_string().bright_red(),
+                );
+
+                if week_pending > 0 {
+                    print!(
+                        "              - ({} / {}) ->",
+                        (week_total - week_pending).to_string().bright_black(),
+                        week_total.to_string().bright_black(),
+                    );
+                } else {
+                    print!(
+                        "              - ({}) ->",
+                        week_total.to_string().bright_black()
+                    );
                 }
-                _ => {}
+
+                print!(
+                    " {}% {}%\n",
+                    ((week_completed * 100) / week_total)
+                        .to_string()
+                        .bright_green(),
+                    ((week_deleted * 100) / week_total)
+                        .to_string()
+                        .bright_red()
+                );
+
+                week_pending = 0;
+                week_completed = 0;
+                week_deleted = 0;
+                week_total = 0;
+
+                term::print_full_divisory();
+            }
+        }
+    }
+
+    Ok(())
+}
+
+pub fn task_abandon(
+    tag: &enums::TaAbandonTags,
+    filter: &String,
+    annotation: &Option<String>,
+) -> Result<(), FypmError> {
+    if (tag == &enums::TaAbandonTags::Abandoned || tag == &enums::TaAbandonTags::NoControl)
+        && annotation.is_none()
+    {
+        panic!("You must specify an annotation when mark a task as NoControl or Abandoned!");
+    }
+    let tasks = get::get_json_by_filter(filter, None)?;
+    let tasks_count: usize = tasks.len();
+    let confirmation = dialog::verify_selected_tasks(&tasks)?;
+
+    if confirmation {
+        let mut modify_args = Vec::new();
+        modify_args.extend([
+            "rc.verbose=0",
+            "rc.recurrence.confirmation=0",
+            "rc.confirmation=0",
+            filter,
+            "modify",
+        ]);
+
+        match tag {
+            enums::TaAbandonTags::Archived => {
+                modify_args.extend(["+Archived"]);
+            }
+            enums::TaAbandonTags::Failed => {
+                modify_args.extend(["+Failed"]);
+            }
+            enums::TaAbandonTags::Abandoned => {
+                modify_args.extend(["+Abandoned"]);
+            }
+            enums::TaAbandonTags::NoControl => {
+                modify_args.extend(["+NoControl"]);
+            }
+        }
+
+        if let Some(annotation) = annotation {
+            action::annotate("task", filter, annotation, true)?;
+        }
+
+        let mut modify_binding = Command::new("task");
+        let modify_command = modify_binding.args(modify_args).stderr(Stdio::inherit());
+
+        let mut delete_binding = Command::new("task");
+        let delete_command = delete_binding
+            .args([
+                "rc.verbose=0",
+                "rc.confirmation=0",
+                "rc.recurrence.confirmation=0",
+                filter,
+                "delete",
+            ])
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit());
+
+        if tasks_count > 2 {
+            let mut modify_child = modify_command.stdin(Stdio::piped()).spawn().unwrap();
+
+            modify_child
+                .stdin
+                .take()
+                .unwrap()
+                .write_all("all\n".as_bytes())
+                .unwrap();
+            modify_child.wait().unwrap();
+
+            let mut delete_child = delete_command.stdin(Stdio::piped()).spawn().unwrap();
+
+            delete_child
+                .stdin
+                .take()
+                .unwrap()
+                .write_all("all\n".as_bytes())
+                .unwrap();
+            delete_child.wait().unwrap();
+        } else {
+            modify_command.output().unwrap();
+            delete_command.output().unwrap();
+        }
+    } else {
+        println!("Aborting...");
+    }
+
+    Ok(())
+}
+pub fn task_schedule(
+    filter: &String,
+    alarm_date: &String,
+    due_date: &Option<String>,
+    worktime: &Option<String>,
+) -> Result<(), FypmError> {
+    let tasks = get::get_json_by_filter(filter, None)?;
+    let tasks_count: usize = tasks.len();
+    let confirmation = dialog::verify_selected_tasks(&tasks)?;
+
+    if confirmation {
+        let mut modify_args = Vec::new();
+        modify_args.extend([
+            "rc.verbose=0".to_string(),
+            "rc.recurrence.confirmation=0".to_string(),
+            "rc.confirmation=0".to_string(),
+            filter.clone(),
+            "modify".to_string(),
+        ]);
+
+        if alarm_date != "cur" {
+            modify_args.extend([format!("ALARM:{}", alarm_date)]);
+        }
+        if let Some(due_date) = due_date {
+            modify_args.extend([format!("due:{}", due_date)]);
+        }
+        if let Some(worktime) = worktime {
+            modify_args.extend([format!("WT:{}", worktime)]);
+        }
+
+        let mut modify_binding = Command::new("task");
+        let modify_command = modify_binding
+            .args(modify_args)
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit());
+
+        if tasks_count > 2 {
+            let mut modify_child = modify_command.stdin(Stdio::piped()).spawn().unwrap();
+
+            modify_child
+                .stdin
+                .take()
+                .unwrap()
+                .write_all("all\n".as_bytes())
+                .unwrap();
+            modify_child.wait().unwrap();
+        } else {
+            modify_command.output().unwrap();
+        }
+    } else {
+        println!("Aborting...");
+    }
+
+    Ok(())
+}
+pub fn task_unschedule(
+    filter: &String,
+    no_alarm: &bool,
+    no_due: &bool,
+    no_worktime: &bool,
+) -> Result<(), FypmError> {
+    let tasks = get::get_json_by_filter(filter, None)?;
+    let tasks_count: usize = tasks.len();
+    let confirmation = dialog::verify_selected_tasks(&tasks)?;
+
+    if confirmation {
+        let mut modify_args = Vec::new();
+        modify_args.extend([
+            "rc.verbose=0",
+            "rc.recurrence.confirmation=0",
+            "rc.confirmation=0",
+            filter,
+            "modify",
+        ]);
+
+        if !*no_alarm {
+            modify_args.extend(["ALARM:"]);
+        }
+        if !*no_due {
+            modify_args.extend(["due:"]);
+        }
+        if !*no_worktime {
+            modify_args.extend(["WT:NonSched!"]);
+        }
+
+        let mut modify_binding = Command::new("task");
+        let modify_command = modify_binding
+            .args(modify_args)
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit());
+
+        if tasks_count > 2 {
+            let mut modify_child = modify_command.stdin(Stdio::piped()).spawn().unwrap();
+
+            modify_child
+                .stdin
+                .take()
+                .unwrap()
+                .write_all("all\n".as_bytes())
+                .unwrap();
+            modify_child.wait().unwrap();
+        } else {
+            modify_command.output().unwrap();
+        }
+    } else {
+        println!("Aborting...");
+    }
+
+    Ok(())
+}
+pub fn task_und(filter: &String, unarchive: &bool) -> Result<(), FypmError> {
+    let tasks = get::get_json_by_filter(filter, None)?;
+    let tasks_count: usize = tasks.len();
+    let confirmation = dialog::verify_selected_tasks(&tasks)?;
+
+    if confirmation {
+        let mut args = vec![
+            "rc.verbose=0",
+            "rc.confirmation=0",
+            "rc.recurrence.confirmation=0",
+            filter,
+            "modify",
+            "status:pending",
+        ];
+
+        if *unarchive {
+            args.extend(["-Archived"]);
+        } else {
+            args.extend(["-Failed", "-Abandoned", "-NoControl"]);
+        }
+
+        let mut modify_binding = Command::new("task");
+        let modify_command = modify_binding.args(args).stderr(Stdio::inherit());
+
+        if tasks_count > 2 {
+            let mut modify_child = modify_command.stdin(Stdio::piped()).spawn().unwrap();
+
+            modify_child
+                .stdin
+                .take()
+                .unwrap()
+                .write_all("all\n".as_bytes())
+                .unwrap();
+            modify_child.wait().unwrap();
+        } else {
+            modify_command.output().unwrap();
+        }
+    } else {
+        println!("Aborting...");
+    }
+
+    Ok(())
+}
+pub fn task_project(action: &TaProjectActions, arg: &Option<String>) -> Result<(), FypmError> {
+    match *action {
+        TaProjectActions::List => {
+            let mut args = Vec::new();
+
+            if let Some(filter) = arg {
+                args.extend([format!("project:{}", filter)]);
+            }
+
+            args.extend(["projects".to_string()]);
+
+            Command::new("task").args(args).output().unwrap();
+        }
+        TaProjectActions::Add => {
+            if let Some(project) = arg {
+                let confirmation: bool = Confirm::new()
+                    .with_prompt(format!("Do you want to add '{}' project?", project))
+                    .interact()
+                    .unwrap();
+
+                if confirmation {
+                    task_add(
+                        &"Project Marker".to_string(),
+                        project,
+                        &" ".to_string(),
+                        &"Continuous".to_string(),
+                        &Some(vec!["+FYPM".to_string()]),
+                        &true,
+                    )?;
+                }
+            } else {
+                panic!("Please provide a project name!");
+            }
+        }
+        TaProjectActions::Archive => {
+            if let Some(project) = arg {
+                let confirmation: bool = Confirm::new()
+                    .with_prompt(format!("Do you want to archive '{}' project?", project))
+                    .interact()
+                    .unwrap();
+
+                if confirmation {
+                    task_abandon(
+                        &enums::TaAbandonTags::Archived,
+                        &format!("(project:{} and -DELETED and -COMPLETED)", project),
+                        &None,
+                    )?;
+                }
             }
         }
     }

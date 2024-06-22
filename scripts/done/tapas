@@ -16,7 +16,6 @@ fi
 
 MOTHER_TASKS_JSON=$(task "($FILTER and +MOTHER)" \
         export | jq '[.[] | .uuid]')
-
 TASKS_COUNT=0
 
 echo "$MOTHER_TASKS_JSON" | jq -r '.[]' | while read element; do

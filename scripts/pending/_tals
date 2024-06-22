@@ -24,7 +24,7 @@ main() {
     CONFIG="rc.report.blist.sort=due+"
     BASE_FILTER="(-Sequence and STYLE.not:Dionysian and TYPE.not:Continuous) and ($DUE_FILTER)"
 
-    task "($OTHER_FILTERS[@]) or ($BASE_FILTER)" "$CONFIG" $MODIFIER
+    task "($OTHER_FILTERS[@]) or ($BASE_FILTER)" "$CONFIG" "$MODIFIER"
 }
 
 verify_args "$@" || exit 1

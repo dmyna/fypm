@@ -13,7 +13,7 @@ calculate_time() {
     else
         DAY="today"
     fi
-    
+
     GET_INITIAL_SLEEP=$(tils 10h before "$DAY" "$TASK_DESC")
     GET_END_SLEEP=$(tils 10h after "$DAY" "$TASK_DESC")
 
@@ -26,7 +26,7 @@ calculate_time() {
 
     if [[ ! "$GET_END_SLEEP" =~ "No filtered data" ]]; then
         END_SLEEP=$(echo "$GET_END_SLEEP" | tail -n 2 | tr -d ' ' | tr -d '\n')
-        
+
         IFS=":" read -r end_hours end_minutes end_seconds <<< "$END_SLEEP"
         END_SECS=$((end_hours*3600 + end_minutes*60 + end_seconds))
     fi

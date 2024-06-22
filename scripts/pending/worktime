@@ -105,7 +105,6 @@ fi
 bspasroot sudo -v
 
 case $1 in
-
     "Highlevel")
         define_values "Highlevel" "#af0" "#111" "04:00"
         ;;

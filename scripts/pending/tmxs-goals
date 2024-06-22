@@ -17,9 +17,9 @@ esac
 
 CAL="cal -c 3 $CAL_ARGS"
 if [[ "$1" == "-a" ]]; then
-    TAGOALS="_tadatels ALARM alarms -w"
+    TAGOALS="fypm ta-ls-date ALARM alarms -w"
 else
-    TAGOALS="_tadatels GOAL goals -m"
+    TAGOALS="fypm ta-ls-date GOAL goals -m"
 fi
 PROJS="task projects"
 
@@ -34,7 +34,7 @@ open_session() {
         tmux send-keys -t "$SESSION":0.1 "perpetue_cmd $TAGOALS" C-m
         tmux send-keys -t "$SESSION":0.3 "perpetue_cmd $CAL" C-m
         tmux send-keys -t "$SESSION":0.4 "perpetue_cmd $PROJS" C-m
-        
+
         tmux select-pane -t "$SESSION":0.2
         tmux attach-session -t "$SESSION"
     fi
