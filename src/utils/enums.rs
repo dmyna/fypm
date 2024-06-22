@@ -143,6 +143,11 @@ pub enum Commands {
         modifier: String,
         filter: Vec<String>,
     },
+    /// List score of tasks between failed/abandoned/no-control and completed tasks (tals-score)
+    TaLsScore {
+        /// To specify range, use: -- -<y|m|w> [year|month|week] OR <start_date> - <end_date> (where format is YYYY-MM-DD)
+        date_args: Option<Vec<String>>,
+    },
     //#endregion
     //#region               Timew Subcommands
     /// Anotate on timewarrior task (tin)

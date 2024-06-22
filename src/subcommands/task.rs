@@ -1,13 +1,13 @@
 use chrono::{DateTime, Datelike, Duration, Local, NaiveDate, Weekday};
 //#region           Crates
+use colored::*;
 use dialoguer::Confirm;
 use regex::Regex;
 use std::io::Write;
 use std::process::Stdio;
-use std::str::FromStr;
 use std::{fs, process::Command, str};
 
-use crate::func::dialog;
+use crate::func::{dialog, matchs};
 //#endregion
 //#region           Modules
 use crate::func::{
@@ -19,7 +19,7 @@ use crate::utils::constants::{CONTROL_TASK, DEFAULT_GET_JSON_OPTIONS, LAST_TASK_
 use crate::utils::enums::{self, TaProjectActions, TaSequenceTypes};
 use crate::utils::err::FypmError;
 use crate::utils::err::FypmErrorKind;
-use crate::utils::get;
+use crate::utils::{extract, get, term};
 //#endregion
 //#region           Implementation
 
@@ -521,44 +521,10 @@ pub fn task_list_date(
     let sort = format!("rc.report.{modifier}.sort={property}");
     let divisory = "                            ";
 
-    let args_len = date_args.len();
-    if args_len > 3 {
-        panic!("You entered too many arguments to date_args!");
-    }
-
     let initial_date: NaiveDate;
     let final_date: NaiveDate;
 
-    if args_len == 3 {
-        let initial_date_str = date_args.get(0).unwrap();
-        let final_date_str = date_args.get(2).unwrap();
-
-        initial_date = NaiveDate::from_str(&initial_date_str).unwrap();
-        final_date = NaiveDate::from_str(&final_date_str).unwrap();
-    } else {
-        let option: &String = date_args.get(0).unwrap();
-
-        let mut option_arg: Option<&String> = None;
-
-        if args_len == 2 {
-            option_arg = Some(date_args.get(1).unwrap());
-        }
-
-        match option.as_str() {
-            "-y" | "--year" => {
-                [initial_date, final_date] = date::get_year(option_arg);
-            }
-            "-m" | "--month" => {
-                [initial_date, final_date] = date::get_month(option_arg);
-            }
-            "-w" | "--week" => {
-                [initial_date, final_date] = date::get_week(option_arg);
-            }
-            _ => {
-                panic!("You entered an invalid option to date_args!");
-            }
-        }
-    }
+    [initial_date, final_date] = extract::date_period(date_args);
 
     for date in NaiveDateIter::new(initial_date, final_date) {
         let initial_day = date.format("%Y-%m-%d").to_string();
@@ -585,7 +551,7 @@ pub fn task_list_mother_and_subtasks(
     filter: &Vec<String>,
 ) -> Result<(), FypmError> {
     let modifier_filter: String;
-    let divisory_char = '─';
+
     let mut tasks_count = 0;
 
     if modifier != "all" {
@@ -640,15 +606,9 @@ pub fn task_list_mother_and_subtasks(
             .unwrap();
 
         println!();
-        if let Some((terminal_size::Width(width), _)) = terminal_size::terminal_size() {
-            for _ in 0..width {
-                print!("{divisory_char}");
-            }
-        } else {
-            for _ in 0..30 {
-                print!("{divisory_char}");
-            }
-        }
+
+        term::print_full_divisory();
+
         println!();
 
         println!("{} tasks found", tasks_count);
@@ -656,6 +616,141 @@ pub fn task_list_mother_and_subtasks(
 
     Ok(())
 }
+pub fn list_completion_score(date_args: &Vec<String>) -> Result<(), FypmError> {
+    let initial_date: NaiveDate;
+    let final_date: NaiveDate;
+
+    [initial_date, final_date] = extract::date_period(date_args);
+
+    let mut week_pending = 0;
+    let mut week_completed = 0;
+    let mut week_deleted = 0;
+    let mut week_total = 0;
+    for date in NaiveDateIter::new(initial_date, final_date) {
+        let initial_day = date.format("%Y-%m-%d").to_string();
+        let final_day = (date + Duration::days(1)).format("%Y-%m-%d").to_string();
+
+        let tasks_json = get::get_json_by_filter(format!("((due.after:{initial_day} or due:{initial_day}) and due.before:{final_day}) and +INSTANCE").as_str(), None)?;
+
+        let pending_count = tasks_json
+            .iter()
+            .filter(|task| task.status.as_str() == "pending")
+            .count();
+        week_pending += pending_count;
+
+        let completed_count = tasks_json
+            .iter()
+            .filter(|task| task.status.as_str() == "completed")
+            .count();
+        week_completed += completed_count;
+
+        let deleted_count = tasks_json
+            .iter()
+            .filter(|task| task.status.as_str() == "deleted")
+            .count();
+        week_deleted += deleted_count;
+
+        let total_count = pending_count + completed_count + deleted_count;
+        week_total += total_count;
+
+        let no_pend_count = total_count - pending_count;
+
+        if total_count == 0 {
+            continue;
+        }
+
+        {
+            println!(
+                "{}: {} {} {}",
+                initial_day.bold(),
+                pending_count.to_string().cyan(),
+                completed_count.to_string().bright_green(),
+                deleted_count.to_string().bright_red()
+            );
+
+            if pending_count > 0 {
+                print!(
+                    "              - ({} / {}) -> {}%",
+                    no_pend_count.to_string().bright_black(),
+                    total_count.to_string().bright_black(),
+                    ((pending_count * 100) / total_count)
+                        .to_string()
+                        .bright_black(),
+                );
+            } else {
+                print!(
+                    "              - ({}) ->",
+                    total_count.to_string().bright_black(),
+                );
+            }
+
+            print!(
+                " {}% {}%",
+                ((completed_count * 100) / total_count)
+                    .to_string()
+                    .bright_green(),
+                ((deleted_count * 100) / total_count)
+                    .to_string()
+                    .bright_red()
+            );
+
+            if date == Local::now().date_naive() {
+                print!(
+                    "                    {}",
+                    "<───── TODAY".bright_white().bold()
+                );
+            }
+
+            println!();
+            println!();
+
+            if date.weekday() == Weekday::Sun || date == final_date {
+                term::print_full_divisory();
+
+                println!(
+                    "{}: {} {} {}",
+                    "Week Status".to_string().bold(),
+                    week_pending.to_string().cyan(),
+                    week_completed.to_string().bright_green(),
+                    week_deleted.to_string().bright_red(),
+                );
+
+                if week_pending > 0 {
+                    print!(
+                        "              - ({} / {}) ->",
+                        (week_total - week_pending).to_string().bright_black(),
+                        week_total.to_string().bright_black(),
+                    );
+                } else {
+                    print!(
+                        "              - ({}) ->",
+                        week_total.to_string().bright_black()
+                    );
+                }
+
+                print!(
+                    " {}% {}%\n",
+                    ((week_completed * 100) / week_total)
+                        .to_string()
+                        .bright_green(),
+                    ((week_deleted * 100) / week_total)
+                        .to_string()
+                        .bright_red()
+                );
+
+                week_pending = 0;
+                week_completed = 0;
+                week_deleted = 0;
+                week_total = 0;
+
+                term::print_full_divisory();
+            }
+        }
+    }
+
+    Ok(())
+}
+
 pub fn task_abandon(
     tag: &enums::TaAbandonTags,
     filter: &String,

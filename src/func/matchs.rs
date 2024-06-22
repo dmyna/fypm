@@ -1,4 +1,7 @@
+use chrono::NaiveDate;
+
 use crate::func::action;
+use crate::func::date;
 use crate::subcommands::{task, timew};
 use crate::utils::enums::{Commands, TimewAction};
 use crate::utils::err::FypmError;
@@ -100,6 +103,19 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
 
             Ok(())
         }
+        Commands::TaLsScore {
+            date_args
+        } => {
+            if let Some(date_args) = date_args {
+                task::list_completion_score(date_args).unwrap();
+            } else {
+                task::list_completion_score(&vec!["-w".to_string()]).unwrap();
+            }
+
+
+            Ok(())
+        }
+
         Commands::TaStart { filter } => task::task_start(filter),
         Commands::TaStop { filter } => task::task_stop(filter, true),
         Commands::TaDone {
@@ -177,6 +193,22 @@ pub fn match_exec_command(
             eprintln!("Failed to execute command, error: {}", e);
 
             Err(e)
+        }
+    }
+}
+pub fn match_date_arg(option: &String, option_arg: Option<&String>) -> [NaiveDate; 2] {
+    match option.as_str() {
+        "-y" | "--year" => {
+            date::get_year(option_arg)
+        }
+        "-m" | "--month" => {
+            date::get_month(option_arg)
+        }
+        "-w" | "--week" => {
+            date::get_week(option_arg)
+        }
+        _ => {
+            panic!("You entered an invalid option to date_args!");
         }
     }
 }

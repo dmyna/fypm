@@ -19,6 +19,7 @@ pub fn get_json_by_filter(
         .output()
         .unwrap()
         .stdout;
+
     let parsed_json =
         serde_json::from_str::<Vec<TaskWarriorExported>>(str::from_utf8(&get_json).unwrap())
             .unwrap();
