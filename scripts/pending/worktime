@@ -1,7 +1,7 @@
 #!/bin/zsh
 
-VIEWER='twui'
-VIEWER_QUIT='q'
+VIEWER='wvit'
+VIEWER_QUIT=':q'
 LAST_WT_PATH=/var/tmp/.last_work_time
 CURRENT_WORKTIME_PATH=/var/tmp/.worktime_filter
 TWUI_CFG_LINE='report.next.filter'
