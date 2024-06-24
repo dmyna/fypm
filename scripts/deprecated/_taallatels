@@ -1,9 +1,0 @@
-#!/bin/zsh
-
-if [[ -n "$1" ]]; then
-    MODIFIER=$1
-else
-    MODIFIER=list
-fi
-
-task ALARM.before:now -PARENT -COMPLETED -DELETED "$MODIFIER"

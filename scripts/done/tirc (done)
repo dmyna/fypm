@@ -1,3 +1,0 @@
-#!/bin/bash
-
-timew continue "$1" "$2" - "$3" :adjust "${@:4}"
