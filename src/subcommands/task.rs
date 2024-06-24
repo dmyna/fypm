@@ -733,9 +733,7 @@ pub fn list_completion_score(date_args: &Vec<String>) -> Result<(), FypmError> {
                     ((week_completed * 100) / week_total)
                         .to_string()
                         .bright_green(),
-                    ((week_deleted * 100) / week_total)
-                        .to_string()
-                        .bright_red()
+                    ((week_deleted * 100) / week_total).to_string().bright_red()
                 );
 
                 week_pending = 0;
@@ -1003,7 +1001,12 @@ pub fn task_project(action: &TaProjectActions, arg: &Option<String>) -> Result<(
 
             args.extend(["projects".to_string()]);
 
-            Command::new("task").args(args).output().unwrap();
+            Command::new("task")
+                .args(args)
+                .stdout(Stdio::inherit())
+                .stderr(Stdio::inherit())
+                .output()
+                .unwrap();
         }
         TaProjectActions::Add => {
             if let Some(project) = arg {

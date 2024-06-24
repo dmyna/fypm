@@ -1,6 +1,0 @@
-#!/bin/zsh
-
-TASK_ID=$1
-ANNOTATION=$2
-
-yes no | task "$TASK_ID" annotate "$ANNOTATION"
