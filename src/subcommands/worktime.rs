@@ -2,6 +2,7 @@
 use chrono::NaiveTime;
 use dialoguer::{console::Term, Input};
 use regex::Regex;
+use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs;
@@ -14,9 +15,9 @@ use std::process::Command;
 use crate::utils::err::FypmError;
 //#endregion
 //#region           Modules
-use crate::DB_PATH;
+use crate::handlers::database::PresetHandler;
 use crate::utils::verify;
-use crate::handlers::database::{DBHandler, PresetHandler};
+use crate::MAIN_DB_FILE;
 //#endregion
 //#region           Structs
 #[derive(Debug, Serialize, Deserialize)]
@@ -31,18 +32,6 @@ pub struct WorktimeHandler;
 //#endregion
 //#region           Implementation
 impl WorktimeHandler {
-    pub fn ensure_worktime_database() {
-        let verify_existence =
-            DBHandler::verify_by_name(&DB_PATH.to_string()).unwrap();
-
-        if verify_existence == false {
-            DBHandler::create(
-                &DB_PATH.to_string(),
-                &String::from("The databowl of your worktimes!"),
-            )
-            .unwrap();
-        }
-    }
     pub fn add(name: &String) -> Result<(), FypmError> {
         let date_format = "%H:%M";
         let term = Term::stdout();
@@ -133,27 +122,39 @@ impl WorktimeHandler {
         };
 
         let preset_instance = PresetHandler {
-            database_name: DB_PATH.to_string(),
+            table_name: "worktime".to_string(),
+            conn: Connection::open(MAIN_DB_FILE.to_string()).unwrap().into(),
         };
 
-        preset_instance.add::<Worktime>(&name, &description, &new_worktime).unwrap();
+        preset_instance
+            .add::<Worktime>(&name, &description, &new_worktime)
+            .unwrap();
 
         Ok(())
     }
     pub fn remove(name: &String) -> Result<(), FypmError> {
         let preset_instance = PresetHandler {
-            database_name: DB_PATH.to_string(),
+            table_name: "worktime".to_string(),
+            conn: Connection::open(MAIN_DB_FILE.to_string()).unwrap().into(),
         };
 
-        preset_instance.remove(&name).unwrap();
+        let result = preset_instance.remove(&name);
 
-        println!("Removed preset {}!", name);
+        match result {
+            Ok(_) => {
+                println!("Removed preset {}!", name);
 
-        Ok(())
+                Ok(())
+            }
+            Err(err) => {
+                Err(err)
+            }
+        }
     }
     pub fn list() -> Result<(), FypmError> {
         let preset_instance = PresetHandler {
-            database_name: DB_PATH.to_string(),
+            table_name: "worktime".to_string(),
+            conn: Connection::open(MAIN_DB_FILE.to_string()).unwrap().into(),
         };
 
         let worktimes = preset_instance.list().unwrap();
@@ -258,7 +259,8 @@ fn update_filter(current_wt: &String, cfg_line: &str) -> () {
 
 pub fn apply(name: &String) -> Result<(), FypmError> {
     let preset_instance = PresetHandler {
-        database_name: DB_PATH.to_string(),
+        table_name: "worktime".to_string(),
+        conn: Connection::open(MAIN_DB_FILE.to_string()).unwrap().into(),
     };
 
     let preset = preset_instance.get(&name).unwrap();

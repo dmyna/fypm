@@ -1,7 +1,5 @@
 use std::{process::Command, str};
 
-use itertools::join;
-
 use super::{
     constants::DEFAULT_GET_JSON_OPTIONS,
     enums::TimewAction,
