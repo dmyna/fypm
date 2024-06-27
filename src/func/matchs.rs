@@ -2,6 +2,8 @@ use chrono::NaiveDate;
 
 use crate::func::action;
 use crate::func::date;
+use crate::subcommands::worktime;
+use crate::subcommands::worktime::WorktimeHandler;
 use crate::subcommands::{task, timew};
 use crate::utils::enums::{Commands, TimewAction};
 use crate::utils::err::FypmError;
@@ -13,7 +15,27 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
         //#region               Systems
         Commands::InitDay => todo!(),
         Commands::Daemon { action, name } => todo!(),
-        Commands::Worktime { action, actionargs } => todo!(),
+        Commands::WtAdd { worktime_name } => {
+            WorktimeHandler::add(worktime_name)?;
+
+            Ok(())
+        },
+        Commands::WtRemove { worktime_name } => {
+            WorktimeHandler::remove(worktime_name)?;
+
+            Ok(())
+        },
+        Commands::WtLs => {
+            WorktimeHandler::list()?;
+
+            Ok(())
+        },
+        Commands::WtApply { worktime_name } => {
+            worktime::apply(worktime_name)?;
+
+            Ok(())
+        },
+
         Commands::Instance { action, actionargs } => todo!(),
         //#endregion
         //#region               Task Subcommands
