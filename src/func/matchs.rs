@@ -1,4 +1,5 @@
 use chrono::NaiveDate;
+use rusqlite::Connection;
 
 use crate::func::action;
 use crate::func::date;
@@ -7,6 +8,7 @@ use crate::subcommands::worktime::WorktimeHandler;
 use crate::subcommands::{task, timew};
 use crate::utils::enums::{Commands, TimewAction};
 use crate::utils::err::FypmError;
+use crate::MAIN_DB_FILE;
 use std::io::Error;
 use std::str;
 
@@ -16,17 +18,23 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
         Commands::InitDay => todo!(),
         Commands::Daemon { action, name } => todo!(),
         Commands::WtAdd { worktime_name } => {
-            WorktimeHandler::add(worktime_name)?;
+            WorktimeHandler {
+                conn: Connection::open(MAIN_DB_FILE.to_string()).unwrap().into(),
+            }.add(worktime_name)?;
 
             Ok(())
         },
         Commands::WtRemove { worktime_name } => {
-            WorktimeHandler::remove(worktime_name)?;
+            WorktimeHandler {
+                conn: Connection::open(MAIN_DB_FILE.to_string()).unwrap().into(),
+            }.remove(worktime_name)?;
 
             Ok(())
         },
         Commands::WtLs => {
-            WorktimeHandler::list()?;
+            WorktimeHandler {
+                conn: Connection::open(MAIN_DB_FILE.to_string()).unwrap().into(),
+            }.list()?;
 
             Ok(())
         },
@@ -65,7 +73,7 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
             other_args,
             skip_confirmation,
         } => {
-            let execute = task::task_add_sub(mother_task, other_args, skip_confirmation).unwrap();
+            task::task_add_sub(mother_task, other_args, skip_confirmation)?;
 
             Ok(())
         }
