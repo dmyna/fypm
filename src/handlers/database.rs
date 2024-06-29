@@ -1,13 +1,17 @@
 //#region           Crates
+use crate::utils::err::{FypmError, FypmErrorKind};
+use rusqlite::{Connection, Error as RusqliteError};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io::{Error, ErrorKind};
 use std::path::Path;
+use std::sync::Arc;
+use uuid::Uuid;
 //#endregion
 //#region           Modules
-use crate::DB_PATH;
-use crate::utils::write;
 use crate::utils::read;
+use crate::utils::write;
+use crate::{DB_PATH, MAIN_DB_FILE};
 //#endregion
 //#region           Structs
 #[derive(Serialize, Deserialize)]
@@ -15,7 +19,7 @@ pub struct DataBowl {
     pub name: String,
     pub description: String,
 }
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Preset {
     pub name: String,
     pub description: String,
@@ -29,7 +33,8 @@ pub struct PresetFile {
 #[derive(Debug)]
 pub struct DBHandler;
 pub struct PresetHandler {
-    pub database_name: String,
+    pub table_name: String,
+    pub conn: Arc<Connection>,
 }
 //#endregion
 //#region           Implementation
@@ -47,35 +52,15 @@ impl DBHandler {
 
         result
     }
-    pub fn ensure_db_existence(&self) -> Result<&DBHandler, Error> {
-        let get_result = fs::read_dir(DB_PATH.to_string());
+    pub fn ensure_db_existence(&self) -> Result<&DBHandler, RusqliteError> {
+        let conn = Connection::open(MAIN_DB_FILE.to_string());
 
-        let result = match get_result {
+        match conn {
             Ok(_) => Ok(self),
-            Err(error) => match error.kind() {
-                ErrorKind::NotFound => {
-                    let create_dir = fs::create_dir_all(DB_PATH.to_string());
-
-                    if create_dir.is_err() {
-                        panic!(
-                            "I can't create {} directory. Fix it immediately >:(.",
-                            DB_PATH.to_string()
-                        );
-                    }
-
-                    Ok(self)
-                }
-                ErrorKind::PermissionDenied => {
-                    panic!(
-                        "Fypm doesn't have permission to read into {} Fix it immediately >:(.",
-                        DB_PATH.to_string()
-                    );
-                }
+            Err(error) => match error {
                 _ => Err(error),
             },
-        };
-
-        result
+        }
     }
 
     pub fn create(name: &String, description: &String) -> Result<DataBowl, Error> {
@@ -169,56 +154,45 @@ impl DBHandler {
     }
 }
 impl PresetHandler {
-    fn get_file_path(&self) -> String {
-        Path::new(&DB_PATH.to_string())
-            .join(self.database_name.as_str())
-            .join("presets.toml")
-            .to_string_lossy()
-            .to_string()
+    pub fn ensure_table_existence(&self) -> Result<usize, RusqliteError> {
+        self.conn.execute(
+            format!(
+                "CREATE TABLE IF NOT EXISTS {} (
+                id TEXT PRIMARY KEY,
+                name TEXT,
+                description TEXT,
+                params BLOB
+            )",
+                self.table_name
+            )
+            .as_str(),
+            [],
+        )
     }
-    pub fn verify_preset_file_existence(&self) -> Result<bool, Error> {
-        let path = self.get_file_path();
 
-        let get_result = read::toml::<PresetFile>(path.as_str());
-
-        let result = match get_result {
-            Ok(_) => Ok(true),
-            Err(error) => match error.kind() {
-                ErrorKind::NotFound => Ok(false),
-                _ => Err(error),
-            },
-        };
-
-        result
-    }
-    pub fn verify_preset_existence(&self, name: &String) -> Result<bool, Error> {
-        let path = self.get_file_path();
-
-        let get_result = read::toml::<PresetFile>(path.as_str());
-
-        let result = match get_result {
-            Ok(presets) => Ok(presets
-                .array
-                .iter()
-                .any(|preset: &Preset| preset.name == *name)),
-            Err(error) => match error.kind() {
-                ErrorKind::NotFound => {
-                    let not_found_msg = "You haven't checked to see if a PresetFile exists! Look where we've come... :(";
-
-                    Err(Error::new(ErrorKind::NotFound, not_found_msg))
-                }
-                _ => Err(error),
-            },
-        };
-
-        result
-    }
     pub fn add<T: Serialize>(
         &self,
         name: &String,
         description: &String,
         params: &T,
-    ) -> Result<(), Error> {
+    ) -> Result<(), FypmError> {
+        let received_rows = self
+            .conn
+            .execute(
+                format!("SELECT * FROM {} WHERE name = ?1", self.table_name).as_str(),
+                [&name],
+            )
+            .unwrap();
+
+        if received_rows > 0 {
+            return Err(FypmError {
+                kind: FypmErrorKind::AlreadyExists,
+                message: "This preset already exists!".to_string(),
+            });
+        }
+
+        let uuid = Uuid::now_v7().to_string();
+
         let str_data =
             toml::to_string(params).expect("Unable to transform parameters into a string!");
 
@@ -228,70 +202,81 @@ impl PresetHandler {
             params: str_data,
         };
 
-        let path = self.get_file_path();
+        {
+            self.ensure_table_existence().unwrap();
 
-        if self.verify_preset_file_existence()? == true {
-            let mut preset_file = read::toml::<PresetFile>(path.as_str()).unwrap();
-
-            if preset_file.array.iter().any(|preset| preset.name == *name) {
-                panic!("Preset {} already exists!", name);
-            }
-
-            preset_file.array.push(preset);
-
-            write::toml(path.as_str(), &preset_file)?;
-        } else {
-            let preset_file = PresetFile {
-                array: vec![preset],
-            };
-
-            write::toml(path.as_str(), &preset_file)?;
+            self.conn
+                .execute(
+                    format!(
+                        "INSERT INTO {} (id, name, description, params) VALUES (?1, ?2, ?3, ?4)",
+                        self.table_name
+                    )
+                    .as_str(),
+                    [&uuid, &preset.name, &preset.description, &preset.params],
+                )
+                .unwrap();
         }
 
         Ok(())
     }
-    pub fn remove(&self, name: &String) -> Result<(), Error> {
-        let path = self.get_file_path();
+    pub fn remove(&self, name: &String) -> Result<(), FypmError> {
+        let removed_rows = self
+            .conn
+            .execute(
+                format!("DELETE FROM {} WHERE name = ?1", self.table_name).as_str(),
+                [&name],
+            )
+            .unwrap();
 
-        if self.verify_preset_file_existence()? == true {
-            let mut preset_file = read::toml::<PresetFile>(path.as_str()).unwrap();
-
-            preset_file.array.retain(|preset| preset.name != *name);
-
-            write::toml(path.as_str(), &preset_file)?;
-
-            Ok(())
-        } else {
-            let not_found_msg = "Preset not found!";
-
-            Err(Error::new(ErrorKind::NotFound, not_found_msg))
+        if removed_rows == 0 {
+            return Err(FypmError {
+                kind: FypmErrorKind::NotFound,
+                message: "Preset not found!".to_string(),
+            });
         }
+
+        Ok(())
     }
-    pub fn get(&self, name: &String) -> Result<Preset, Error> {
-        let path = self.get_file_path();
+    pub fn get(&self, name: &String) -> Result<Preset, FypmError> {
+        let mut query = self
+            .conn
+            .prepare(format!("SELECT * FROM {} WHERE name = ?1", self.table_name).as_str())
+            .unwrap();
 
-        if self.verify_preset_file_existence()? == true {
-            let preset_file = read::toml::<PresetFile>(path.as_str()).unwrap();
+        let get_preset = query.query_row([&name], |row| {
+            Ok(Preset {
+                name: row.get(1)?,
+                description: row.get(2)?,
+                params: row.get(3)?,
+            })
+        });
 
-            for preset in preset_file.array {
-                if preset.name == *name {
-                    return Ok(preset);
-                }
-            }
+        if let Ok(preset) = get_preset {
+            Ok(preset)
+        } else {
+            Err(FypmError {
+                kind: FypmErrorKind::NotFound,
+                message: "Preset not found!".to_string(),
+            })
         }
-
-        Err(Error::new(ErrorKind::NotFound, "Preset not found!"))
     }
     pub fn list(&self) -> Result<Vec<(String, String)>, Error> {
-        let path = self.get_file_path();
-
         let mut presets = Vec::new();
 
-        if self.verify_preset_file_existence()? == true {
-            let preset_file = read::toml::<PresetFile>(path.as_str()).unwrap();
+        {
+            let mut query = self
+                .conn
+                .prepare(format!("SELECT name, description FROM {}", self.table_name).as_str())
+                .unwrap();
 
-            for preset in preset_file.array {
-                presets.push((preset.name, preset.description));
+            let row_iter = query
+                .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))
+                .unwrap();
+
+            for row in row_iter {
+                let preset = row.unwrap();
+
+                presets.push((preset.0, preset.1));
             }
         }
 

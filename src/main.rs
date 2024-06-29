@@ -30,6 +30,8 @@ lazy_static! {
         .join(".local/share/fypm")
         .to_string_lossy()
         .into_owned());
+
+    static ref MAIN_DB_FILE: String = DB_PATH.to_string() + "/fypm.db";
 }
 //#endregion
 //#region           Implementation

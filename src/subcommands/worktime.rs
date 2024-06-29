@@ -2,6 +2,7 @@
 use chrono::NaiveTime;
 use dialoguer::{console::Term, Input};
 use regex::Regex;
+use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs;
@@ -11,11 +12,12 @@ use std::io::Error;
 use std::path::Path;
 use std::process::Command;
 
+use crate::utils::err::FypmError;
 //#endregion
 //#region           Modules
-use crate::DB_PATH;
+use crate::handlers::database::PresetHandler;
 use crate::utils::verify;
-use crate::handlers::database::{DBHandler, PresetHandler};
+use crate::MAIN_DB_FILE;
 //#endregion
 //#region           Structs
 #[derive(Debug, Serialize, Deserialize)]
@@ -30,31 +32,9 @@ pub struct WorktimeHandler;
 //#endregion
 //#region           Implementation
 impl WorktimeHandler {
-    pub fn ensure_worktime_database() {
-        let verify_existence =
-            DBHandler::verify_by_name(&DB_PATH.to_string()).unwrap();
-
-        if verify_existence == false {
-            DBHandler::create(
-                &DB_PATH.to_string(),
-                &String::from("The databowl of your worktimes!"),
-            )
-            .unwrap();
-        }
-    }
-    pub fn add(args: &Vec<String>) -> Result<(), Error> {
+    pub fn add(name: &String) -> Result<(), FypmError> {
         let date_format = "%H:%M";
         let term = Term::stdout();
-
-        if args.len() != 1 {
-            if args.len() > 1 {
-                panic!("Too much arguments!");
-            } else {
-                panic!("Not enough arguments!");
-            }
-        }
-
-        let name = args.get(0).unwrap().to_string();
 
         let description = Input::<String>::new()
             .with_prompt("Write a description for your worktime")
@@ -142,38 +122,42 @@ impl WorktimeHandler {
         };
 
         let preset_instance = PresetHandler {
-            database_name: DB_PATH.to_string(),
+            table_name: "worktime".to_string(),
+            conn: Connection::open(MAIN_DB_FILE.to_string()).unwrap().into(),
         };
 
-        preset_instance.add::<Worktime>(&name, &description, &new_worktime)
-    }
-    pub fn remove(args: &Vec<String>) -> Result<(), Error> {
-        if args.len() != 1 {
-            if args.len() > 1 {
-                panic!("Too much arguments!");
-            } else {
-                panic!("Not enough arguments!");
-            }
-        }
-
-        let name = args.get(0).unwrap().to_string();
-
-        let preset_instance = PresetHandler {
-            database_name: DB_PATH.to_string(),
-        };
-
-        preset_instance.remove(&name)?;
-
-        println!("Removed preset {}!", name);
+        preset_instance
+            .add::<Worktime>(&name, &description, &new_worktime)
+            .unwrap();
 
         Ok(())
     }
-    pub fn list() -> Result<(), Error> {
+    pub fn remove(name: &String) -> Result<(), FypmError> {
         let preset_instance = PresetHandler {
-            database_name: DB_PATH.to_string(),
+            table_name: "worktime".to_string(),
+            conn: Connection::open(MAIN_DB_FILE.to_string()).unwrap().into(),
         };
 
-        let worktimes = preset_instance.list()?;
+        let result = preset_instance.remove(&name);
+
+        match result {
+            Ok(_) => {
+                println!("Removed preset {}!", name);
+
+                Ok(())
+            }
+            Err(err) => {
+                Err(err)
+            }
+        }
+    }
+    pub fn list() -> Result<(), FypmError> {
+        let preset_instance = PresetHandler {
+            table_name: "worktime".to_string(),
+            conn: Connection::open(MAIN_DB_FILE.to_string()).unwrap().into(),
+        };
+
+        let worktimes = preset_instance.list().unwrap();
 
         if worktimes.is_empty() {
             println!("No worktimes found!");
@@ -273,19 +257,10 @@ fn update_filter(current_wt: &String, cfg_line: &str) -> () {
     update_vit_taskrc();
 }
 
-pub fn apply(args: &Vec<String>) -> Result<(), Error> {
-    if args.len() != 1 {
-        if args.len() > 1 {
-            panic!("Too much arguments!");
-        } else {
-            panic!("Not enough arguments!");
-        }
-    }
-
-    let name = args.get(0).unwrap().to_string();
-
+pub fn apply(name: &String) -> Result<(), FypmError> {
     let preset_instance = PresetHandler {
-        database_name: DB_PATH.to_string(),
+        table_name: "worktime".to_string(),
+        conn: Connection::open(MAIN_DB_FILE.to_string()).unwrap().into(),
     };
 
     let preset = preset_instance.get(&name).unwrap();
@@ -335,20 +310,6 @@ pub fn apply(args: &Vec<String>) -> Result<(), Error> {
     }
 
     Command::new("polybar-msg").args(["cmd", "restart"]);
-
-    Ok(())
-}
-
-pub fn match_action(action: &String, actionargs: &Vec<String>) -> Result<(), Error> {
-    WorktimeHandler::ensure_worktime_database();
-
-    match action.as_str() {
-        "add" | "create" => WorktimeHandler::add(actionargs).unwrap(),
-        "rm" | "remove" => WorktimeHandler::remove(actionargs).unwrap(),
-        "ls" | "list" => WorktimeHandler::list().unwrap(),
-        "apply" => apply(actionargs).unwrap(),
-        _ => panic!("No valid action provided!"),
-    }
 
     Ok(())
 }

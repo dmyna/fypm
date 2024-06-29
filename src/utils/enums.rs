@@ -9,12 +9,22 @@ pub enum Commands {
         #[arg(long)]
         name: String,
     },
-    /// Manage worktime system
-    Worktime {
-        action: String,
-        #[arg(long)]
-        actionargs: Vec<String>,
+
+    /// Add a worktime
+    WtAdd {
+        worktime_name: String,
     },
+    /// Remove a worktime
+    WtRemove {
+        worktime_name: String,
+    },
+    /// List worktimes
+    WtLs,
+    /// Apply a worktime
+    WtApply {
+        worktime_name: String,
+    },
+
     /// Manage instances
     Instance {
         action: String,
@@ -188,7 +198,7 @@ pub enum Commands {
     //#endregion
 }
 
-#[derive(ValueEnum, Clone, PartialEq)]
+#[derive(ValueEnum, Clone, PartialEq, strum_macros::Display)]
 pub enum TaProjectActions {
     /// Add a project (alias: a)
     #[value(alias = "a")]
