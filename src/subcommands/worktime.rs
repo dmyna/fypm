@@ -11,11 +11,13 @@ use std::io::BufReader;
 use std::io::Error;
 use std::path::Path;
 use std::process::Command;
+use std::sync::Arc;
 
 use crate::utils::err::FypmError;
 //#endregion
 //#region           Modules
 use crate::handlers::database::PresetHandler;
+use crate::utils::err::FypmErrorKind;
 use crate::utils::verify;
 use crate::MAIN_DB_FILE;
 //#endregion
@@ -28,11 +30,13 @@ struct Worktime {
     polybar_background: String,
     polybar_foreground: String,
 }
-pub struct WorktimeHandler;
+pub struct WorktimeHandler {
+    pub conn: Arc<Connection>,
+}
 //#endregion
 //#region           Implementation
 impl WorktimeHandler {
-    pub fn add(name: &String) -> Result<(), FypmError> {
+    pub fn add(self, name: &String) -> Result<(), FypmError> {
         let date_format = "%H:%M";
         let term = Term::stdout();
 
@@ -123,7 +127,7 @@ impl WorktimeHandler {
 
         let preset_instance = PresetHandler {
             table_name: "worktime".to_string(),
-            conn: Connection::open(MAIN_DB_FILE.to_string()).unwrap().into(),
+            conn: self.conn,
         };
 
         preset_instance
@@ -132,10 +136,10 @@ impl WorktimeHandler {
 
         Ok(())
     }
-    pub fn remove(name: &String) -> Result<(), FypmError> {
+    pub fn remove(self, name: &String) -> Result<(), FypmError> {
         let preset_instance = PresetHandler {
             table_name: "worktime".to_string(),
-            conn: Connection::open(MAIN_DB_FILE.to_string()).unwrap().into(),
+            conn: self.conn,
         };
 
         let result = preset_instance.remove(&name);
@@ -146,15 +150,13 @@ impl WorktimeHandler {
 
                 Ok(())
             }
-            Err(err) => {
-                Err(err)
-            }
+            Err(err) => Err(err),
         }
     }
-    pub fn list() -> Result<(), FypmError> {
+    pub fn list(self) -> Result<(), FypmError> {
         let preset_instance = PresetHandler {
             table_name: "worktime".to_string(),
-            conn: Connection::open(MAIN_DB_FILE.to_string()).unwrap().into(),
+            conn: self.conn,
         };
 
         let worktimes = preset_instance.list().unwrap();
@@ -179,57 +181,28 @@ fn write_values_on_temp_files(
     fg_poly_color: &String,
 ) -> Result<(), Error> {
     let path = Path::new("/var/tmp");
+    let last_wt_path = path.join(".last_work_time");
 
     fs::write(path.join("current_work_time"), current_wt)?;
     fs::write(path.join("current_polybar_b_wt_color"), bg_poly_color)?;
     fs::write(path.join("current_polybar_f_wt_color"), fg_poly_color)?;
 
+    fs::write(last_wt_path, &current_wt)?;
+
     Ok(())
 }
-fn update_vit_taskrc() {
-    let cfg_file_path = dirs::home_dir().unwrap().join(".taskrc");
-    let vit_cfg_file_path = dirs::home_dir().unwrap().join(".vit_taskrc");
 
-    let cfg_file = fs::read_to_string(&cfg_file_path).unwrap();
-
-    let reader = BufReader::new(cfg_file.as_bytes());
-
-    let check_comment = |line: &Result<String, Error>| {
-        let line = line.as_ref().ok();
-
-        if let Some(line) = line {
-            !line.starts_with("#NO-VIT")
-        } else {
-            false
-        }
-    };
-
-    let lines = reader.lines();
-
-    let new_lines: Vec<String> = lines
-        .take_while(check_comment)
-        .map(|line| line.unwrap())
-        .collect();
-
-    let new_vit_cfg_file = new_lines.join("\n");
-
-    fs::write(vit_cfg_file_path, new_vit_cfg_file).unwrap();
-}
-
-fn update_filter(current_wt: &String, cfg_line: &str) -> () {
+fn update_filter(current_wt: &String, cfg_line: &str) -> Result<(), Error> {
+    let current_filter_path = Path::new("/var/tmp/.worktime_filter");
     let config_file_path = dirs::home_dir().unwrap().join(".taskrc");
 
-    //. DEV
-    // transform this: "(GOAL.after:$(date +%Y-%m-01) and GOAL.before:now and TYPE:Objective)"
-
-    let goal_string = "(GOAL.before:now and due.before:eom and TYPE:Objective)";
     let essential_string = "(+TODAY and +INSTANCE)";
     let scheduled_string =
         "((scheduled.after:today or scheduled:today) and scheduled.before:tomorrow)";
 
     let worktime_filter = format!(
-        "(WT:{} or WT:AllDay) and ({} or {} or {})",
-        current_wt, essential_string, goal_string, scheduled_string
+        "(WT:{} or WT:AllDay) and ({} or {})",
+        current_wt, essential_string, scheduled_string
     );
 
     let due_filter = env::var("DUE_FILTER").expect("The DUE_FILTER is not set! Fix it >:(");
@@ -252,9 +225,32 @@ fn update_filter(current_wt: &String, cfg_line: &str) -> () {
         .replace_all(&config_file, format!("{}={}", cfg_line, final_filter))
         .to_string();
 
-    fs::write(config_file_path, new_config_file).unwrap();
+    fs::write(config_file_path, new_config_file)?;
 
-    update_vit_taskrc();
+    fs::write(current_filter_path, final_filter)?;
+
+    Ok(())
+}
+fn update_viewer_session(viewer: &str, viewer_quit_key: &str) -> Result<(), Error> {
+    //. DEV: switch to tmux interface
+
+    let tmux_twui_open = Command::new("tmux")
+        .args(["has-session", "-t", "TaskWarrior"])
+        .output()?;
+
+    if tmux_twui_open.status.success() {
+        Command::new("tmux")
+            .args(["send-keys", "-t", "TaskWarrior:0.0", viewer_quit_key, "C-m"])
+            .output()?;
+
+        Command::new("tmux")
+            .args(["send-keys", "-t", "TaskWarrior:0.0", viewer, "C-m"])
+            .output()?;
+    } else {
+        Command::new("taopen").spawn()?;
+    }
+
+    Ok(())
 }
 
 pub fn apply(name: &String) -> Result<(), FypmError> {
@@ -263,54 +259,50 @@ pub fn apply(name: &String) -> Result<(), FypmError> {
         conn: Connection::open(MAIN_DB_FILE.to_string()).unwrap().into(),
     };
 
-    let preset = preset_instance.get(&name).unwrap();
+    let get_preset = preset_instance.get(&name);
 
-    let preset_params = toml::from_str::<Worktime>(preset.params.as_str()).unwrap();
+    match get_preset {
+        Ok(preset) => {
+            let preset_params = toml::from_str::<Worktime>(preset.params.as_str()).unwrap();
 
-    let current_wt_string = format!("{} -> {}", preset.name, preset_params.end_time.as_str());
+            let current_wt_string =
+                format!("{} -> {}", preset.name, preset_params.end_time.as_str());
 
-    env::set_var("WORKTIME", preset.name);
+            env::set_var("WORKTIME", preset.name);
 
-    write_values_on_temp_files(
-        &current_wt_string,
-        &preset_params.polybar_background,
-        &preset_params.polybar_foreground,
-    )
-    .unwrap();
-
-    {
-        let vit_cfg_line = "report.wlist.filter";
-        let twui_cfg_line = "uda.taskwarrior-tui.task-report.next.filter";
-
-        update_filter(&name, vit_cfg_line);
-        update_filter(&name, twui_cfg_line);
-    }
-    {
-        let viewer = "twui";
-        let viewer_quit_key = "q";
-
-        let tmux_twui_open = Command::new("tmux")
-            .args(["has-session", "-t", "TaskWarrior"])
-            .output()
+            write_values_on_temp_files(
+                &current_wt_string,
+                &preset_params.polybar_background,
+                &preset_params.polybar_foreground,
+            )
             .unwrap();
 
-        if tmux_twui_open.status.success() {
-            Command::new("tmux")
-                .args(["send-keys", "-t", "TaskWarrior:0.0", viewer_quit_key, "C-m"])
-                .output()
-                .unwrap();
+            {
+                let twui_cfg_line = "uda.taskwarrior-tui.task-report.next.filter";
 
-            Command::new("tmux")
-                .args(["send-keys", "-t", "TaskWarrior:0.0", viewer, "C-m"])
-                .output()
-                .unwrap();
-        } else {
-            Command::new("taopen").spawn().unwrap();
+                update_filter(&name, twui_cfg_line).unwrap();
+            }
+
+            update_viewer_session("wvit", ":q").unwrap();
+
+            Command::new("polybar-msg").args(["cmd", "restart"]);
+
+            Ok(())
         }
+        Err(error) => {
+            match error.kind {
+                FypmErrorKind::NotFound => {
+                    println!("This preset doesn't exist! These are the available presets:");
+
+                    WorktimeHandler {
+                        conn: preset_instance.conn,
+                    }.list()?;
+
+                    Ok(())
+                }
+                _ => return Err(error),
+            }
+        },
     }
-
-    Command::new("polybar-msg").args(["cmd", "restart"]);
-
-    Ok(())
 }
 //#endregion

@@ -1,5 +1,9 @@
 #[derive(Clone, serde::Deserialize, Debug)]
-#[allow(unused)]
+pub struct TaskAnnotation {
+    pub entry: String,
+    pub description: String,
+}
+#[derive(Clone, serde::Deserialize, Debug)]
 pub struct TaskWarriorExported {
     pub id: u32,
     #[serde(rename = "STATE")]
@@ -24,11 +28,11 @@ pub struct TaskWarriorExported {
     pub project: Option<String>,
     pub status: String,
     pub uuid: String,
+    pub annotations: Option<Vec<TaskAnnotation>>,
     pub tags: Option<Vec<String>>,
     pub urgency: f64,
 }
 #[derive(serde::Deserialize, Debug)]
-#[allow(unused)]
 pub struct TimeWarriorExported {
     pub id: i32,
     pub start: String,
