@@ -1,0 +1,16 @@
+#!/bin/zsh
+
+usage() {
+    echo "Usage: unc_deleted - Uncontroled deleted tasks filter"
+}
+verify_args() {
+    if [[ ! $# -eq 0 ]]; then
+        usage
+        return 1
+    fi
+}
+main() {
+    task +DELETED -Old_Deleted -Failed -Abandoned -NoControl -Archived all
+}
+verify_args $@ || exit 1
+main
