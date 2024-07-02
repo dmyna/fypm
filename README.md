@@ -7,6 +7,7 @@ Fypm (*Four Years Productivity Manager*) is the productivity manager for Four Ye
 ```bash
 git clone https://github.com/dmyna/fypm.git
 cd fypm
+
 cargo build --release
 sudo cp target/release/fypm /usr/bin
 ```
@@ -17,8 +18,10 @@ All documentation is written in an Obsidian vault and stored in the [docs](https
 
 ## Testing
 ```bash
+# install docker, docker-compose and docker-buildx
+
 git clone https://github.com/dmyna/fypm.git
 cd fypm
-sudo docker-compose up -d
+
 ./scripts/test.sh
 ```
