@@ -52,15 +52,10 @@ impl DBHandler {
 
         result
     }
-    pub fn ensure_db_existence(&self) -> Result<&DBHandler, RusqliteError> {
-        let conn = Connection::open(MAIN_DB_FILE.to_string());
+    pub fn ensure_db_path(&self) -> Result<&DBHandler, Error> {
+        fs::create_dir_all(DB_PATH.to_string())?;
 
-        match conn {
-            Ok(_) => Ok(self),
-            Err(error) => match error {
-                _ => Err(error),
-            },
-        }
+        Ok(self)
     }
 
     pub fn create(name: &String, description: &String) -> Result<DataBowl, Error> {

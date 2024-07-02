@@ -36,7 +36,7 @@ lazy_static! {
 //#endregion
 //#region           Implementation
 fn main() {
-    handlers::database::DBHandler.ensure_db_existence().unwrap();
+    handlers::database::DBHandler.ensure_db_path().unwrap();
 
     let cli = Cli::parse();
 
