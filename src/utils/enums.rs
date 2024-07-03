@@ -1,5 +1,71 @@
 use clap::{Subcommand, ValueEnum};
 
+#[derive(ValueEnum, Clone, PartialEq)]
+pub enum VerifyScripts {
+    /// Verify if exists Continuous tasks without aliases
+    Aliases,
+}
+
+#[derive(ValueEnum, Clone, PartialEq, strum_macros::Display)]
+pub enum TaProjectActions {
+    /// Add a project (alias: a)
+    #[value(alias = "a")]
+    Add,
+    /// List projects (alias: l)
+    #[value(alias = "l")]
+    List,
+    /// Archive a project (alias: c)
+    #[value(alias = "c")]
+    Archive
+}
+#[derive(ValueEnum, Clone, PartialEq)]
+pub enum TaAbandonTags {
+    /// Archive a task (alias: c)
+    #[value(alias = "c")]
+    Archived,
+    /// Abandon a task in Failed case (alias: f)
+    #[value(alias = "f")]
+    Failed,
+    /// Abandon a task in Abandoned case (alias: a)
+    #[value(alias = "a")]
+    Abandoned,
+    /// Abandon a task in NoControl case (alias: n)
+    #[value(alias = "n")]
+    NoControl,
+}
+#[derive(ValueEnum, Clone, PartialEq, strum_macros::Display)]
+pub enum TaSequenceTypes {
+    /// Create a book sequence
+    #[value(alias = "b")]
+    Book,
+    /// Create a serie sequence
+    #[value(alias = "s")]
+    Serie,
+    /// Create an anime sequence
+    #[value(alias = "a")]
+    Anime,
+    /// Create a manga sequence
+    #[value(alias = "yp")]
+    YTPlaylist,
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
+pub enum StatisticsCommands {
+    Deleted,
+    Pending,
+}
+pub enum TimewAction {
+    Start,
+    End,
+}
+
+#[derive(ValueEnum, Clone, PartialEq)]
+pub enum AliasActions {
+    Add,
+    Change,
+}
+
+
 #[derive(Subcommand)]
 pub enum Commands {
     //#region               Systems
@@ -23,6 +89,19 @@ pub enum Commands {
     /// Apply a worktime
     WtApply {
         worktime_name: String,
+    },
+
+    /// Verify tasks for inconsistencies
+    Verify {
+        script: VerifyScripts,
+    },
+
+    /// Manage tasks aliases
+    Alias {
+        /// The action to be performed
+        action: AliasActions,
+        /// Filter to task to be manipulated (max: 1)
+        filter: String,
     },
 
     /// Manage instances
@@ -196,57 +275,4 @@ pub enum Commands {
         filters: Option<Vec<String>>,
     },
     //#endregion
-}
-
-#[derive(ValueEnum, Clone, PartialEq, strum_macros::Display)]
-pub enum TaProjectActions {
-    /// Add a project (alias: a)
-    #[value(alias = "a")]
-    Add,
-    /// List projects (alias: l)
-    #[value(alias = "l")]
-    List,
-    /// Archive a project (alias: c)
-    #[value(alias = "c")]
-    Archive
-}
-#[derive(ValueEnum, Clone, PartialEq)]
-pub enum TaAbandonTags {
-    /// Archive a task (alias: c)
-    #[value(alias = "c")]
-    Archived,
-    /// Abandon a task in Failed case (alias: f)
-    #[value(alias = "f")]
-    Failed,
-    /// Abandon a task in Abandoned case (alias: a)
-    #[value(alias = "a")]
-    Abandoned,
-    /// Abandon a task in NoControl case (alias: n)
-    #[value(alias = "n")]
-    NoControl,
-}
-#[derive(ValueEnum, Clone, PartialEq, strum_macros::Display)]
-pub enum TaSequenceTypes {
-    /// Create a book sequence
-    #[value(alias = "b")]
-    Book,
-    /// Create a serie sequence
-    #[value(alias = "s")]
-    Serie,
-    /// Create an anime sequence
-    #[value(alias = "a")]
-    Anime,
-    /// Create a manga sequence
-    #[value(alias = "yp")]
-    YTPlaylist,
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
-pub enum StatisticsCommands {
-    Deleted,
-    Pending,
-}
-pub enum TimewAction {
-    Start,
-    End,
 }

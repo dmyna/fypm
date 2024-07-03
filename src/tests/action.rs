@@ -1,5 +1,7 @@
 #[cfg(test)]
-use crate::*;
+use crate::utils;
+#[cfg(test)]
+use crate::func;
 
 #[test]
 fn verify_if_wt_is_allday() {
