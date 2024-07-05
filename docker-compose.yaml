@@ -1,3 +1,11 @@
 services:
   app:
     build: .
+    user: root
+    container_name: fypm_tests
+    volumes:
+      - .:/app
+    command: ["/app/scripts/on-container_test.sh" ]
+
+volumes:
+  fypm_vol:
