@@ -32,7 +32,8 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
                     aliases::AliasesHandler::add(filter)
                 },
                 AliasActions::Change => {
-                    aliases::AliasesHandler::change(filter)
+                    //aliases::AliasesHandler::change(filter)
+                    unimplemented!()
                 },
             }
         },

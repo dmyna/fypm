@@ -17,6 +17,7 @@ fn verify_if_wt_is_allday() {
         seq_current: None,
         seq_next: None,
         seq_prev: None,
+        alias: None,
         style: None,
         entry: "2023-08-22T00:00:00Z".to_string(),
         modified: "2023-08-22T00:00:00Z".to_string(),

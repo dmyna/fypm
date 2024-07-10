@@ -38,7 +38,8 @@ impl AliasesHandler {
     }
 
     pub fn add(filter: &String) -> Result<(), FypmError> {
-        let task = get::get_json_by_filter(filter, DEFAULT_GET_JSON_OPTIONS)?
+        let get_task = get::get_json_by_filter(filter, DEFAULT_GET_JSON_OPTIONS)?;
+        let task = get_task
             .get(0)
             .unwrap();
 
@@ -83,7 +84,7 @@ impl AliasesHandler {
                         return Ok(());
                     }
                 } else {
-                    
+                    unimplemented!()
                 }
             }
         }
@@ -91,7 +92,7 @@ impl AliasesHandler {
         Ok(())
     }
 
-    pub fn change(self, name: &String) -> Result<(), FypmError> {}
+    //pub fn change(self, name: &String) -> Result<(), FypmError> {}
 }
 
 pub fn verify_aliases_tasks() -> Result<(), FypmError> {
