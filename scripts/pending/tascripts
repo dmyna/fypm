@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/zsh -x
 
 EXECUTED=0
 
@@ -70,6 +70,11 @@ case $(task "$1" export | jq -r '.[0].parent') in
     "5ad9400e-df1b-49be-b565-1bd7ddb1c000")
         before_executed
         vivaldi --new-window https://www.instagram.com/direct/inbox/ https://www.facebook.com/messages/
+        after_executed
+        ;;
+    "d525acb2-e118-461a-a472-b7d6d45644b4")
+        before_executed
+        bash -c "sleep 10 && yes | pwf" &
         after_executed
         ;;
 esac

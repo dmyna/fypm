@@ -96,6 +96,9 @@ uda.GOAL.label=Goal
 uda.ALARM.type=date
 uda.ALARM.label=Alarm
 
+uda.ALIAS.type=string
+uda.ALIAS.label=Alias
+
 #           Urgency Properties
 uda.effort.type=string
 uda.effort.label=Efort
