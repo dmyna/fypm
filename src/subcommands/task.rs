@@ -11,13 +11,15 @@ use crate::func::dialog;
 //#endregion
 //#region           Modules
 use crate::func::{
-    action::{self, *}, list, parser,
+    action::{self, *},
+    list, parser,
 };
 use crate::handlers::date::NaiveDateIter;
 use crate::utils::constants::{CONTROL_TASK, DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH};
 use crate::utils::enums::{self, TaProjectActions, TaSequenceTypes};
 use crate::utils::err::FypmError;
 use crate::utils::err::FypmErrorKind;
+use crate::utils::structs::TaskWarriorExported;
 use crate::utils::{extract, get, term};
 //#endregion
 //#region           Implementation
@@ -106,6 +108,9 @@ pub fn task_done(
     filter: &Option<String>,
     tastart_filter: &Option<String>,
 ) -> Result<(), FypmError> {
+    let mut args = vec!["rc.confirmation=0", "rc.recurrence.confirmation=0"];
+    let selected_tasks: Vec<TaskWarriorExported>;
+
     if let Some(filter) = filter {
         let task_json = get::get_json_by_filter(filter, None)?;
 
@@ -122,13 +127,7 @@ pub fn task_done(
             }
         }
 
-        Command::new("task")
-            .args(["rc.recurrence.confirmation=0", filter, "done"])
-            .stdin(Stdio::inherit())
-            .stdout(Stdio::inherit())
-            .stderr(Stdio::inherit())
-            .output()
-            .unwrap();
+        selected_tasks = task_json;
     } else {
         let current_task = get::get_current_task_json()?;
 
@@ -138,17 +137,28 @@ pub fn task_done(
             task_start(&CONTROL_TASK.to_string())?;
         }
 
+        selected_tasks = vec![current_task];
+    }
+
+    let join_uuids = selected_tasks
+        .iter()
+        .map(|task| task.uuid.as_str())
+        .collect::<Vec<&str>>()
+        .join(" ");
+
+    args.extend([join_uuids.as_str(), "done"]);
+
+    let confirmation = dialog::verify_selected_tasks(&selected_tasks)?;
+
+    if confirmation {
         Command::new("task")
-            .args([
-                "rc.confirmation=0",
-                "rc.recurrence.confirmation=0",
-                current_task.uuid.as_str(),
-                "done",
-            ])
+            .args(args)
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())
             .output()
             .unwrap();
+    } else {
+        println!("Aborting...");
     }
 
     Ok(())

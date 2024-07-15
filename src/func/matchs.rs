@@ -3,9 +3,13 @@ use rusqlite::Connection;
 
 use crate::func::action;
 use crate::func::date;
+use crate::handlers;
+use crate::handlers::aliases;
 use crate::subcommands::worktime;
 use crate::subcommands::worktime::WorktimeHandler;
 use crate::subcommands::{task, timew};
+use crate::utils::enums;
+use crate::utils::enums::AliasActions;
 use crate::utils::enums::{Commands, TimewAction};
 use crate::utils::err::FypmError;
 use crate::MAIN_DB_FILE;
@@ -17,6 +21,23 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
         //#region               Systems
         Commands::InitDay => todo!(),
         Commands::Daemon { action, name } => todo!(),
+
+        Commands::Verify { script } => {
+            match_verify_script(script)
+        },
+
+        Commands::Alias { action, filter } => {
+            match action {
+                AliasActions::Add => {
+                    aliases::AliasesHandler::add(filter)
+                },
+                AliasActions::Change => {
+                    //aliases::AliasesHandler::change(filter)
+                    unimplemented!()
+                },
+            }
+        },
+
         Commands::WtAdd { worktime_name } => {
             WorktimeHandler {
                 conn: Connection::open(MAIN_DB_FILE.to_string()).unwrap().into(),
@@ -239,6 +260,14 @@ pub fn match_date_arg(option: &String, option_arg: Option<&String>) -> [NaiveDat
         }
         _ => {
             panic!("You entered an invalid option to date_args!");
+        }
+    }
+}
+
+pub fn match_verify_script(script: &enums::VerifyScripts) -> Result<(), FypmError> {
+    match script {
+        enums::VerifyScripts::Aliases => {
+            handlers::aliases::verify_aliases_tasks()
         }
     }
 }

@@ -16,6 +16,8 @@ pub struct TaskWarriorExported {
     pub wt: String,
     #[serde(rename = "INFORELAT")]
     pub inforelat: Option<String>,
+    #[serde(rename = "ALIAS")]
+    pub alias: Option<String>,
     #[serde(rename = "SEQ_CURRENT")]
     pub seq_current: Option<String>,
     #[serde(rename = "SEQ_NEXT")]
