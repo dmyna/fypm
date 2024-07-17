@@ -17,9 +17,9 @@ esac
 
 CAL="cal -c 3 $CAL_ARGS"
 if [[ "$1" == "-a" ]]; then
-    TAGOALS="fypm ta-ls-date ALARM alarms -w"
+    TAGOALS="fypm ta-ls-date ALARM alarms -- -w"
 else
-    TAGOALS="fypm ta-ls-date GOAL goals -m"
+    TAGOALS="fypm ta-ls-date GOAL goals -- -m"
 fi
 PROJS="task projects"
 

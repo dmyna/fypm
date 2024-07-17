@@ -24,14 +24,8 @@ set_sound 100 75
 case $(task "$1" export | jq -r '.[0].parent') in
     "9d130a7c-6b6a-4a11-a571-d0178f5b8efb")
         before_executed
-        vivaldi-stable --app=https://www.monkeytype.com
+        vivaldi-stable --app=https://www.monkeytype.com --profile-directory="Default"
         set_sound 100
-        after_executed
-        ;;
-    "9b499b12-ccfc-4f30-9668-c22fb4daba85")
-        before_executed
-        vivaldi-stable --app=https://www.braingymmer.com/pt/brain-games/
-        set_sound 85
         after_executed
         ;;
     "395f46a2-041c-4e0a-96dc-8c1757d79b48")
@@ -64,26 +58,27 @@ case $(task "$1" export | jq -r '.[0].parent') in
         ;;
     "534895c6-f264-4353-904a-679318b3b968")
         before_executed
-        vivaldi --new-window https://loritta.website/br/daily https://top.gg/bot/loritta/vote https://apolobot.com/dashboard/daily
+        vivaldi --new-window https://loritta.website/br/daily https://top.gg/bot/loritta/vote https://apolobot.com/dashboard/daily --profile-directory="Default"
         after_executed
         ;;
     "5ad9400e-df1b-49be-b565-1bd7ddb1c000")
         before_executed
-        vivaldi --new-window https://www.instagram.com/direct/inbox/ https://www.facebook.com/messages/
+        vivaldi --new-window https://www.instagram.com/direct/inbox/ --profile-directory="Default"
+        vivaldi --new-window https://www.instagram.com/direct/inbox/ https://web.whatsapp.com/ --profile-directory="Profile 1"
         after_executed
         ;;
-    "d525acb2-e118-461a-a472-b7d6d45644b4")
-        before_executed
-        bash -c "sleep 10 && yes | pwf" &
-        after_executed
-        ;;
+    #"d525acb2-e118-461a-a472-b7d6d45644b4")
+        #before_executed
+        #bash -c "sleep 10 && yes | pwf" & disown
+        #after_executed
+        #;;
 esac
 
 # Mother Task Case
 case $(task "$1" export | jq -r '.[0].MOTHER') in
     "88e174db-6ec1-400f-b9da-ce951628322c")
         before_executed
-        vivaldi-stable --app=https://www.duolingo.com/learn
+        vivaldi-stable --app=https://www.duolingo.com/learn --profile-directory="Default"
         lay dvorak
         set_sound 70 100
         after_executed
@@ -94,7 +89,7 @@ esac
 case $(task "$1" export | jq -r '.[0].INFORELAT') in
     "4ea8d410-7eea-481f-b90e-11745d942567")
         before_executed
-        vivaldi-stable --app=https://www.duolingo.com/learn
+        vivaldi-stable --app=https://www.duolingo.com/learn --profile-directory="Default"
         lay dvorak
         set_sound 70 100
         after_executed
@@ -105,7 +100,7 @@ esac
 case $(task "$1" export | jq -r '.[0].project') in
     "CerebralLine.Reading")
         set_sound 50
-	    vivaldi-stable https://eggsy.xyz/projects/premid/custom-status/
+	    vivaldi-stable https://eggsy.xyz/projects/premid/custom-status/ --profile-directory="Default"
         after_executed
         ;;
     "Lazer.Watch")
@@ -127,7 +122,7 @@ esac
 case $(task "$1" export | jq -r '.[0].uuid') in
     "100372a8-5ca2-493a-b6f3-4b74195c8848")
         before_executed
-        vivaldi-stable --app=https://chess.com
+        vivaldi-stable --app=https://chess.com --profile-directory="Default"
         after_executed
         ;;
 esac
