@@ -9,7 +9,7 @@ source $FYW_DIR/config/aliases.zsh
 
 
 # Init some fysm scripts if it is the initialization of the system
-if test ! -e "$INIT_LOCK"; then
+if test ! -e "$INIT_LOCK" && [ "$DISPLAY" != "" ]; then
     mkdir "$FYSM_TEMP"
 
     "$FYW_DIR"/config/init_scheduler.zsh
