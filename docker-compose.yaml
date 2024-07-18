@@ -5,7 +5,7 @@ services:
     container_name: fypm_tests
     volumes:
       - .:/app
-    command: ["/app/scripts/on-container_test.sh" ]
+    command: ["/app/scripts/on-container_test.bash" ]
 
 volumes:
   fypm_vol:
