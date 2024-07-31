@@ -63,6 +63,34 @@ pub struct TaskWarriorUrgencyConfig {
     pub scope: TaskWarriorUrgencyConfigScope,
 }
 
+impl Default for TaskWarriorReportConfig {
+    fn default() -> Self {
+        Self {
+            columns: None,
+            labels: None,
+            sort: None,
+            filter: None,
+        }
+    }
+}
+impl Default for TaskWarriorUDAConfig {
+    fn default() -> Self {
+        Self {
+            r#type: String::new(),
+            label: String::new(),
+            values: None,
+            default: None,
+        }
+    }
+}
+impl Default for TaskWarriorUrgencyConfig {
+    fn default() -> Self {
+        Self {
+            coefficient: 0.0,
+            scope: TaskWarriorUrgencyConfigScope::Common,
+        }
+    }
+}
 
 pub enum TaskWarriorUserScopeProperty {
     Tag,
