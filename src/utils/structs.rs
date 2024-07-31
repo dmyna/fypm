@@ -41,6 +41,36 @@ pub struct TimeWarriorExported {
     pub end: Option<String>,
     pub tags: Option<Vec<String>>,
 }
+
 pub struct GetJsonByFilterOptions {
     pub quantity: Option<usize>,
+}
+
+pub struct TaskWarriorReportConfig {
+    pub columns: Option<Vec<String>>,
+    pub labels: Option<Vec<String>>,
+    pub sort: Option<Vec<String>>,
+    pub filter: Option<String>,
+}
+pub struct TaskWarriorUDAConfig {
+    pub r#type: String,
+    pub label: String,
+    pub values: Option<Vec<String>>,
+    pub default: Option<String>,
+}
+pub struct TaskWarriorUrgencyConfig {
+    pub coefficient: f32,
+    pub scope: TaskWarriorUrgencyConfigScope,
+}
+
+
+pub enum TaskWarriorUserScopeProperty {
+    Tag,
+}
+pub enum TaskWarriorUrgencyConfigScope {
+    UDA,
+    Common,
+    User {
+        property: TaskWarriorUserScopeProperty,
+    },
 }
