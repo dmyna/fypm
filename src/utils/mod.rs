@@ -9,3 +9,4 @@ pub mod verify;
 pub mod write;
 pub mod extract;
 pub mod term;
+pub mod comments;
