@@ -70,13 +70,6 @@ pub enum AliasActions {
 #[derive(Subcommand)]
 pub enum Commands {
     //#region               Systems
-    /// Manage daemon processes
-    Daemon {
-        action: String,
-        #[arg(long)]
-        name: String,
-    },
-
     /// Add a worktime
     WtAdd {
         worktime_name: String,

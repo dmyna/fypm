@@ -20,7 +20,6 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
     match command {
         //#region               Systems
         Commands::InitDay => todo!(),
-        Commands::Daemon { action, name } => todo!(),
 
         Commands::Verify { script } => {
             match_verify_script(script)
