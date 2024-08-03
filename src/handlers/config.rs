@@ -7,7 +7,8 @@ use crate::utils::structs::{
     TaskWarriorUrgencyConfigScope, TaskWarriorUserScopeProperty,
 };
 use crate::CONFIG_PATH;
-use std::fs::{self, ReadDir};
+use std::collections::BTreeMap;
+use std::fs;
 use std::path::Path;
 use std::io::Write;
 
