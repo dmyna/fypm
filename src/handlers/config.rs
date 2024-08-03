@@ -283,8 +283,14 @@ impl ConfigHandler {
                     TaskWarriorUDAConfig {
                         r#type: "string".to_string(),
                         label: "Style".to_string(),
-                        values: Some(vec!["default".to_string(), "important".to_string()]),
-                        default: Some("default".to_string()),
+                        values: Some(vec![
+                            "Apollonian".to_string(),
+                            "Dionysian".to_string(),
+                            "Creative".to_string(),
+                            "Necessity".to_string(),
+                            "Idle".to_string(),
+                        ]),
+                        ..Default::default()
                     },
                 ),
                 (
@@ -292,8 +298,16 @@ impl ConfigHandler {
                     TaskWarriorUDAConfig {
                         r#type: "string".to_string(),
                         label: "Type".to_string(),
-                        values: Some(vec!["task".to_string(), "event".to_string()]),
-                        default: Some("task".to_string()),
+                        values: Some(vec![
+                            "Habit".to_string(),
+                            "Eventual".to_string(),
+                            "Objective".to_string(),
+                            "Continuous".to_string(),
+                            "SubTask".to_string(),
+                            "Event".to_string(),
+                            "Check".to_string(),
+                        ]),
+                        ..Default::default()
                     },
                 ),
                 (
@@ -301,8 +315,8 @@ impl ConfigHandler {
                     TaskWarriorUDAConfig {
                         r#type: "string".to_string(),
                         label: "State".to_string(),
-                        values: Some(vec!["active".to_string(), "inactive".to_string()]),
-                        default: Some("active".to_string()),
+                        values: Some(vec!["Info".to_string(), "Time".to_string()]),
+                        default: Some("Time".to_string()),
                     },
                 ),
                 (
@@ -310,8 +324,7 @@ impl ConfigHandler {
                     TaskWarriorUDAConfig {
                         r#type: "string".to_string(),
                         label: "Mother".to_string(),
-                        values: Some(vec!["none".to_string()]),
-                        default: Some("none".to_string()),
+                        ..Default::default()
                     },
                 ),
                 (
@@ -319,35 +332,31 @@ impl ConfigHandler {
                     TaskWarriorUDAConfig {
                         r#type: "string".to_string(),
                         label: "Inforelat".to_string(),
-                        values: Some(vec!["none".to_string()]),
-                        default: Some("none".to_string()),
+                        ..Default::default()
                     },
                 ),
                 (
                     FypmUDAs::SeqCurrent,
                     TaskWarriorUDAConfig {
-                        r#type: "integer".to_string(),
+                        r#type: "string".to_string(),
                         label: "Current Sequence".to_string(),
-                        values: None,
-                        default: None,
+                        ..Default::default()
                     },
                 ),
                 (
                     FypmUDAs::SeqPrevious,
                     TaskWarriorUDAConfig {
-                        r#type: "integer".to_string(),
+                        r#type: "string".to_string(),
                         label: "Previous Sequence".to_string(),
-                        values: None,
-                        default: None,
+                        ..Default::default()
                     },
                 ),
                 (
                     FypmUDAs::SeqNext,
                     TaskWarriorUDAConfig {
-                        r#type: "integer".to_string(),
+                        r#type: "string".to_string(),
                         label: "Next Sequence".to_string(),
-                        values: None,
-                        default: None,
+                        ..Default::default()
                     },
                 ),
                 (
@@ -355,58 +364,68 @@ impl ConfigHandler {
                     TaskWarriorUDAConfig {
                         r#type: "string".to_string(),
                         label: "WorkTime".to_string(),
-                        values: Some(vec!["none".to_string()]),
-                        default: Some("none".to_string()),
+                        values: Some(vec![
+                            "Quantify!".to_string(),
+                            "AllDay!".to_string(),
+                            "NonSched!".to_string(),
+                            "Break!".to_string(),
+                        ]),
+                        default: Some("NonSched!".to_string()),
                     },
                 ),
                 (
                     FypmUDAs::Goal,
                     TaskWarriorUDAConfig {
-                        r#type: "string".to_string(),
+                        r#type: "date".to_string(),
                         label: "Goal".to_string(),
-                        values: Some(vec!["none".to_string()]),
-                        default: Some("none".to_string()),
+                        ..Default::default()
                     },
                 ),
                 (
                     FypmUDAs::Alarm,
                     TaskWarriorUDAConfig {
-                        r#type: "string".to_string(),
+                        r#type: "date".to_string(),
                         label: "Alarm".to_string(),
-                        values: Some(vec!["none".to_string()]),
-                        default: Some("none".to_string()),
+                        ..Default::default()
                     },
                 ),
                 (
                     FypmUDAs::Effort,
                     TaskWarriorUDAConfig {
-                        r#type: "integer".to_string(),
+                        r#type: "string".to_string(),
                         label: "Effort".to_string(),
-                        values: None,
-                        default: None,
+                        values: Some(vec![
+                            "Inconsistent".to_string(),
+                            "One".to_string(),
+                            "Two".to_string(),
+                            "Three".to_string(),
+                            "Four".to_string(),
+                            "Five".to_string(),
+                            "None".to_string(),
+                        ]),
+                        default: Some("None".to_string()),
                     },
                 ),
                 (
                     FypmUDAs::Quadrant,
                     TaskWarriorUDAConfig {
-                        r#type: "integer".to_string(),
+                        r#type: "string".to_string(),
                         label: "Quadrant".to_string(),
                         values: Some(vec![
-                            "1".to_string(),
-                            "2".to_string(),
-                            "3".to_string(),
-                            "4".to_string(),
+                            "One".to_string(),
+                            "Two".to_string(),
+                            "Three".to_string(),
+                            "None".to_string(),
                         ]),
-                        default: Some("1".to_string()),
+                        default: Some("None".to_string()),
                     },
                 ),
                 (
                     FypmUDAs::Estimate,
                     TaskWarriorUDAConfig {
-                        r#type: "integer".to_string(),
+                        r#type: "string".to_string(),
                         label: "Estimate".to_string(),
-                        values: None,
-                        default: None,
+                        ..Default::default()
                     },
                 ),
             ]),
@@ -520,9 +539,16 @@ impl ConfigHandler {
                     },
                 ),
                 (
-                    FypmUrgency::TypeEssential,
+                    FypmUrgency::TypeEventual,
                     TaskWarriorUrgencyConfig {
                         coefficient: 5.0,
+                        scope: TaskWarriorUrgencyConfigScope::UDA,
+                    },
+                ),
+                (
+                    FypmUrgency::TypeHabit,
+                    TaskWarriorUrgencyConfig {
+                        coefficient: 7.0,
                         scope: TaskWarriorUrgencyConfigScope::UDA,
                     },
                 ),
@@ -935,6 +961,10 @@ impl ConfigHandler {
             let defaults_map = ConfigHandler::get_defaults_btreemap(&defaults).unwrap();
 
             configs_map.extend(defaults_map);
+        }
+
+        {
+            //. Put Worktime config here
         }
 
         // General user-defined configs
