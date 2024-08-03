@@ -4,10 +4,9 @@ use dialoguer::{console::Term, Input};
 use regex::Regex;
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
+use serde_json::error;
 use std::env;
 use std::fs;
-use std::io::BufRead;
-use std::io::BufReader;
 use std::io::Error;
 use std::path::Path;
 use std::process::Command;
@@ -292,7 +291,8 @@ pub fn apply(name: &String) -> Result<(), FypmError> {
         Err(error) => {
             match error.kind {
                 FypmErrorKind::NotFound => {
-                    println!("This preset doesn't exist! These are the available presets:");
+                    println!("{}", error.message);
+                    println!("These are the available presets:");
 
                     WorktimeHandler {
                         conn: preset_instance.conn,

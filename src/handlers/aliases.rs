@@ -46,7 +46,7 @@ impl AliasesHandler {
         if let Some(alias) = &task.alias {
             println!("Task {} already has alias {}. Are you trying to change? You can use `fypm alias change`!", task.uuid, alias);
         } else {
-            let mut valid_alias = false;
+            let valid_alias = false;
 
             while !valid_alias {
                 let get_input = Input::<String>::new()

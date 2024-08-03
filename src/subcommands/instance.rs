@@ -1,5 +1,7 @@
-use dialoguer::{console::Term, Confirm, Input};
-use std::io::Error;
+// use dialoguer::{console::Term, Confirm, Input};
+// use std::io::Error;
+
+use crate::utils::err::FypmError;
 
 #[derive(Debug)]
 struct Instance {
@@ -12,56 +14,58 @@ pub struct InstanceHandler;
 //#endregion
 //#region           Implementation
 impl InstanceHandler {
-    pub fn add() -> Result<(), Error> {
-        let date_format = "%H:%M";
-        let term = Term::stdout();
+    pub fn add() -> Result<(), FypmError> {
+        todo!();
 
-        let name = Input::<String>::new()
-            .with_prompt("Write a name for your instance")
-            .interact_text()
-            .unwrap();
-        term.clear_last_lines(1).unwrap();
+        // let date_format = "%H:%M";
+        // let term = Term::stdout();
 
-        let description = Input::<String>::new()
-            .with_prompt("Write a description for your instance")
-            .interact_text()
-            .unwrap();
-        term.clear_last_lines(1).unwrap();
+        // let name = Input::<String>::new()
+        //     .with_prompt("Write a name for your instance")
+        //     .interact_text()
+        //     .unwrap();
+        // term.clear_last_lines(1).unwrap();
 
-        let timew = Confirm::new()
-            .with_prompt("Do you want to create a instance (new timeline) for timewarrior? (y/n)")
-            .interact()
-            .unwrap();
-        term.clear_last_lines(1).unwrap();
+        // let description = Input::<String>::new()
+        //     .with_prompt("Write a description for your instance")
+        //     .interact_text()
+        //     .unwrap();
+        // term.clear_last_lines(1).unwrap();
 
-        let task = Confirm::new()
-            .with_prompt(
-                "Do you want to create a instance (new tasks database) for taskwarrior? (y/n)",
-            )
-            .interact()
-            .unwrap();
-        term.clear_last_lines(1).unwrap();
+        // let timew = Confirm::new()
+        //     .with_prompt("Do you want to create a instance (new timeline) for timewarrior? (y/n)")
+        //     .interact()
+        //     .unwrap();
+        // term.clear_last_lines(1).unwrap();
 
-        let instance = Instance {
-            name,
-            description,
-            task,
-            timew,
-        };
+        // let task = Confirm::new()
+        //     .with_prompt(
+        //         "Do you want to create a instance (new tasks database) for taskwarrior? (y/n)",
+        //     )
+        //     .interact()
+        //     .unwrap();
+        // term.clear_last_lines(1).unwrap();
 
-        if timew {}
-        if task {}
+        // let instance = Instance {
+        //     name,
+        //     description,
+        //     task,
+        //     timew,
+        // };
 
-        Ok(())
+        // if timew {}
+        // if task {}
+
+        // Ok(())
     }
 }
 
-pub fn match_action(action: &str, actionargs: &Vec<String>) -> Result<(), Error> {
+pub fn match_action(action: &str, actionargs: &Vec<String>) -> Result<(), FypmError> {
     match action {
         "add" => InstanceHandler::add(),
-        "remove" => unimplemented!(),
-        "edit" => unimplemented!(),
-        "list" => unimplemented!(),
+        "remove" => todo!(),
+        "edit" => todo!(),
+        "list" => todo!(),
         _ => panic!("Action not found!"),
     }
 }

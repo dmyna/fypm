@@ -2,7 +2,6 @@ use chrono::{DateTime, Datelike, Duration, Local, NaiveDate, Weekday};
 //#region           Crates
 use colored::*;
 use dialoguer::Confirm;
-use regex::Regex;
 use std::io::Write;
 use std::process::Stdio;
 use std::{fs, process::Command, str};

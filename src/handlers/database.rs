@@ -11,7 +11,7 @@ use uuid::Uuid;
 //#region           Modules
 use crate::utils::read;
 use crate::utils::write;
-use crate::{DB_PATH, MAIN_DB_FILE};
+use crate::DB_PATH;
 //#endregion
 //#region           Structs
 #[derive(Serialize, Deserialize)]

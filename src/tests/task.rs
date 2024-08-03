@@ -1,3 +1,4 @@
+#[cfg(test)]
 use crate::subcommands::task;
 
 #[cfg(test)]
