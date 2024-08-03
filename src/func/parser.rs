@@ -69,9 +69,9 @@ pub fn match_special_timing_properties(id: &String) -> Result<String, FypmError>
             let received_action = properties.clone().nth(1).unwrap();
             let action: TimewAction;
 
-            if received_action == "start" {
+            if received_action == "start" || received_action == "s" {
                 action = TimewAction::Start;
-            } else if received_action == "end" {
+            } else if received_action == "end" || received_action == "e" {
                 action = TimewAction::End;
             } else {
                 return Err(FypmError {
