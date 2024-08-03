@@ -1,4 +1,5 @@
 use clap::{Subcommand, ValueEnum};
+use strum::{Display, EnumString};
 
 #[derive(ValueEnum, Clone, PartialEq)]
 pub enum VerifyScripts {
@@ -276,3 +277,140 @@ pub enum Commands {
     },
     //#endregion
 }
+
+#[derive(EnumString, Display, Hash, PartialEq, Eq, Debug, Ord, PartialOrd)]
+#[strum(serialize_all = "kebab-case")]
+pub enum FypmReports {
+    Waiting,
+    Next,
+    List,
+    All,
+    Blist,
+    Wlist,
+    Goals,
+    Alarms,
+    AllGoals,
+    Const,
+    Recurring,
+}
+#[derive(EnumString, Display, Hash, PartialEq, Eq, Debug, Ord, PartialOrd)]
+#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+pub enum FypmUDAs {
+    Style,
+    Type,
+    State,
+    Mother,
+    Inforelat,
+    SeqCurrent,
+    SeqPrevious,
+    SeqNext,
+    Wt,
+    Goal,
+    Alarm,
+    #[strum(serialize = "effort")]
+    Effort,
+    #[strum(serialize = "quadrant")]
+    Quadrant,
+    #[strum(serialize = "estimate")]
+    Estimate,
+}
+#[derive(EnumString, Display, Hash, PartialEq, Eq, Debug, Ord, PartialOrd)]
+#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+pub enum FypmUrgency {
+    // General
+    #[strum(serialize = "active")]
+    Active,
+    #[strum(serialize = "tags")]
+    Tags,
+    #[strum(serialize = "project")]
+    Project,
+    #[strum(serialize = "annotations")]
+    Annotations,
+    #[strum(serialize = "scheduled")]
+    Scheduled,
+
+    // Virtual Tags
+    #[strum(serialize = "OVERDUE")]
+    Overdue,
+    #[strum(serialize = "WAITING")]
+    Waiting,
+    #[strum(serialize = "TEMPLATE")]
+    Template,
+    #[strum(serialize = "COMPLETED")]
+    Completed,
+    #[strum(serialize = "DELETED")]
+    Deleted,
+
+    // WorkTime
+    #[strum(serialize = "Wt-Quantify!")]
+    WtQuantify,
+    #[strum(serialize = "Wt-AllDay!")]
+    WtAllDay,
+    #[strum(serialize = "Wt-NonSched!")]
+    WtNonSched,
+
+    // Type
+    #[strum(serialize = "TYPE-SubTask")]
+    TypeSubTask,
+    #[strum(serialize = "TYPE-Essential")]
+    TypeEssential,
+    #[strum(serialize = "TYPE-Objective")]
+    TypeObjective,
+    #[strum(serialize = "TYPE-Continuous")]
+    TypeContinuous,
+    #[strum(serialize = "TYPE-Check")]
+    TypeCheck,
+    #[strum(serialize = "TYPE-Event")]
+    TypeEvent,
+
+    // Style
+    #[strum(serialize = "STYLE-Apollonian")]
+    StyleApollonian,
+    #[strum(serialize = "STYLE-Creative")]
+    StyleCreative,
+    #[strum(serialize = "STYLE-Dionysian")]
+    StyleDionysian,
+    #[strum(serialize = "STYLE-Necessity")]
+    StyleNecessity,
+
+    // Effort
+    #[strum(serialize = "effort-Zero")]
+    EffortZero,
+    #[strum(serialize = "effort-One")]
+    EffortOne,
+    #[strum(serialize = "effort-Two")]
+    EffortTwo,
+    #[strum(serialize = "effort-Three")]
+    EffortThree,
+    #[strum(serialize = "effort-Four")]
+    EffortFour,
+    #[strum(serialize = "effort-Five")]
+    EffortFive,
+
+    // Quadrant
+    #[strum(serialize = "quadrant-One")]
+    QuadrantOne,
+    #[strum(serialize = "quadrant-Two")]
+    QuadrantTwo,
+    #[strum(serialize = "quadrant-Three")]
+    QuadrantThree,
+    #[strum(serialize = "quadrant-Four")]
+    QuadrantNone,
+
+    // Urgency Increment
+    UrgP5,
+    UrgP10,
+    UrgP15,
+    UrgP20,
+    UrgP25,
+    UrgP30,
+    UrgP100,
+    UrgN5,
+    UrgN10,
+    UrgN15,
+    UrgN20,
+    UrgN25,
+    UrgN30,
+    UrgN100,
+}
+
