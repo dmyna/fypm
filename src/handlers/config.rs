@@ -11,9 +11,10 @@ use crate::utils::structs::{
 };
 use crate::CONFIG_PATH;
 use std::collections::BTreeMap;
-use std::fs;
-use std::io::Write;
+use std::fs::File;
+use std::io::{Read, Write};
 use std::path::Path;
+use std::{env, fs};
 
 pub struct FypmConfigs {
     pub uda: BTreeMap<FypmUDAs, TaskWarriorUDAConfig>,
@@ -49,7 +50,7 @@ impl ConfigHandler {
         Ok(())
     }
 
-    pub fn create_config_defaults() -> FypmConfigs {
+    fn create_config_defaults() -> FypmConfigs {
         FypmConfigs {
             report: BTreeMap::from([
                 (
@@ -807,7 +808,7 @@ impl ConfigHandler {
             ]),
         }
     }
-    pub fn get_defaults_btreemap(
+    fn get_defaults_btreemap(
         defaults: &FypmConfigs,
     ) -> Result<BTreeMap<String, String>, FypmError> {
         let mut hashmap: BTreeMap<String, String> = BTreeMap::new();
@@ -885,7 +886,7 @@ impl ConfigHandler {
         Ok(hashmap)
     }
 
-    pub fn get_config(config_file_name: &str) -> Result<FypmConfigFile, FypmError> {
+    fn get_config(config_file_name: &str) -> Result<FypmConfigFile, FypmError> {
         let config_file_path = Path::new(&CONFIG_PATH.to_string()).join(config_file_name);
 
         let config_name: String;
@@ -907,7 +908,7 @@ impl ConfigHandler {
             map: config_hashmap,
         })
     }
-    pub fn verify_config_entries(
+    fn verify_config_entries(
         config: &FypmConfigFile,
         forbidden_keys: &Vec<&str>,
         allowed_keys: &Vec<&str>,
@@ -946,7 +947,7 @@ impl ConfigHandler {
         Ok(entries_count)
     }
 
-    pub fn mount_taskrc() -> Result<(), FypmError> {
+    fn mount_taskrc() -> Result<BTreeMap<String, String>, FypmError> {
         let mut configs_map = BTreeMap::new();
 
         // Taskwarrior user-defined and fypm defaults
@@ -1027,10 +1028,47 @@ impl ConfigHandler {
             }
         }
 
+        Ok(configs_map)
+    }
+    pub fn handle_config() -> Result<(), FypmError> {
+        let taskrc_env = env::var("TASKRC").unwrap_or("".to_string());
+
+        let taskrc_path = match taskrc_env.as_str() {
+            "" => dirs::home_dir()
+                .unwrap()
+                .join(".taskrc")
+                .to_string_lossy()
+                .to_string(),
+            _ => taskrc_env,
+        };
+
+        let configs_map = ConfigHandler::mount_taskrc().unwrap();
+
         let parsed_configs = serde_ini::to_string::<BTreeMap<String, String>>(&configs_map)
             .expect("There's a problem in default configs!");
 
-        println!("{}", &parsed_configs);
+        match fs::metadata(&taskrc_path) {
+            Ok(metadata) => {
+                if metadata.is_file() {
+                    let mut file = File::open(&taskrc_path).unwrap();
+
+                    let mut content = String::new();
+                    file.read_to_string(&mut content).unwrap();
+
+                    if content.trim() == parsed_configs.trim() {
+                        return Ok(());
+                    }
+                } else {
+                    return Err(FypmError {
+                        message: "The .taskrc is not a file!".to_string(),
+                        kind: FypmErrorKind::InvalidConfig,
+                    });
+                }
+            }
+            _ => return Ok(()),
+        }
+
+        fs::write(&taskrc_path, parsed_configs).unwrap();
 
         Ok(())
     }
