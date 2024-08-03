@@ -350,10 +350,12 @@ pub enum FypmUrgency {
     WtNonSched,
 
     // Type
+    #[strum(serialize = "TYPE-Eventual")]
+    TypeEventual,
     #[strum(serialize = "TYPE-SubTask")]
     TypeSubTask,
-    #[strum(serialize = "TYPE-Essential")]
-    TypeEssential,
+    #[strum(serialize = "TYPE-Habit")]
+    TypeHabit,
     #[strum(serialize = "TYPE-Objective")]
     TypeObjective,
     #[strum(serialize = "TYPE-Continuous")]
