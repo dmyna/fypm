@@ -342,11 +342,11 @@ pub enum FypmUrgency {
     Deleted,
 
     // WorkTime
-    #[strum(serialize = "Wt-Quantify!")]
+    #[strum(serialize = "WT-Quantify!")]
     WtQuantify,
-    #[strum(serialize = "Wt-AllDay!")]
+    #[strum(serialize = "WT-AllDay!")]
     WtAllDay,
-    #[strum(serialize = "Wt-NonSched!")]
+    #[strum(serialize = "WT-NonSched!")]
     WtNonSched,
 
     // Type
