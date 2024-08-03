@@ -600,10 +600,27 @@ impl ConfigHandler {
         Ok(hashmap)
     }
 
+    pub fn get_config(config_file_name: &str) -> Result<FypmConfigFile, FypmError> {
         let config_file_path = Path::new(&CONFIG_PATH.to_string()).join(config_file_name);
 
-        let file_content = fs::read_to_string(&config_file_path).unwrap();
+        let config_name: String;
+        if let Some(pos) = config_file_name.find(".fypm") {
+            config_name = config_file_name[..pos].to_string();
+        } else {
+            return Err(FypmError {
+                message: "Invalid config file name!".to_string(),
+                kind: FypmErrorKind::InvalidInput,
+            });
+        }
 
-        todo!();
+        let file_content = fs::read_to_string(&config_file_path).unwrap();
+        let config_hashmap =
+            serde_ini::from_str::<BTreeMap<String, String>>(&file_content).unwrap();
+
+        Ok(FypmConfigFile {
+            name: config_name,
+            map: config_hashmap,
+        })
+    }
     }
 }
