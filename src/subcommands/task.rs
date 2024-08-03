@@ -67,12 +67,6 @@ pub fn task_start(filter: &String) -> Result<(), FypmError> {
     filter = match_inforelat_and_sequence(&filter_json[0]).unwrap();
 
     {
-        //. DEV: Implement tascripts in Rust later
-
-        Command::new("tascripts").args([&filter]).output().unwrap();
-    }
-
-    {
         let active_tasks = get::get_current_task_json();
 
         if active_tasks.is_err() {
@@ -100,6 +94,12 @@ pub fn task_start(filter: &String) -> Result<(), FypmError> {
             .args([filter.as_str(), "start"])
             .output()
             .unwrap();
+
+        {
+            //. DEV: Implement tascripts in Rust later
+
+            Command::new("tascripts").args([&filter]).output().unwrap();
+        }
 
         Ok(())
     }
