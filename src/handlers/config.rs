@@ -211,37 +211,6 @@ impl ConfigHandler {
                     filter: Some("status:pending and ALARM.any:".to_string()),
                     ..Default::default()
                 }),
-                (FypmReports::AllGoals, TaskWarriorReportConfig {
-                    columns: Some(vec![
-                        "id".to_string(),
-                        "entry.age".to_string(),
-                        "STYLE".to_string(),
-                        "TYPE".to_string(),
-                        "project".to_string(),
-                        "tags".to_string(),
-                        "WT".to_string(),
-                        "GOAL".to_string(),
-                        "due.relative".to_string(),
-                        "description".to_string(),
-                        "urgency".to_string(),
-                    ]),
-                    labels: Some(vec![
-                        "ID".to_string(),
-                        "Age".to_string(),
-                        "Style".to_string(),
-                        "Type".to_string(),
-                        "Project".to_string(),
-                        "TaskWarriorUserScopeProperty::Tag".to_string(),
-                        "WorkTime".to_string(),
-                        "Goal".to_string(),
-                        "Due".to_string(),
-                        "Description".to_string(),
-                        "Urg".to_string(),
-                    ]),
-                    sort: Some(vec!["GOAL+".to_string()]),
-                    filter: Some("status:pending and GOAL.any:".to_string()),
-                    ..Default::default()
-                }),
                 (FypmReports::Const, TaskWarriorReportConfig {
                     columns: Some(vec![
                         "id".to_string(),
