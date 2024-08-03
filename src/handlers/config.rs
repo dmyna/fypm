@@ -661,5 +661,99 @@ impl ConfigHandler {
         Ok(entries_count)
     }
 
+    pub fn mount_taskrc() -> Result<(), FypmError> {
+        let mut configs_map = BTreeMap::new();
+
+        // Taskwarrior user-defined and fypm defaults
+        {
+            let taskwarrior_configs = ConfigHandler::get_config(DEFAULT_CONFIG_FILES[0]).unwrap();
+            ConfigHandler::verify_config_entries(
+                &taskwarrior_configs,
+                &vec![],
+                &vec!["*"],
+            ).unwrap();
+
+            configs_map.extend(taskwarrior_configs.map);
+
+            let defaults = ConfigHandler::create_config_defaults();
+            let defaults_map = ConfigHandler::get_defaults_btreemap(&defaults).unwrap();
+
+            configs_map.extend(defaults_map);
+        }
+
+        // General user-defined configs
+        {
+            let uda_configs = ConfigHandler::get_config(DEFAULT_CONFIG_FILES[1]).unwrap();
+            ConfigHandler::verify_config_entries(
+                &uda_configs,
+                &vec!["report", "urgency", "color"],
+                &vec!["uda"],
+            )
+            .unwrap();
+
+            configs_map.extend(uda_configs.map);
+
+            let report_configs = ConfigHandler::get_config(DEFAULT_CONFIG_FILES[2]).unwrap();
+            ConfigHandler::verify_config_entries(
+                &report_configs,
+                &vec!["uda", "urgency", "color"],
+                &vec!["report"],
+            )
+            .unwrap();
+
+            configs_map.extend(report_configs.map);
+
+            let urgency_configs = ConfigHandler::get_config(DEFAULT_CONFIG_FILES[3]).unwrap();
+            ConfigHandler::verify_config_entries(
+                &urgency_configs,
+                &vec!["uda", "report", "color"],
+                &vec!["urgency"],
+            )
+            .unwrap();
+
+            configs_map.extend(urgency_configs.map);
+
+            let color_configs = ConfigHandler::get_config(DEFAULT_CONFIG_FILES[4]).unwrap();
+            ConfigHandler::verify_config_entries(
+                &color_configs,
+                &vec!["uda", "report", "urgency"],
+                &vec!["color"],
+            )
+            .unwrap();
+
+            configs_map.extend(color_configs.map);
+        }
+
+        // Overlay configs
+        {
+            let overlay_configs = ConfigHandler::get_config(DEFAULT_CONFIG_FILES[5]).unwrap();
+            ConfigHandler::verify_config_entries(
+                &overlay_configs,
+                &vec![],
+                &vec!["*"],
+            )
+            .unwrap();
+
+            for key in overlay_configs.map.keys() {
+                if configs_map.contains_key(key) {
+                    configs_map.insert(
+                        key.clone(),
+                        overlay_configs.map.get(key).unwrap().clone(),
+                    );
+                } else {
+                    Err(FypmError {
+                        message: format!("The key {} is not present in any config! Are you trying to overwrite the wind?", key),
+                        kind: FypmErrorKind::InvalidConfig,
+                    })?;
+                }
+            }
+        }
+
+        let parsed_configs = serde_ini::to_string::<BTreeMap<String, String>>(&configs_map)
+            .expect("There's a problem in default configs!");
+
+        println!("{}", &parsed_configs);
+
+        Ok(())
     }
 }
