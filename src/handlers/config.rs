@@ -151,39 +151,6 @@ impl ConfigHandler {
                     sort: Some(vec!["urgency+".to_string()]),
                     ..Default::default()
                 }),
-                (FypmReports::Wlist, TaskWarriorReportConfig {
-                    columns: Some(vec![
-                        "id".to_string(),
-                        "status.short".to_string(),
-                        "STYLE".to_string(),
-                        "TYPE".to_string(),
-                        "project".to_string(),
-                        "tags".to_string(),
-                        "WT".to_string(),
-                        "GOAL".to_string(),
-                        "wait.relative".to_string(),
-                        "due.relative".to_string(),
-                        "description".to_string(),
-                        "urgency".to_string(),
-                    ]),
-                    labels: Some(vec![
-                        "ID".to_string(),
-                        "S".to_string(),
-                        "Style".to_string(),
-                        "Type".to_string(),
-                        "Project".to_string(),
-                        "Tags".to_string(),
-                        "Worktime".to_string(),
-                        "Goal".to_string(),
-                        "Wait".to_string(),
-                        "Due".to_string(),
-                        "Desc".to_string(),
-                        "Urg".to_string(),
-                    ]),
-                    filter: Some("((+ACTIVE or +OVERDUE or +Divisory or (((due:today or due.after:today) and due.before:tomorrow) and (WT:Quantify or WT:NonSched)) or ((WT:Calm or WT:AllDay) and ((+TODAY and +INSTANCE) or (GOAL.after:2024-05-01 and GOAL.before:now and TYPE:Objective) or (ALARM.after:now and ALARM.before:18:00)))) and status:pending) or (((due:today or due.after:today) and due.before:tomorrow) and WT:AllDay and (status.not:recurring and status.not:waiting))".to_string()),
-                    sort: Some(vec!["urgency-".to_string()]),
-                    ..Default::default()
-                }),
                 (        FypmReports::Goals, TaskWarriorReportConfig {
                     columns: Some(vec![
                         "id".to_string(),
