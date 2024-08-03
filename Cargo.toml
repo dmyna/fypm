@@ -3,8 +3,6 @@ name = "fypm"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 chrono = "0.4.31"
 colored = "2.1.0"
@@ -28,3 +26,5 @@ strum_macros = "0.26.4"
 rusqlite = "0.31.0"
 diesel = { version = "2.2.2", features = ["sqlite"] }
 ratatui = "0.27.0"
+serde_ini = "0.2.0"
+strum = { version = "0.26.3", features = ["derive"] }

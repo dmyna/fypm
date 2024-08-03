@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 #[derive(Clone, serde::Deserialize, Debug)]
 pub struct TaskAnnotation {
     pub entry: String,
@@ -41,6 +43,72 @@ pub struct TimeWarriorExported {
     pub end: Option<String>,
     pub tags: Option<Vec<String>>,
 }
+
 pub struct GetJsonByFilterOptions {
     pub quantity: Option<usize>,
+}
+
+pub struct TaskWarriorReportConfig {
+    pub columns: Option<Vec<String>>,
+    pub labels: Option<Vec<String>>,
+    pub sort: Option<Vec<String>>,
+    pub filter: Option<String>,
+}
+pub struct TaskWarriorUDAConfig {
+    pub r#type: String,
+    pub label: String,
+    pub values: Option<Vec<String>>,
+    pub default: Option<String>,
+}
+pub struct TaskWarriorUrgencyConfig {
+    pub coefficient: f32,
+    pub scope: TaskWarriorUrgencyConfigScope,
+}
+
+impl Default for TaskWarriorReportConfig {
+    fn default() -> Self {
+        Self {
+            columns: None,
+            labels: None,
+            sort: None,
+            filter: None,
+        }
+    }
+}
+impl Default for TaskWarriorUDAConfig {
+    fn default() -> Self {
+        Self {
+            r#type: String::new(),
+            label: String::new(),
+            values: None,
+            default: None,
+        }
+    }
+}
+impl Default for TaskWarriorUrgencyConfig {
+    fn default() -> Self {
+        Self {
+            coefficient: 0.0,
+            scope: TaskWarriorUrgencyConfigScope::Common,
+        }
+    }
+}
+
+#[derive(PartialEq, Eq)]
+pub enum TaskWarriorUserScopeProperty {
+    Tag,
+}
+
+#[derive(PartialEq, Eq)]
+pub enum TaskWarriorUrgencyConfigScope {
+    UDA,
+    Common,
+    User {
+        property: TaskWarriorUserScopeProperty,
+    },
+}
+#[derive(Clone)]
+pub struct FypmConfigFile {
+    pub name: String,
+    pub map: BTreeMap<String, String>,
 }
