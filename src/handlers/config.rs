@@ -127,12 +127,11 @@ impl ConfigHandler {
     }
     pub fn create_config_defaults() -> FypmConfigs {
         FypmConfigs {
-            report: FypmReports {
-                waiting: TaskWarriorReportConfig {
+            report: BTreeMap::from([
+                (FypmReports::Waiting, TaskWarriorReportConfig {
                     sort: Some(vec!["wait+".to_string()]),
                     ..Default::default()
-                },
-                next: TaskWarriorReportConfig {
+                }), (FypmReports::Next, TaskWarriorReportConfig {
                     columns: Some(vec![
                         "entry.age".to_string(),
                         "STYLE".to_string(),
@@ -159,8 +158,8 @@ impl ConfigHandler {
                     ]),
                     sort: Some(vec!["urgency-".to_string(), "ALARM-".to_string()]),
                     ..Default::default()
-                },
-                list: TaskWarriorReportConfig {
+                }),
+                (FypmReports::List, TaskWarriorReportConfig {
                     columns: Some(vec![
                         "id".to_string(),
                         "entry.age".to_string(),
@@ -196,8 +195,8 @@ impl ConfigHandler {
                     sort: Some(vec!["urgency+".to_string()]),
                     filter: Some("status:pending -WAITING -Ghost".to_string()),
                     ..Default::default()
-                },
-                all: TaskWarriorReportConfig {
+                }),
+                (FypmReports::All, TaskWarriorReportConfig {
                     columns: Some(vec![
                         "uuid.short".to_string(),
                         "id".to_string(),
@@ -232,8 +231,8 @@ impl ConfigHandler {
                     ]),
                     sort: Some(vec!["urgency+".to_string()]),
                     ..Default::default()
-                },
-                blist: TaskWarriorReportConfig {
+                }),
+                (FypmReports::Blist, TaskWarriorReportConfig {
                     columns: Some(vec![
                         "id".to_string(),
                         "status.short".to_string(),
@@ -251,8 +250,8 @@ impl ConfigHandler {
                     filter: Some("WT.not:NonSched! and -Ghost and -DELETED and -PARENT and -COMPLETED and TYPE.not:Event".to_string()),
                     sort: Some(vec!["urgency-".to_string()]),
                     ..Default::default()
-                },
-                wlist: TaskWarriorReportConfig {
+                }),
+                (FypmReports::Wlist, TaskWarriorReportConfig {
                     columns: Some(vec![
                         "id".to_string(),
                         "status.short".to_string(),
@@ -284,8 +283,8 @@ impl ConfigHandler {
                     filter: Some("((+ACTIVE or +OVERDUE or +Divisory or (((due:today or due.after:today) and due.before:tomorrow) and (WT:Quantify or WT:NonSched)) or ((WT:Calm or WT:AllDay) and ((+TODAY and +INSTANCE) or (GOAL.after:2024-05-01 and GOAL.before:now and TYPE:Objective) or (ALARM.after:now and ALARM.before:18:00)))) and status:pending) or (((due:today or due.after:today) and due.before:tomorrow) and WT:AllDay and (status.not:recurring and status.not:waiting))".to_string()),
                     sort: Some(vec!["urgency-".to_string()]),
                     ..Default::default()
-                },
-                goals: TaskWarriorReportConfig {
+                }),
+                (        FypmReports::Goals, TaskWarriorReportConfig {
                     columns: Some(vec![
                         "id".to_string(),
                         "entry.age".to_string(),
@@ -311,8 +310,8 @@ impl ConfigHandler {
                     sort: Some(vec!["GOAL+".to_string()]),
                     filter: Some("status:pending and GOAL.any:".to_string()),
                     ..Default::default()
-                },
-                alarms: TaskWarriorReportConfig {
+                }),
+                (FypmReports::Alarms, TaskWarriorReportConfig {
                     columns: Some(vec![
                         "id".to_string(),
                         "entry.age".to_string(),
@@ -333,7 +332,7 @@ impl ConfigHandler {
                         "Style".to_string(),
                         "Type".to_string(),
                         "Project".to_string(),
-                        "Tag".to_string(),
+                        "TaskWarriorUserScopeProperty::Tag".to_string(),
                         "WorkTime".to_string(),
                         "Goal".to_string(),
                         "Alarm".to_string(),
@@ -344,8 +343,8 @@ impl ConfigHandler {
                     sort: Some(vec!["ALARM+".to_string()]),
                     filter: Some("status:pending and ALARM.any:".to_string()),
                     ..Default::default()
-                },
-                all_goals: TaskWarriorReportConfig {
+                }),
+                (FypmReports::AllGoals, TaskWarriorReportConfig {
                     columns: Some(vec![
                         "id".to_string(),
                         "entry.age".to_string(),
@@ -365,7 +364,7 @@ impl ConfigHandler {
                         "Style".to_string(),
                         "Type".to_string(),
                         "Project".to_string(),
-                        "Tag".to_string(),
+                        "TaskWarriorUserScopeProperty::Tag".to_string(),
                         "WorkTime".to_string(),
                         "Goal".to_string(),
                         "Due".to_string(),
@@ -375,8 +374,8 @@ impl ConfigHandler {
                     sort: Some(vec!["GOAL+".to_string()]),
                     filter: Some("status:pending and GOAL.any:".to_string()),
                     ..Default::default()
-                },
-                r#const: TaskWarriorReportConfig {
+                }),
+                (FypmReports::Const, TaskWarriorReportConfig {
                     columns: Some(vec![
                         "id".to_string(),
                         "entry.age".to_string(),
@@ -396,7 +395,7 @@ impl ConfigHandler {
                         "Style".to_string(),
                         "Type".to_string(),
                         "Project".to_string(),
-                        "Tag".to_string(),
+                        "TaskWarriorUserScopeProperty::Tag".to_string(),
                         "WorkTime".to_string(),
                         "Goal".to_string(),
                         "Due".to_string(),
@@ -406,8 +405,8 @@ impl ConfigHandler {
                     sort: Some(vec!["ID-".to_string()]),
                     filter: Some("status:pending and GOAL.any:".to_string()),
                     ..Default::default()
-                },
-                recurring: TaskWarriorReportConfig {
+                }),
+                (FypmReports::Recurring, TaskWarriorReportConfig {
                     columns: Some(vec![
                         "id".to_string(),
                         "entry.age".to_string(),
@@ -428,7 +427,7 @@ impl ConfigHandler {
                         "Style".to_string(),
                         "Type".to_string(),
                         "Project".to_string(),
-                        "Tag".to_string(),
+                        "TaskWarriorUserScopeProperty::Tag".to_string(),
                         "WorkTime".to_string(),
                         "Goal".to_string(),
                         "Recur".to_string(),
@@ -439,298 +438,284 @@ impl ConfigHandler {
                     sort: Some(vec!["recur+".to_string()]),
                     filter: Some("status:pending and recur.any:".to_string()),
                     ..Default::default()
-                },
-            },
-            uda: FypmUdas {
-                style: TaskWarriorUDAConfig {
+                }),
+            ]),
+            uda: BTreeMap::from([
+                (FypmUDAs::Style, TaskWarriorUDAConfig {
                     r#type: "string".to_string(),
                     label: "Style".to_string(),
                     values: Some(vec!["default".to_string(), "important".to_string()]),
                     default: Some("default".to_string()),
-                },
-                r#type: TaskWarriorUDAConfig {
+                }),
+                (FypmUDAs::Type, TaskWarriorUDAConfig {
                     r#type: "string".to_string(),
                     label: "Type".to_string(),
                     values: Some(vec!["task".to_string(), "event".to_string()]),
                     default: Some("task".to_string()),
-                },
-                state: TaskWarriorUDAConfig {
+                }),
+                (FypmUDAs::State, TaskWarriorUDAConfig {
                     r#type: "string".to_string(),
                     label: "State".to_string(),
                     values: Some(vec!["active".to_string(), "inactive".to_string()]),
                     default: Some("active".to_string()),
-                },
-                mother: TaskWarriorUDAConfig {
+                }),
+                (FypmUDAs::Mother, TaskWarriorUDAConfig {
                     r#type: "string".to_string(),
                     label: "Mother".to_string(),
                     values: Some(vec!["none".to_string()]),
                     default: Some("none".to_string()),
-                },
-                inforelat: TaskWarriorUDAConfig {
+                }),
+                (FypmUDAs::Inforelat, TaskWarriorUDAConfig {
                     r#type: "string".to_string(),
                     label: "Inforelat".to_string(),
                     values: Some(vec!["none".to_string()]),
                     default: Some("none".to_string()),
-                },
-                seq_current: TaskWarriorUDAConfig {
+                }),
+                (FypmUDAs::SeqCurrent, TaskWarriorUDAConfig {
                     r#type: "integer".to_string(),
                     label: "Current Sequence".to_string(),
                     values: None,
                     default: None,
-                },
-                seq_previous: TaskWarriorUDAConfig {
+                }),
+                (FypmUDAs::SeqPrevious, TaskWarriorUDAConfig {
                     r#type: "integer".to_string(),
                     label: "Previous Sequence".to_string(),
                     values: None,
                     default: None,
-                },
-                seq_next: TaskWarriorUDAConfig {
+                }),
+                (FypmUDAs::SeqNext, TaskWarriorUDAConfig {
                     r#type: "integer".to_string(),
                     label: "Next Sequence".to_string(),
                     values: None,
                     default: None,
-                },
-                wt: TaskWarriorUDAConfig {
+                }),
+                (FypmUDAs::Wt, TaskWarriorUDAConfig {
                     r#type: "string".to_string(),
                     label: "WorkTime".to_string(),
                     values: Some(vec!["none".to_string()]),
                     default: Some("none".to_string()),
-                },
-                goal: TaskWarriorUDAConfig {
+                }),
+                (FypmUDAs::Goal, TaskWarriorUDAConfig {
                     r#type: "string".to_string(),
                     label: "Goal".to_string(),
                     values: Some(vec!["none".to_string()]),
                     default: Some("none".to_string()),
-                },
-                alarm: TaskWarriorUDAConfig {
+                }),
+                (FypmUDAs::Alarm, TaskWarriorUDAConfig {
                     r#type: "string".to_string(),
                     label: "Alarm".to_string(),
                     values: Some(vec!["none".to_string()]),
                     default: Some("none".to_string()),
-                },
-                effort: TaskWarriorUDAConfig {
+                }),
+                (FypmUDAs::Effort, TaskWarriorUDAConfig {
                     r#type: "integer".to_string(),
                     label: "Effort".to_string(),
                     values: None,
                     default: None,
-                },
-                quadrant: TaskWarriorUDAConfig {
+                }),
+                (FypmUDAs::Quadrant, TaskWarriorUDAConfig {
                     r#type: "integer".to_string(),
                     label: "Quadrant".to_string(),
                     values: Some(vec!["1".to_string(), "2".to_string(), "3".to_string(), "4".to_string()]),
                     default: Some("1".to_string()),
-                },
-                estimate: TaskWarriorUDAConfig {
+                }),
+                (FypmUDAs::Estimate, TaskWarriorUDAConfig {
                     r#type: "integer".to_string(),
                     label: "Estimate".to_string(),
                     values: None,
                     default: None,
-                },
-            },
-            urgency: FypmUrgency {
-                active: TaskWarriorUrgencyConfig {
+                }),
+            ]),
+            urgency: BTreeMap::from([
+                (FypmUrgency::Active, TaskWarriorUrgencyConfig {
                     coefficient: 1000.0,
                     scope: TaskWarriorUrgencyConfigScope::Common,
-                },
-                tags: TaskWarriorUrgencyConfig {
+                }),
+                (FypmUrgency::Tags, TaskWarriorUrgencyConfig {
                     coefficient: 0.0,
-                    scope: TaskWarriorUrgencyConfigScope::Common,
-                },
-                project: TaskWarriorUrgencyConfig {
+                    scope: TaskWarriorUrgencyConfigScope::Common
+                }),
+                (FypmUrgency::Project, TaskWarriorUrgencyConfig {
                     coefficient: 0.0,
-                    scope: TaskWarriorUrgencyConfigScope::Common,
-                },
-                annotations: TaskWarriorUrgencyConfig {
+                    scope: TaskWarriorUrgencyConfigScope::Common
+                }),
+                (FypmUrgency::Annotations, TaskWarriorUrgencyConfig {
                     coefficient: 0.0,
-                    scope: TaskWarriorUrgencyConfigScope::Common,
-                },
-                scheduled: TaskWarriorUrgencyConfig {
+                    scope: TaskWarriorUrgencyConfigScope::Common
+                }),
+                (FypmUrgency::Scheduled, TaskWarriorUrgencyConfig {
                     coefficient: 20.0,
-                    scope: TaskWarriorUrgencyConfigScope::Common,
-                },
-
-                // Virtual tags
-                overdue: TaskWarriorUrgencyConfig {
+                    scope: TaskWarriorUrgencyConfigScope::Common
+                }),
+                (FypmUrgency::Overdue, TaskWarriorUrgencyConfig {
                     coefficient: 50.0,
                     scope: TaskWarriorUrgencyConfigScope::User { property: TaskWarriorUserScopeProperty::Tag },
-                },
-                waiting: TaskWarriorUrgencyConfig {
+                }),
+                (FypmUrgency::Waiting, TaskWarriorUrgencyConfig {
                     coefficient: -10.0,
                     scope: TaskWarriorUrgencyConfigScope::User { property: TaskWarriorUserScopeProperty::Tag },
-                },
-                template: TaskWarriorUrgencyConfig {
+                }),
+                (FypmUrgency::Template, TaskWarriorUrgencyConfig {
                     coefficient: -20.0,
                     scope: TaskWarriorUrgencyConfigScope::User { property: TaskWarriorUserScopeProperty::Tag },
-                },
-                completed: TaskWarriorUrgencyConfig {
+                }),
+                (FypmUrgency::Completed, TaskWarriorUrgencyConfig {
                     coefficient: -30.0,
                     scope: TaskWarriorUrgencyConfigScope::User { property: TaskWarriorUserScopeProperty::Tag },
-                },
-                deleted: TaskWarriorUrgencyConfig {
+                }),
+                (FypmUrgency::Deleted, TaskWarriorUrgencyConfig {
                     coefficient: -50.0,
                     scope: TaskWarriorUrgencyConfigScope::User { property: TaskWarriorUserScopeProperty::Tag },
-                },
-
-                // WorkTime
-                wt_quantify: TaskWarriorUrgencyConfig {
+                }),
+                (FypmUrgency::WtQuantify, TaskWarriorUrgencyConfig {
                     coefficient: 0.0,
-                    scope: TaskWarriorUrgencyConfigScope::UDA,
-                },
-                wt_allday: TaskWarriorUrgencyConfig {
+                    scope: TaskWarriorUrgencyConfigScope::UDA
+                }),
+                (FypmUrgency::WtAllDay, TaskWarriorUrgencyConfig {
                     coefficient: -200.0,
-                    scope: TaskWarriorUrgencyConfigScope::UDA,
-                },
-                wt_nonsched: TaskWarriorUrgencyConfig {
+                    scope: TaskWarriorUrgencyConfigScope::UDA
+                }),
+                (FypmUrgency::WtNonSched, TaskWarriorUrgencyConfig {
                     coefficient: -5.0,
-                    scope: TaskWarriorUrgencyConfigScope::UDA,
-                },
-
-                // Type
-                type_subtask: TaskWarriorUrgencyConfig {
+                    scope: TaskWarriorUrgencyConfigScope::UDA
+                }),
+                (FypmUrgency::TypeSubTask, TaskWarriorUrgencyConfig {
                     coefficient: -8.0,
-                    scope: TaskWarriorUrgencyConfigScope::UDA,
-                },
-                type_essential: TaskWarriorUrgencyConfig {
+                    scope: TaskWarriorUrgencyConfigScope::UDA
+                }),
+                (FypmUrgency::TypeEssential, TaskWarriorUrgencyConfig {
                     coefficient: 5.0,
-                    scope: TaskWarriorUrgencyConfigScope::UDA,
-                },
-                type_objective: TaskWarriorUrgencyConfig {
+                    scope: TaskWarriorUrgencyConfigScope::UDA
+                }),
+                (FypmUrgency::TypeObjective, TaskWarriorUrgencyConfig {
                     coefficient: -5.0,
-                    scope: TaskWarriorUrgencyConfigScope::UDA,
-                },
-                type_continuous: TaskWarriorUrgencyConfig {
+                    scope: TaskWarriorUrgencyConfigScope::UDA
+                }),
+                (FypmUrgency::TypeContinuous, TaskWarriorUrgencyConfig {
                     coefficient: 0.0,
-                    scope: TaskWarriorUrgencyConfigScope::UDA,
-                },
-                type_check: TaskWarriorUrgencyConfig {
+                    scope: TaskWarriorUrgencyConfigScope::UDA
+                }),
+                (FypmUrgency::TypeCheck, TaskWarriorUrgencyConfig {
                     coefficient: 0.0,
-                    scope: TaskWarriorUrgencyConfigScope::UDA,
-                },
-                type_event: TaskWarriorUrgencyConfig {
+                    scope: TaskWarriorUrgencyConfigScope::UDA
+                }),
+                (FypmUrgency::TypeEvent, TaskWarriorUrgencyConfig {
                     coefficient: -175.0,
-                    scope: TaskWarriorUrgencyConfigScope::UDA,
-                },
-
-                // Style
-                style_apollonian: TaskWarriorUrgencyConfig {
+                    scope: TaskWarriorUrgencyConfigScope::UDA
+                }),
+                (FypmUrgency::StyleApollonian, TaskWarriorUrgencyConfig {
                     coefficient: 3.0,
-                    scope: TaskWarriorUrgencyConfigScope::UDA,
-                },
-                style_creative: TaskWarriorUrgencyConfig {
+                    scope: TaskWarriorUrgencyConfigScope::UDA
+                }),
+                (FypmUrgency::StyleCreative, TaskWarriorUrgencyConfig {
                     coefficient: 1.0,
-                    scope: TaskWarriorUrgencyConfigScope::UDA,
-                },
-                style_dionysian: TaskWarriorUrgencyConfig {
+                    scope: TaskWarriorUrgencyConfigScope::UDA
+                }),
+                (FypmUrgency::StyleDionysian, TaskWarriorUrgencyConfig {
                     coefficient: -2.0,
-                    scope: TaskWarriorUrgencyConfigScope::UDA,
-                },
-                style_necessity: TaskWarriorUrgencyConfig {
+                    scope: TaskWarriorUrgencyConfigScope::UDA
+                }),
+                (FypmUrgency::StyleNecessity, TaskWarriorUrgencyConfig {
                     coefficient: 5.0,
-                    scope: TaskWarriorUrgencyConfigScope::UDA,
-                },
-
-                // Effort
-                effort_zero: TaskWarriorUrgencyConfig {
+                    scope: TaskWarriorUrgencyConfigScope::UDA
+                }),
+                (FypmUrgency::EffortZero, TaskWarriorUrgencyConfig {
                     coefficient: 0.0,
-                    scope: TaskWarriorUrgencyConfigScope::UDA,
-                },
-                effort_one: TaskWarriorUrgencyConfig {
+                    scope: TaskWarriorUrgencyConfigScope::UDA
+                }),
+                (FypmUrgency::EffortOne, TaskWarriorUrgencyConfig {
                     coefficient: 1.0,
-                    scope: TaskWarriorUrgencyConfigScope::UDA,
-                },
-                effort_two: TaskWarriorUrgencyConfig {
+                    scope: TaskWarriorUrgencyConfigScope::UDA
+                }),
+                (FypmUrgency::EffortTwo, TaskWarriorUrgencyConfig {
                     coefficient: 2.0,
-                    scope: TaskWarriorUrgencyConfigScope::UDA,
-                },
-                effort_three: TaskWarriorUrgencyConfig {
+                    scope: TaskWarriorUrgencyConfigScope::UDA
+                }),
+                (FypmUrgency::EffortThree, TaskWarriorUrgencyConfig {
                     coefficient: 3.0,
-                    scope: TaskWarriorUrgencyConfigScope::UDA,
-                },
-                effort_four: TaskWarriorUrgencyConfig {
+                    scope: TaskWarriorUrgencyConfigScope::UDA
+                }),
+                (FypmUrgency::EffortFour, TaskWarriorUrgencyConfig {
                     coefficient: 4.0,
-                    scope: TaskWarriorUrgencyConfigScope::UDA,
-                },
-                effort_five: TaskWarriorUrgencyConfig {
+                    scope: TaskWarriorUrgencyConfigScope::UDA
+                }),
+                (FypmUrgency::EffortFive, TaskWarriorUrgencyConfig {
                     coefficient: 5.0,
-                    scope: TaskWarriorUrgencyConfigScope::UDA,
-                },
-
-                // Quadrant
-                quadrant_one: TaskWarriorUrgencyConfig {
+                    scope: TaskWarriorUrgencyConfigScope::UDA
+                }),
+                (FypmUrgency::QuadrantOne, TaskWarriorUrgencyConfig {
                     coefficient: 10.0,
-                    scope: TaskWarriorUrgencyConfigScope::UDA,
-                },
-                quadrant_two: TaskWarriorUrgencyConfig {
+                    scope: TaskWarriorUrgencyConfigScope::UDA
+                }),
+                (FypmUrgency::QuadrantTwo, TaskWarriorUrgencyConfig {
                     coefficient: 7.0,
-                    scope: TaskWarriorUrgencyConfigScope::UDA,
-                },
-                quadrant_three: TaskWarriorUrgencyConfig {
+                    scope: TaskWarriorUrgencyConfigScope::UDA
+                }),
+                (FypmUrgency::QuadrantThree, TaskWarriorUrgencyConfig {
                     coefficient: 5.0,
-                    scope: TaskWarriorUrgencyConfigScope::UDA,
-                },
-                quadrant_none: TaskWarriorUrgencyConfig {
+                    scope: TaskWarriorUrgencyConfigScope::UDA
+                }),
+                (FypmUrgency::QuadrantNone, TaskWarriorUrgencyConfig {
                     coefficient: 0.0,
-                    scope: TaskWarriorUrgencyConfigScope::UDA,
-                },
-
-                // Urgency Increment
-                urg_p5: TaskWarriorUrgencyConfig {
+                    scope: TaskWarriorUrgencyConfigScope::UDA
+                }),
+                (FypmUrgency::UrgP5, TaskWarriorUrgencyConfig {
                     coefficient: 5.0,
                     scope: TaskWarriorUrgencyConfigScope::User { property: TaskWarriorUserScopeProperty::Tag },
-                },
-                urg_p10: TaskWarriorUrgencyConfig {
+                }),
+                (FypmUrgency::UrgP10, TaskWarriorUrgencyConfig {
                     coefficient: 10.0,
                     scope: TaskWarriorUrgencyConfigScope::User { property: TaskWarriorUserScopeProperty::Tag },
-                },
-                urg_p15: TaskWarriorUrgencyConfig {
+                }),
+                (FypmUrgency::UrgP15, TaskWarriorUrgencyConfig {
                     coefficient: 15.0,
                     scope: TaskWarriorUrgencyConfigScope::User { property: TaskWarriorUserScopeProperty::Tag },
-                },
-                urg_p20: TaskWarriorUrgencyConfig {
+                }),
+                (FypmUrgency::UrgP20, TaskWarriorUrgencyConfig {
                     coefficient: 20.0,
                     scope: TaskWarriorUrgencyConfigScope::User { property: TaskWarriorUserScopeProperty::Tag },
-                },
-                urg_p25: TaskWarriorUrgencyConfig {
+                }),
+                (FypmUrgency::UrgP25, TaskWarriorUrgencyConfig {
                     coefficient: 25.0,
                     scope: TaskWarriorUrgencyConfigScope::User { property: TaskWarriorUserScopeProperty::Tag },
-                },
-                urg_p30: TaskWarriorUrgencyConfig {
+                }),
+                (FypmUrgency::UrgP30, TaskWarriorUrgencyConfig {
                     coefficient: 30.0,
                     scope: TaskWarriorUrgencyConfigScope::User { property: TaskWarriorUserScopeProperty::Tag },
-                },
-                urg_p100: TaskWarriorUrgencyConfig {
+                }),
+                (FypmUrgency::UrgP100, TaskWarriorUrgencyConfig {
                     coefficient: 100.0,
                     scope: TaskWarriorUrgencyConfigScope::User { property: TaskWarriorUserScopeProperty::Tag },
-                },
-                urg_n5: TaskWarriorUrgencyConfig {
+                }),
+                (FypmUrgency::UrgN5, TaskWarriorUrgencyConfig {
                     coefficient: -5.0,
                     scope: TaskWarriorUrgencyConfigScope::User { property: TaskWarriorUserScopeProperty::Tag },
-                },
-                urg_n10: TaskWarriorUrgencyConfig {
+                }),
+                (FypmUrgency::UrgN10, TaskWarriorUrgencyConfig {
                     coefficient: -10.0,
                     scope: TaskWarriorUrgencyConfigScope::User { property: TaskWarriorUserScopeProperty::Tag },
-                },
-                urg_n15: TaskWarriorUrgencyConfig {
+                }),
+                (FypmUrgency::UrgN15, TaskWarriorUrgencyConfig {
                     coefficient: -15.0,
                     scope: TaskWarriorUrgencyConfigScope::User { property: TaskWarriorUserScopeProperty::Tag },
-                },
-                urg_n20: TaskWarriorUrgencyConfig {
+                }),
+                (FypmUrgency::UrgN20, TaskWarriorUrgencyConfig {
                     coefficient: -20.0,
                     scope: TaskWarriorUrgencyConfigScope::User { property: TaskWarriorUserScopeProperty::Tag },
-                },
-                urg_n25: TaskWarriorUrgencyConfig {
+                }),
+                (FypmUrgency::UrgN25, TaskWarriorUrgencyConfig {
                     coefficient: -25.0,
                     scope: TaskWarriorUrgencyConfigScope::User { property: TaskWarriorUserScopeProperty::Tag },
-                },
-                urg_n30: TaskWarriorUrgencyConfig {
+                }),
+                (FypmUrgency::UrgN30, TaskWarriorUrgencyConfig {
                     coefficient: -30.0,
                     scope: TaskWarriorUrgencyConfigScope::User { property: TaskWarriorUserScopeProperty::Tag },
-                },
-                urg_n100: TaskWarriorUrgencyConfig {
+                }),
+                (FypmUrgency::UrgN100, TaskWarriorUrgencyConfig {
                     coefficient: -100.0,
                     scope: TaskWarriorUrgencyConfigScope::User { property: TaskWarriorUserScopeProperty::Tag },
-                },
-            }
+                })
+            ])
         }
     }
 
