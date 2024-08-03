@@ -522,8 +522,84 @@ impl ConfigHandler {
             ])
         }
     }
+    pub fn get_defaults_btreemap(
+        defaults: &FypmConfigs,
+    ) -> Result<BTreeMap<String, String>, FypmError> {
+        let mut hashmap: BTreeMap<String, String> = BTreeMap::new();
 
-    pub fn parse_ini<T>(config_file_name: &str) -> Result<T, FypmError> {
+        // UDA
+        for key in defaults.uda.keys() {
+            let value = defaults.uda.get(key).unwrap();
+
+            hashmap.insert(format!("uda.{}.type", key), value.r#type.clone());
+            hashmap.insert(format!("uda.{}.label", key), value.label.clone());
+
+            if let Some(values) = &value.values {
+                hashmap.insert(format!("uda.{}.values", key), values.join(","));
+            }
+
+            if let Some(default) = &value.default {
+                hashmap.insert(format!("uda.{}.default", key), default.clone());
+            }
+        }
+
+        // report
+        for key in defaults.report.keys() {
+            let value = defaults.report.get(key).unwrap();
+
+            if let Some(columns) = &value.columns {
+                hashmap.insert(format!("report.{}.columns", key), columns.join(","));
+            }
+
+            if let Some(labels) = &value.labels {
+                hashmap.insert(format!("report.{}.labels", key), labels.join(","));
+            }
+
+            if let Some(sort) = &value.sort {
+                hashmap.insert(format!("report.{}.sort", key), sort.join(","));
+            }
+
+            if let Some(filter) = &value.filter {
+                hashmap.insert(format!("report.{}.filter", key), filter.clone());
+            }
+        }
+
+        // urgency
+        for key in defaults.urgency.keys() {
+            let value = defaults.urgency.get(key).unwrap();
+
+            if value.scope == TaskWarriorUrgencyConfigScope::UDA {
+                let parsed_key = key.to_string();
+                let key_parts = parsed_key.split("-").collect::<Vec<&str>>();
+
+                if key_parts.len() == 2 {
+                    hashmap.insert(
+                        format!("urgency.uda.{}.{}.coefficient", key_parts[0], key_parts[1]),
+                        value.coefficient.to_string(),
+                    );
+                }
+            }
+
+            if value.scope == TaskWarriorUrgencyConfigScope::Common {
+                hashmap.insert(
+                    format!("urgency.{}.coefficient", key),
+                    value.coefficient.to_string(),
+                );
+            }
+
+            if let TaskWarriorUrgencyConfigScope::User { property } = &value.scope {
+                if *property == TaskWarriorUserScopeProperty::Tag {
+                    hashmap.insert(
+                        format!("urgency.user.tag.{}.coefficient", key),
+                        value.coefficient.to_string(),
+                    );
+                }
+            }
+        }
+
+        Ok(hashmap)
+    }
+
         let config_file_path = Path::new(&CONFIG_PATH.to_string()).join(config_file_name);
 
         let file_content = fs::read_to_string(&config_file_path).unwrap();
