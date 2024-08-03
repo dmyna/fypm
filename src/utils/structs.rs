@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 #[derive(Clone, serde::Deserialize, Debug)]
 pub struct TaskAnnotation {
     pub entry: String,
@@ -92,13 +94,21 @@ impl Default for TaskWarriorUrgencyConfig {
     }
 }
 
+#[derive(PartialEq, Eq)]
 pub enum TaskWarriorUserScopeProperty {
     Tag,
 }
+
+#[derive(PartialEq, Eq)]
 pub enum TaskWarriorUrgencyConfigScope {
     UDA,
     Common,
     User {
         property: TaskWarriorUserScopeProperty,
     },
+}
+#[derive(Clone)]
+pub struct FypmConfigFile {
+    pub name: String,
+    pub map: BTreeMap<String, String>,
 }
