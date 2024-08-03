@@ -32,7 +32,20 @@ pub fn transform_dates_to_iso(received_time: String) -> Result<String, ParseErro
 pub fn match_special_aliases(filter: &String) -> String {
     match filter.as_str() {
         // Last Task
-        "last" => action::receive_last_task().unwrap(),
+        "last" => {
+            let get_task = action::receive_last_task();
+
+            match get_task {
+                Ok(task) => task,
+                Err(error) => {
+                    if error.kind() == std::io::ErrorKind::NotFound {
+                        CONTROL_TASK.to_string()
+                    } else {
+                        panic!("{}", error);
+                    }
+                }
+            }
+        },
         // Time without specific use
         "t" => CONTROL_TASK.to_string(),
         // Lost time
