@@ -151,12 +151,25 @@ pub fn task_done(
     let confirmation = dialog::verify_selected_tasks(&selected_tasks)?;
 
     if confirmation {
-        Command::new("task")
+        let mut done_binding = Command::new("task");
+        let done_command = done_binding
             .args(args)
             .stdout(Stdio::inherit())
-            .stderr(Stdio::inherit())
-            .output()
-            .unwrap();
+            .stderr(Stdio::inherit());
+
+        if selected_tasks.len() > 2 {
+            let mut done_child = done_command.stdin(Stdio::piped()).spawn().unwrap();
+
+            done_child
+                .stdin
+                .take()
+                .unwrap()
+                .write_all("all\n".as_bytes())
+                .unwrap();
+            done_child.wait().unwrap();
+        } else {
+            done_command.output().unwrap();
+        }
     } else {
         println!("Aborting...");
     }
