@@ -14,17 +14,13 @@ use crate::utils::enums::AliasActions;
 use crate::utils::enums::{Commands, TimewAction};
 use crate::utils::err::FypmError;
 use crate::MAIN_DB_FILE;
-use std::io::Error;
-use std::str;
 
 pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
     match command {
         //#region               Systems
         Commands::InitDay => todo!(),
 
-        Commands::Verify { script } => {
-            match_verify_script(script)
-        },
+        Commands::Verify { script } => match_verify_script(script),
 
         Commands::Alias { action, filter } => {
             match action {
@@ -39,31 +35,34 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
         Commands::WtAdd { worktime_name } => {
             WorktimeHandler {
                 conn: Connection::open(MAIN_DB_FILE.to_string()).unwrap().into(),
-            }.add(worktime_name)?;
+            }
+            .add(worktime_name)?;
 
             Ok(())
-        },
+        }
         Commands::WtRemove { worktime_name } => {
             WorktimeHandler {
                 conn: Connection::open(MAIN_DB_FILE.to_string()).unwrap().into(),
-            }.remove(worktime_name)?;
+            }
+            .remove(worktime_name)?;
 
             Ok(())
-        },
+        }
         Commands::WtLs => {
             WorktimeHandler {
                 conn: Connection::open(MAIN_DB_FILE.to_string()).unwrap().into(),
-            }.list()?;
+            }
+            .list()?;
 
             Ok(())
-        },
+        }
         Commands::WtApply { worktime_name } => {
             worktime::apply(worktime_name)?;
 
             Ok(())
-        },
+        }
 
-        Commands::Instance { action, actionargs } => todo!(),
+        Commands::Instance { action, actionargs } => instance::match_action(action, actionargs),
         //#endregion
         //#region               Task Subcommands
         Commands::TaAdd {
