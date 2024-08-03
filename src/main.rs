@@ -44,6 +44,8 @@ fn main() {
     handlers::config::ConfigHandler::ensure_config_path().unwrap();
     handlers::config::ConfigHandler::ensure_config_files().unwrap();
 
+    handlers::config::ConfigHandler::handle_config().unwrap();
+
     let cli = Cli::parse();
 
     func::matchs::match_subcommand(&cli.command).unwrap();
