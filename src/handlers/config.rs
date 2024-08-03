@@ -1,110 +1,19 @@
 use crate::utils::constants::DEFAULT_CONFIG_FILES;
+use crate::utils::enums::{FypmReports, FypmUDAs, FypmUrgency};
 use crate::utils::err::{FypmError, FypmErrorKind};
 use crate::utils::structs::{
-    TaskWarriorReportConfig, TaskWarriorUDAConfig, TaskWarriorUrgencyConfig,
+    FypmConfigFile, TaskWarriorReportConfig, TaskWarriorUDAConfig, TaskWarriorUrgencyConfig,
     TaskWarriorUrgencyConfigScope, TaskWarriorUserScopeProperty,
 };
 use crate::CONFIG_PATH;
 use std::fs::{self, ReadDir};
 use std::path::Path;
+use std::io::Write;
 
-pub struct FypmReports {
-    waiting: TaskWarriorReportConfig,
-    next: TaskWarriorReportConfig,
-    list: TaskWarriorReportConfig,
-    all: TaskWarriorReportConfig,
-    blist: TaskWarriorReportConfig,
-    wlist: TaskWarriorReportConfig,
-    goals: TaskWarriorReportConfig,
-    alarms: TaskWarriorReportConfig,
-    all_goals: TaskWarriorReportConfig,
-    r#const: TaskWarriorReportConfig,
-    recurring: TaskWarriorReportConfig,
-}
-pub struct FypmUdas {
-    style: TaskWarriorUDAConfig,
-    r#type: TaskWarriorUDAConfig,
-    state: TaskWarriorUDAConfig,
-    mother: TaskWarriorUDAConfig,
-    inforelat: TaskWarriorUDAConfig,
-    seq_current: TaskWarriorUDAConfig,
-    seq_previous: TaskWarriorUDAConfig,
-    seq_next: TaskWarriorUDAConfig,
-    wt: TaskWarriorUDAConfig,
-    goal: TaskWarriorUDAConfig,
-    alarm: TaskWarriorUDAConfig,
-    effort: TaskWarriorUDAConfig,
-    quadrant: TaskWarriorUDAConfig,
-    estimate: TaskWarriorUDAConfig,
-}
-pub struct FypmUrgency {
-    // General
-    active: TaskWarriorUrgencyConfig,
-    tags: TaskWarriorUrgencyConfig,
-    project: TaskWarriorUrgencyConfig,
-    annotations: TaskWarriorUrgencyConfig,
-    scheduled: TaskWarriorUrgencyConfig,
-
-    // Virtual Tags
-    overdue: TaskWarriorUrgencyConfig,
-    waiting: TaskWarriorUrgencyConfig,
-    template: TaskWarriorUrgencyConfig,
-    completed: TaskWarriorUrgencyConfig,
-    deleted: TaskWarriorUrgencyConfig,
-
-    // WorkTime
-    wt_quantify: TaskWarriorUrgencyConfig,
-    wt_allday: TaskWarriorUrgencyConfig,
-    wt_nonsched: TaskWarriorUrgencyConfig,
-
-    // Type
-    type_subtask: TaskWarriorUrgencyConfig,
-    type_essential: TaskWarriorUrgencyConfig,
-    type_objective: TaskWarriorUrgencyConfig,
-    type_continuous: TaskWarriorUrgencyConfig,
-    type_check: TaskWarriorUrgencyConfig,
-    type_event: TaskWarriorUrgencyConfig,
-
-    // Style
-    style_apollonian: TaskWarriorUrgencyConfig,
-    style_creative: TaskWarriorUrgencyConfig,
-    style_dionysian: TaskWarriorUrgencyConfig,
-    style_necessity: TaskWarriorUrgencyConfig,
-
-    // Effort
-    effort_zero: TaskWarriorUrgencyConfig,
-    effort_one: TaskWarriorUrgencyConfig,
-    effort_two: TaskWarriorUrgencyConfig,
-    effort_three: TaskWarriorUrgencyConfig,
-    effort_four: TaskWarriorUrgencyConfig,
-    effort_five: TaskWarriorUrgencyConfig,
-
-    // Quadrant
-    quadrant_one: TaskWarriorUrgencyConfig,
-    quadrant_two: TaskWarriorUrgencyConfig,
-    quadrant_three: TaskWarriorUrgencyConfig,
-    quadrant_none: TaskWarriorUrgencyConfig,
-
-    // Urgency Increment
-    urg_p5: TaskWarriorUrgencyConfig,
-    urg_p10: TaskWarriorUrgencyConfig,
-    urg_p15: TaskWarriorUrgencyConfig,
-    urg_p20: TaskWarriorUrgencyConfig,
-    urg_p25: TaskWarriorUrgencyConfig,
-    urg_p30: TaskWarriorUrgencyConfig,
-    urg_p100: TaskWarriorUrgencyConfig,
-    urg_n5: TaskWarriorUrgencyConfig,
-    urg_n10: TaskWarriorUrgencyConfig,
-    urg_n15: TaskWarriorUrgencyConfig,
-    urg_n20: TaskWarriorUrgencyConfig,
-    urg_n25: TaskWarriorUrgencyConfig,
-    urg_n30: TaskWarriorUrgencyConfig,
-    urg_n100: TaskWarriorUrgencyConfig,
-}
 pub struct FypmConfigs {
-    pub report: FypmReports,
-    pub uda: FypmUdas,
-    pub urgency: FypmUrgency,
+    pub uda: BTreeMap<FypmUDAs, TaskWarriorUDAConfig>,
+    pub report: BTreeMap<FypmReports, TaskWarriorReportConfig>,
+    pub urgency: BTreeMap<FypmUrgency, TaskWarriorUrgencyConfig>,
 }
 
 pub struct ConfigHandler;
