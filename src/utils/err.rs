@@ -12,6 +12,7 @@ pub enum FypmErrorKind {
     WrongInitialization,
     ProblemWithStoredTask,
     InvalidInput,
+    InvalidConfig,
 }
 
 #[derive(Debug)]
