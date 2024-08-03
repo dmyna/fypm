@@ -622,5 +622,44 @@ impl ConfigHandler {
             map: config_hashmap,
         })
     }
+    pub fn verify_config_entries(
+        config: &FypmConfigFile,
+        forbidden_keys: &Vec<&str>,
+        allowed_keys: &Vec<&str>,
+    ) -> Result<usize, FypmError> {
+        let mut entries_count = 0;
+
+        for key in config.map.keys() {
+            let first_key = key.split(".").nth(0).unwrap();
+
+            if forbidden_keys.contains(&first_key) {
+                return Err(FypmError {
+                    message: format!("Invalid key in {} config: {}", config.name, key),
+                    kind: FypmErrorKind::InvalidConfig,
+                });
+            } else {
+                if allowed_keys.len() == 1 && allowed_keys[0] == "*" {
+                    entries_count += 1;
+
+                    continue;
+                }
+
+                if allowed_keys.contains(&first_key) {
+                    entries_count += 1;
+                } else {
+                    return Err(FypmError {
+                        message: format!(
+                            "Unknown key in {} config: {}. Are you sure if it's allowed?",
+                            config.name, key
+                        ),
+                        kind: FypmErrorKind::InvalidConfig,
+                    });
+                }
+            }
+        }
+
+        Ok(entries_count)
+    }
+
     }
 }
