@@ -151,25 +151,6 @@ impl ConfigHandler {
                     sort: Some(vec!["urgency+".to_string()]),
                     ..Default::default()
                 }),
-                (FypmReports::Blist, TaskWarriorReportConfig {
-                    columns: Some(vec![
-                        "id".to_string(),
-                        "status.short".to_string(),
-                        "STYLE".to_string(),
-                        "TYPE".to_string(),
-                        "project".to_string(),
-                        "tags".to_string(),
-                        "WT".to_string(),
-                        "GOAL".to_string(),
-                        "wait.relative".to_string(),
-                        "due.relative".to_string(),
-                        "description".to_string(),
-                        "urgency".to_string(),
-                    ]),
-                    filter: Some("WT.not:NonSched! and -Ghost and -DELETED and -PARENT and -COMPLETED and TYPE.not:Event".to_string()),
-                    sort: Some(vec!["urgency-".to_string()]),
-                    ..Default::default()
-                }),
                 (FypmReports::Wlist, TaskWarriorReportConfig {
                     columns: Some(vec![
                         "id".to_string(),
