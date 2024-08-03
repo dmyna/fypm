@@ -211,7 +211,7 @@ pub fn task_add(
     }
 
     let mut args = vec![
-        "rc.verbose=new-uuid".to_string(),
+        "rc.verbose=new-id".to_string(),
         "add".to_string(),
         description.to_string(),
         format!("project:{}", project),
@@ -225,37 +225,31 @@ pub fn task_add(
 
     let execute = Command::new("task").args(args).output();
 
-    let uuid: String;
-    {
-        let regex = Regex::new(
-            r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
-        )
-        .unwrap();
+    let id: String;
+    if let Ok(output) = execute {
+        if output.status.success() {
+            let stdout = str::from_utf8(&output.stdout).unwrap();
 
-        if let Ok(output) = execute {
-            if output.status.success() {
-                let stdout = str::from_utf8(&output.stdout).unwrap();
-
-                if let Some(captured) = regex.captures(stdout) {
-                    uuid = captured[0].to_string();
-                } else {
-                    println!("No created tasks!");
-                    panic!("{}", stdout)
-                }
-            } else {
-                panic!(
-                    "An error occurred trying to create a task: {}",
-                    str::from_utf8(&output.stderr).unwrap()
-                );
-            }
+            id = stdout
+                .trim()
+                .replace("Created task ", "")
+                .replace(".", "")
+                .to_string();
         } else {
-            let error = execute.unwrap_err();
-
-            panic!("An error occurred trying to create a task: {}", error);
+            panic!(
+                "An error occurred trying to create a task: {}",
+                str::from_utf8(&output.stderr).unwrap()
+            );
         }
+    } else {
+        let error = execute.unwrap_err();
+
+        panic!("An error occurred trying to create a task: {}", error);
     }
 
-    println!("Created task with uuid: {}!", uuid);
+    let uuid = get::get_uuids_by_filter(&id, DEFAULT_GET_JSON_OPTIONS)?[0].clone();
+
+    println!("Created task with id \"{}\"! ({})", id, uuid);
 
     Ok(uuid)
 }
