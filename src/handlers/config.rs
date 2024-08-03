@@ -1,3 +1,4 @@
+use crate::utils::comments::{COLORS_CONFIG_COMMENT, OVERLAY_CONFIG_COMMENT, REPORT_CONFIG_COMMENT, TASK_CONFIG_COMMENT, UDA_CONFIG_COMMENT, URGENCY_CONFIG_COMMENT};
 use crate::utils::constants::DEFAULT_CONFIG_FILES;
 use crate::utils::enums::{FypmReports, FypmUDAs, FypmUrgency};
 use crate::utils::err::{FypmError, FypmErrorKind};
@@ -24,13 +25,22 @@ impl ConfigHandler {
         Ok(())
     }
     pub fn ensure_config_files() -> Result<(), FypmError> {
-        for config_file in DEFAULT_CONFIG_FILES {
+        fn ensure_file_existence(config_file: &str, initial_content: &str) {
             let file_path = Path::new(&CONFIG_PATH.to_string()).join(config_file);
 
             if !file_path.exists() {
-                fs::File::create(file_path).unwrap();
+                let mut file = fs::File::create(file_path).unwrap();
+
+                file.write_all(initial_content.as_bytes()).unwrap();
             }
         }
+
+        ensure_file_existence(DEFAULT_CONFIG_FILES[0], TASK_CONFIG_COMMENT);
+        ensure_file_existence(DEFAULT_CONFIG_FILES[1], UDA_CONFIG_COMMENT);
+        ensure_file_existence(DEFAULT_CONFIG_FILES[2], REPORT_CONFIG_COMMENT);
+        ensure_file_existence(DEFAULT_CONFIG_FILES[3], URGENCY_CONFIG_COMMENT);
+        ensure_file_existence(DEFAULT_CONFIG_FILES[4], COLORS_CONFIG_COMMENT);
+        ensure_file_existence(DEFAULT_CONFIG_FILES[5], OVERLAY_CONFIG_COMMENT);
 
         Ok(())
     }
