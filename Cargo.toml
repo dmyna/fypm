@@ -1,6 +1,6 @@
 [package]
 name = "fypm"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 [dependencies]
@@ -23,8 +23,8 @@ itertools = "0.13.0"
 tmux_interface = "0.3.2"
 terminal_size = "0.3.0"
 strum_macros = "0.26.4"
-rusqlite = "0.31.0"
 diesel = { version = "2.2.2", features = ["sqlite"] }
 ratatui = "0.27.0"
 serde_ini = "0.2.0"
 strum = { version = "0.26.3", features = ["derive"] }
+diesel_migrations = { version = "2.2.0", features = ["sqlite"] }

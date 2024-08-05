@@ -9,13 +9,14 @@ mod handlers;
 mod subcommands;
 mod tests;
 mod utils;
+mod db;
 
 use utils::enums::Commands;
 //#endregion
 //#region           Structs && Enums
 #[derive(Parser)]
 #[command(name = "fypm")]
-#[command(version = "0.1.0")]
+#[command(version = "0.2.0")]
 #[command(about = "Four Years Productivity Manager", long_about = None)]
 pub struct Cli {
     #[command(subcommand)]
@@ -30,17 +31,20 @@ lazy_static! {
         .join(".local/share/fypm")
         .to_string_lossy()
         .into_owned());
-    static ref MAIN_DB_FILE: String = DB_PATH.to_string() + "/fypm.db";
     static ref CONFIG_PATH: String = env::var("FYPM_CONFIG").unwrap_or_else(|_| dirs::home_dir()
         .unwrap()
         .join(".config/fypm")
         .to_string_lossy()
         .into_owned());
+
+    #[derive(Debug)]
+    static ref DATABASE_URL: String = DB_PATH.to_string() + "/fypm.db";
 }
 //#endregion
 //#region           Implementation
 fn main() {
-    handlers::database::DBHandler.ensure_db_path().unwrap();
+    handlers::database::DBHandler::ensure_db_path().unwrap();
+    handlers::database::DBHandler::ensure_db().unwrap();
     handlers::config::ConfigHandler::ensure_config_path().unwrap();
     handlers::config::ConfigHandler::ensure_config_files().unwrap();
 
