@@ -15,7 +15,7 @@ use utils::enums::Commands;
 //#region           Structs && Enums
 #[derive(Parser)]
 #[command(name = "fypm")]
-#[command(version = "0.1.0")]
+#[command(version = "0.2.0")]
 #[command(about = "Four Years Productivity Manager", long_about = None)]
 pub struct Cli {
     #[command(subcommand)]
