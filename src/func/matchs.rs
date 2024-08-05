@@ -1,5 +1,6 @@
 use chrono::NaiveDate;
-use rusqlite::Connection;
+use diesel::Connection;
+use diesel::SqliteConnection;
 
 use crate::func::action;
 use crate::func::date;
@@ -13,7 +14,7 @@ use crate::utils::enums;
 use crate::utils::enums::AliasActions;
 use crate::utils::enums::{Commands, TimewAction};
 use crate::utils::err::FypmError;
-use crate::MAIN_DB_FILE;
+use crate::DATABASE_URL;
 
 pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
     match command {
@@ -33,26 +34,25 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
         }
 
         Commands::WtAdd { worktime_name } => {
-            WorktimeHandler {
-                conn: Connection::open(MAIN_DB_FILE.to_string()).unwrap().into(),
-            }
-            .add(worktime_name)?;
+            WorktimeHandler::add(
+                &mut SqliteConnection::establish(DATABASE_URL.as_str()).unwrap(),
+                worktime_name,
+            )?;
 
             Ok(())
         }
         Commands::WtRemove { worktime_name } => {
-            WorktimeHandler {
-                conn: Connection::open(MAIN_DB_FILE.to_string()).unwrap().into(),
-            }
-            .remove(worktime_name)?;
+            WorktimeHandler::remove(
+                &mut SqliteConnection::establish(DATABASE_URL.as_str()).unwrap(),
+                worktime_name,
+            )?;
 
             Ok(())
         }
         Commands::WtLs => {
-            WorktimeHandler {
-                conn: Connection::open(MAIN_DB_FILE.to_string()).unwrap().into(),
-            }
-            .list()?;
+            WorktimeHandler::list(
+                &mut SqliteConnection::establish(DATABASE_URL.as_str()).unwrap(),
+            )?;
 
             Ok(())
         }

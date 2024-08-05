@@ -1,41 +1,33 @@
 //#region           Crates
 use chrono::NaiveTime;
 use dialoguer::{console::Term, Input};
+use diesel::Connection;
+use diesel::QueryDsl;
+use diesel::RunQueryDsl;
+use diesel::SqliteConnection;
+use diesel::TextExpressionMethods;
 use regex::Regex;
-use rusqlite::Connection;
-use serde::{Deserialize, Serialize};
-use serde_json::error;
 use std::env;
 use std::fs;
 use std::io::Error;
 use std::path::Path;
 use std::process::Command;
-use std::sync::Arc;
 
+use crate::db::models::Worktime;
+use crate::db::schema::worktimes;
 use crate::utils::err::FypmError;
 //#endregion
 //#region           Modules
-use crate::handlers::database::PresetHandler;
 use crate::utils::err::FypmErrorKind;
 use crate::utils::verify;
-use crate::MAIN_DB_FILE;
+use crate::DATABASE_URL;
 //#endregion
 //#region           Structs
-#[derive(Debug, Serialize, Deserialize)]
-struct Worktime {
-    style: String,
-    start_time: String,
-    end_time: String,
-    polybar_background: String,
-    polybar_foreground: String,
-}
-pub struct WorktimeHandler {
-    pub conn: Arc<Connection>,
-}
+pub struct WorktimeHandler;
 //#endregion
 //#region           Implementation
 impl WorktimeHandler {
-    pub fn add(self, name: &String) -> Result<(), FypmError> {
+    pub fn add(conn: &mut SqliteConnection, name: &String) -> Result<(), FypmError> {
         let date_format = "%H:%M";
         let term = Term::stdout();
 
@@ -117,6 +109,9 @@ impl WorktimeHandler {
         term.clear_last_lines(1).unwrap();
 
         let new_worktime = Worktime {
+            id: uuid::Uuid::now_v7().to_string(),
+            name: name.to_string(),
+            description,
             style,
             start_time,
             end_time,
@@ -124,41 +119,30 @@ impl WorktimeHandler {
             polybar_foreground,
         };
 
-        let preset_instance = PresetHandler {
-            table_name: "worktime".to_string(),
-            conn: self.conn,
-        };
-
-        preset_instance
-            .add::<Worktime>(&name, &description, &new_worktime)
+        diesel::insert_into(worktimes::table)
+            .values(&new_worktime)
+            .execute(conn)
             .unwrap();
 
         Ok(())
     }
-    pub fn remove(self, name: &String) -> Result<(), FypmError> {
-        let preset_instance = PresetHandler {
-            table_name: "worktime".to_string(),
-            conn: self.conn,
-        };
+    pub fn remove(conn: &mut SqliteConnection, name: &String) -> Result<(), FypmError> {
+        diesel::delete(worktimes::table.filter(worktimes::dsl::name.like(name)))
+            .execute(conn)
+            .unwrap();
 
-        let result = preset_instance.remove(&name);
-
-        match result {
-            Ok(_) => {
-                println!("Removed preset {}!", name);
-
-                Ok(())
-            }
-            Err(err) => Err(err),
-        }
+        Ok(())
     }
-    pub fn list(self) -> Result<(), FypmError> {
-        let preset_instance = PresetHandler {
-            table_name: "worktime".to_string(),
-            conn: self.conn,
-        };
+    pub fn get(conn: &mut SqliteConnection, name: &String) -> Result<Worktime, FypmError> {
+        let worktime: Worktime = worktimes::dsl::worktimes
+            .filter(worktimes::dsl::name.like(name))
+            .first::<Worktime>(conn)
+            .unwrap();
 
-        let worktimes = preset_instance.list().unwrap();
+        Ok(worktime)
+    }
+    pub fn list(conn: &mut SqliteConnection) -> Result<(), FypmError> {
+        let worktimes: Vec<Worktime> = worktimes::dsl::worktimes.load(conn).unwrap();
 
         if worktimes.is_empty() {
             println!("No worktimes found!");
@@ -166,7 +150,7 @@ impl WorktimeHandler {
             println!("Found {} worktimes. These are:", worktimes.len());
 
             for worktime in worktimes {
-                println!("{} - {}", worktime.0, worktime.1);
+                println!("{} - {}", worktime.name, worktime.description);
             }
         }
 
@@ -253,26 +237,20 @@ fn update_viewer_session(viewer: &str, viewer_quit_key: &str) -> Result<(), Erro
 }
 
 pub fn apply(name: &String) -> Result<(), FypmError> {
-    let preset_instance = PresetHandler {
-        table_name: "worktime".to_string(),
-        conn: Connection::open(MAIN_DB_FILE.to_string()).unwrap().into(),
-    };
+    let mut conn = SqliteConnection::establish(DATABASE_URL.as_str()).unwrap();
 
-    let get_preset = preset_instance.get(&name);
+    let get_preset = WorktimeHandler::get(&mut conn, &name);
 
     match get_preset {
         Ok(preset) => {
-            let preset_params = toml::from_str::<Worktime>(preset.params.as_str()).unwrap();
-
-            let current_wt_string =
-                format!("{} -> {}", preset.name, preset_params.end_time.as_str());
+            let current_wt_string = format!("{} -> {}", preset.name, preset.end_time.as_str());
 
             env::set_var("WORKTIME", preset.name);
 
             write_values_on_temp_files(
                 &current_wt_string,
-                &preset_params.polybar_background,
-                &preset_params.polybar_foreground,
+                &preset.polybar_background,
+                &preset.polybar_foreground,
             )
             .unwrap();
 
@@ -288,20 +266,16 @@ pub fn apply(name: &String) -> Result<(), FypmError> {
 
             Ok(())
         }
-        Err(error) => {
-            match error.kind {
-                FypmErrorKind::NotFound => {
-                    println!("{}", error.message);
-                    println!("These are the available presets:");
+        Err(error) => match error.kind {
+            FypmErrorKind::NotFound => {
+                println!("{}", error.message);
+                println!("These are the available presets:");
 
-                    WorktimeHandler {
-                        conn: preset_instance.conn,
-                    }.list()?;
+                WorktimeHandler::list(&mut conn)?;
 
-                    Ok(())
-                }
-                _ => return Err(error),
+                Ok(())
             }
+            _ => return Err(error),
         },
     }
 }
