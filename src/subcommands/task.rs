@@ -310,7 +310,10 @@ pub fn task_add_sub(
 
         subtask = uuid;
     } else {
-        panic!("You specified a wrong number of arguments! You don't know how to read documentation, do you? :P");
+        return Err(FypmError {
+            message: "You specified a wrong number of arguments! You don't know how to read documentation, do you? :P".to_string(),
+            kind: FypmErrorKind::InvalidInput
+        });
     }
 
     Command::new("task")
