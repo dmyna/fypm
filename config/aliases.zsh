@@ -39,7 +39,7 @@ alias tils="$PKG ti-ls"
 # TaskWarrior
 alias talc="task const"
 alias talss="_tals alarms"
-alias ttals="task TYPE.not:SubTask -Ghost list"
+alias ttals="task +SUBTASK -Ghost list"
 alias tagoals="$PKG ta-ls-date GOAL goals --"
 alias tagoalss="$PKG ta-ls-date GOAL all-goals --"
 alias taduels="$PKG ta-ls-date due list --"

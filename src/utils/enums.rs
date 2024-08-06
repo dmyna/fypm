@@ -345,8 +345,6 @@ pub enum FypmUrgency {
     // Type
     #[strum(serialize = "TYPE-Eventual")]
     TypeEventual,
-    #[strum(serialize = "TYPE-SubTask")]
-    TypeSubTask,
     #[strum(serialize = "TYPE-Habit")]
     TypeHabit,
     #[strum(serialize = "TYPE-Objective")]
@@ -391,6 +389,10 @@ pub enum FypmUrgency {
     QuadrantThree,
     #[strum(serialize = "quadrant-Four")]
     QuadrantNone,
+
+    // Fypm Tags
+    #[strum(serialize = "SUBTASK")]
+    SubTask,
 
     // Urgency Increment
     UrgP5,

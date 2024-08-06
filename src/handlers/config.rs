@@ -305,7 +305,6 @@ impl ConfigHandler {
                             "Eventual".to_string(),
                             "Objective".to_string(),
                             "Continuous".to_string(),
-                            "SubTask".to_string(),
                             "Event".to_string(),
                             "Check".to_string(),
                         ]),
@@ -534,13 +533,6 @@ impl ConfigHandler {
                     },
                 ),
                 (
-                    FypmUrgency::TypeSubTask,
-                    TaskWarriorUrgencyConfig {
-                        coefficient: -8.0,
-                        scope: TaskWarriorUrgencyConfigScope::UDA,
-                    },
-                ),
-                (
                     FypmUrgency::TypeEventual,
                     TaskWarriorUrgencyConfig {
                         coefficient: 5.0,
@@ -678,6 +670,15 @@ impl ConfigHandler {
                     TaskWarriorUrgencyConfig {
                         coefficient: 0.0,
                         scope: TaskWarriorUrgencyConfigScope::UDA,
+                    },
+                ),
+                (
+                    FypmUrgency::SubTask,
+                    TaskWarriorUrgencyConfig {
+                        coefficient: -8.0,
+                        scope: TaskWarriorUrgencyConfigScope::User {
+                            property: TaskWarriorUserScopeProperty::Tag,
+                        },
                     },
                 ),
                 (
