@@ -53,14 +53,10 @@ elif [[ $TYPE == "Event" ]]; then
         JSON="$(echo $JSON | jq -r --arg NEW_DUE "$NEW_UTC_DATE" '.due = $NEW_DUE')"
     fi
 elif [[ $TYPE == "Check" ]]; then
-    # Check if a Check task has a recur
-    if [[ $(echo $JSON | jq -r '.recur') == "null" ]]; then
-        errprint "Check tasks must have a recur!"
-    fi
-    
     # Check if a Check task has STATE set to 'Info'
     if [[ $(echo $JSON | jq -r '.STATE') != "Info" ]]; then
-        errprint "Habit tasks must have STATE set to 'Info'!"
+        errprint "Check tasks must have STATE set to 'Info'!"
+    fi
     fi
 fi
 
