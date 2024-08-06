@@ -188,7 +188,15 @@ pub fn task_done(
                     .stdout(Stdio::inherit())
                     .stderr(Stdio::inherit());
 
-                tag_command.output().unwrap();
+                let mut tag_child = tag_command.stdin(Stdio::piped()).spawn().unwrap();
+
+                tag_child
+                    .stdin
+                    .take()
+                    .unwrap()
+                    .write_all("all\n".as_bytes())
+                    .unwrap();
+                tag_child.wait().unwrap();
             }
         }
         let mut done_args = args.clone();
