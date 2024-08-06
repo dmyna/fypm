@@ -14,7 +14,7 @@ if [[ $TYPE == "Habit" ]]; then
     if [[ $(echo $JSON | jq -r '.recur') == "null" ]]; then
         errprint "Habit tasks must have a recur!"
     fi
-    
+
     # Check if a Habit task has STATE set to 'Time'
     if [[ $(echo $JSON | jq -r '.STATE') != "Time" ]]; then
         errprint "Habit tasks must have STATE set to 'Time'!"
@@ -57,6 +57,15 @@ elif [[ $TYPE == "Check" ]]; then
     if [[ $(echo $JSON | jq -r '.STATE') != "Info" ]]; then
         errprint "Check tasks must have STATE set to 'Info'!"
     fi
+elif [[ $TYPE == "Continuous" ]]; then
+    # Check if a Continuous task has STATE set to 'Time'
+    if [[ $(echo $JSON | jq -r '.STATE') != "Time" ]]; then
+        errprint "Continuous tasks must have STATE set to 'Time'!"
+    fi
+
+    # Check if a Continuous task has a ALIAS
+    if [[ $(echo $JSON | jq -r '.ALIAS') == "null" ]]; then
+        errprint "Continuous tasks must have an ALIAS!"
     fi
 fi
 
