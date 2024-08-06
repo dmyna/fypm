@@ -327,6 +327,7 @@ pub fn task_add_sub(
             &subtask,
             &"modify".to_string(),
             &format!("MOTHER:{}", mother_task_json.uuid),
+            &"+SUBTASK".to_string(),
         ])
         .output()
         .unwrap();
