@@ -17,16 +17,21 @@ alias tastat-pen="$PKG ta-statistic pending"
 alias tals-date="$PKG ta-ls-date"
 alias tals-score="$PKG ta-ls-score --"
 alias taban="$PKG ta-abandon"
+
 alias taund="$PKG ta-und"
 alias tsched="$PKG ta-schedule"
 alias tusched="$PKG ta-unschedule"
+
 alias tamas="$PKG ta-ls-mot-and-sub list"
 alias ttamas="$PKG ta-ls-mot-and-sub all"
+
 alias taproj="$PKG ta-project"
+
 alias wt="$PKG wt-apply"
 alias wt-add="$PKG wt-add"
 alias wt-rm="$PKG wt-remove"
 alias wt-ls="$PKG wt-ls"
+
 
 alias tin="$PKG ti-annotate"
 alias ticart="$PKG ti-start-correction"
