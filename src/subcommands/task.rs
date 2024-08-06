@@ -4,6 +4,7 @@ use colored::*;
 use dialoguer::Confirm;
 use std::io::Write;
 use std::process::Stdio;
+use std::vec;
 use std::{fs, process::Command, str};
 
 use crate::func::dialog;
@@ -106,6 +107,8 @@ pub fn task_start(filter: &String) -> Result<(), FypmError> {
 pub fn task_done(
     filter: &Option<String>,
     tastart_filter: &Option<String>,
+    not_necessary: &bool,
+    delegated: &bool,
 ) -> Result<(), FypmError> {
     let mut args = vec!["rc.confirmation=0", "rc.recurrence.confirmation=0"];
     let selected_tasks: Vec<TaskWarriorExported>;
@@ -150,6 +153,43 @@ pub fn task_done(
     let confirmation = dialog::verify_selected_tasks(&selected_tasks)?;
 
     if confirmation {
+        // Tags logic
+        {
+            let tags: Vec<&str> = vec![];
+
+            if *not_necessary {
+                args.push("+NotNecessary");
+            }
+
+            if *delegated {
+                args.push("+Delegated");
+            }
+
+            if tags.len() == 2 {
+                return Err(FypmError {
+                    message: "You are trying to mark a task with two tags! Are you crazy?"
+                        .to_string(),
+                    kind: FypmErrorKind::InvalidInput,
+                });
+            } else if tags.len() == 1 {
+                let mut tags_args = vec![
+                    "rc.confirmation=0",
+                    "rc.recurrence.confirmation=0",
+                    "modify",
+                ];
+
+                tags_args.extend(tags);
+
+                let mut tag_binding = Command::new("task");
+                let tag_command = tag_binding
+                    .args(tags_args)
+                    .stdout(Stdio::inherit())
+                    .stderr(Stdio::inherit());
+
+                tag_command.output().unwrap();
+            }
+        }
+
         let mut done_binding = Command::new("task");
         let done_command = done_binding
             .args(args)

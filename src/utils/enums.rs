@@ -176,6 +176,13 @@ pub enum Commands {
         tasks_to_done: Option<String>,
         #[arg(short = 's', long = "start")]
         tastart_filter: Option<String>,
+        /// Didn't need to do a task and it's done? Tag it with this tag!
+        /// (If you're prevented from doing the task, use `taban n` even if it's no longer needed)
+        #[arg(short = 'n', long = "not-necessary")]
+        not_necessary: bool,
+        /// Have you delegated this task and it was done? Tag it with this tag!
+        #[arg(short = 'd', long = "delegated")]
+        delegated: bool,
     },
     TaSchedule {
         filter: String,
