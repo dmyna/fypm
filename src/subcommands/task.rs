@@ -107,6 +107,7 @@ pub fn task_start(filter: &String) -> Result<(), FypmError> {
 pub fn task_done(
     filter: &Option<String>,
     tastart_filter: &Option<String>,
+    annotation: &Option<String>,
     not_necessary: &bool,
     delegated: &bool,
 ) -> Result<(), FypmError> {
@@ -148,11 +149,15 @@ pub fn task_done(
         .collect::<Vec<&str>>()
         .join(" ");
 
-    args.extend([join_uuids.as_str(), "done"]);
+    args.extend([join_uuids.as_str()]);
 
     let confirmation = dialog::verify_selected_tasks(&selected_tasks)?;
 
     if confirmation {
+        if let Some(annotation) = annotation {
+            action::annotate("task", &join_uuids, annotation, true)?;
+        }
+
         // Tags logic
         {
             let tags: Vec<&str> = vec![];
@@ -172,12 +177,9 @@ pub fn task_done(
                     kind: FypmErrorKind::InvalidInput,
                 });
             } else if tags.len() == 1 {
-                let mut tags_args = vec![
-                    "rc.confirmation=0",
-                    "rc.recurrence.confirmation=0",
-                    "modify",
-                ];
+                let mut tags_args = args.clone();
 
+                tags_args.push("modify");
                 tags_args.extend(tags);
 
                 let mut tag_binding = Command::new("task");
@@ -189,10 +191,13 @@ pub fn task_done(
                 tag_command.output().unwrap();
             }
         }
+        let mut done_args = args.clone();
+
+        done_args.push("done");
 
         let mut done_binding = Command::new("task");
         let done_command = done_binding
-            .args(args)
+            .args(done_args)
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit());
 

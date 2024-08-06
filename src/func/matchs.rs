@@ -166,9 +166,10 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
         Commands::TaDone {
             tasks_to_done,
             tastart_filter,
+            annotation,
             not_necessary,
             delegated,
-        } => task::task_done(tasks_to_done, tastart_filter, not_necessary, delegated),
+        } => task::task_done(tasks_to_done, tastart_filter, annotation, not_necessary, delegated),
         Commands::TaAnnotate { filter, annotation } => {
             action::annotate("task", filter, annotation, false)
         }
