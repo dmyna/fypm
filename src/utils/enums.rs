@@ -285,6 +285,7 @@ pub enum FypmReports {
     AllGoals,
     Const,
     Recurring,
+    Visual
 }
 #[derive(EnumString, Display, Hash, PartialEq, Eq, Debug, Ord, PartialOrd)]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]

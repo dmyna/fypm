@@ -278,6 +278,37 @@ impl ConfigHandler {
                         ..Default::default()
                     },
                 ),
+                (
+                    FypmReports::Visual,
+                    TaskWarriorReportConfig {
+                        columns: Some(vec![
+                            "entry.age".to_string(),
+                            "STYLE".to_string(),
+                            "TYPE".to_string(),
+                            "WT".to_string(),
+                            "estimate".to_string(),
+                            "due.relative".to_string(),
+                            "project".to_string(),
+                            "id".to_string(),
+                            "description".to_string(),
+                            "urgency".to_string(),
+                        ]),
+                        labels: Some(vec![
+                            "Age".to_string(),
+                            "Style".to_string(),
+                            "Type".to_string(),
+                            "WorkTime".to_string(),
+                            "Est".to_string(),
+                            "Due".to_string(),
+                            "Project".to_string(),
+                            "ID".to_string(),
+                            "Description".to_string(),
+                            "Urg".to_string(),
+                        ]),
+                        sort: Some(vec!["urgency-".to_string(), "ALARM-".to_string()]),
+                        filter: Some("status:pending status.not:waiting".to_string()),
+                    },
+                ),
             ]),
             uda: BTreeMap::from([
                 (
