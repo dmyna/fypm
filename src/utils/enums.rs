@@ -45,9 +45,9 @@ pub enum TaSequenceTypes {
     /// Create an anime sequence
     #[value(alias = "a")]
     Anime,
-    /// Create a manga sequence
+    /// Create a Youtube playlist sequence
     #[value(alias = "yp")]
-    YTPlaylist,
+    YoutubePlaylist,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
@@ -365,6 +365,8 @@ pub enum FypmUrgency {
     StyleDionysian,
     #[strum(serialize = "STYLE-Necessity")]
     StyleNecessity,
+    #[strum(serialize = "STYLE-Idle")]
+    StyleIdle,
 
     // Effort
     #[strum(serialize = "effort-Zero")]
