@@ -82,6 +82,12 @@ pub fn pending_tasks(no_parents: &bool) -> Result<(), FypmError> {
         .filter(|task| task.r#type == "Check".to_string())
         .count();
 
+    let mother = tasks_json
+        .iter()
+        .filter(|task| {
+            task.tags.is_some() && task.tags.as_ref().unwrap().contains(&"MOTHER".to_string())
+        })
+        .count();
     let subtask = tasks_json
         .iter()
         .filter(|task| {
@@ -101,9 +107,9 @@ pub fn pending_tasks(no_parents: &bool) -> Result<(), FypmError> {
     println!("Eventual: {} ({})", eventual, all_pending - eventual);
     println!("Objective: {} ({})", objective, all_pending - objective);
     println!("Continuous: {} ({})", continuous, all_pending - continuous);
-    println!("SubTask: {} ({})", subtask, all_pending - subtask);
     println!("Event: {} ({})", event, all_pending - event);
     println!("Check: {} ({})", check, all_pending - check);
+    println!("Mother: {} ({})", mother, all_pending - mother);
     println!("SubTask: {} ({})", subtask, all_pending - subtask);
     println!("Style None: {}", style_none);
     println!("");
