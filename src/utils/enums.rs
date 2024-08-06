@@ -121,7 +121,7 @@ pub enum Commands {
     /// Add a subtask to a objective task (taadd-sub)
     TaAddSub {
         mother_task: String,
-        /// The args to be passed to taadd (description and STYLE or simply more than 1 parameter)
+        /// The args to be passed to taadd (required: description, STYLE, TYPE)
         /// or the existent subtask (1 parameter)
         other_args: Vec<String>,
         #[arg(short = 'y', long)]
