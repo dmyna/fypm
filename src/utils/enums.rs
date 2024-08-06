@@ -355,6 +355,8 @@ pub enum FypmUrgency {
     TypeCheck,
     #[strum(serialize = "TYPE-Event")]
     TypeEvent,
+    #[strum(serialize = "TYPE-Goal")]
+    TypeGoal,
 
     // Style
     #[strum(serialize = "STYLE-Apollonian")]

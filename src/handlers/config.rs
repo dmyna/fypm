@@ -307,6 +307,7 @@ impl ConfigHandler {
                             "Continuous".to_string(),
                             "Event".to_string(),
                             "Check".to_string(),
+                            "Goal".to_string(),
                         ]),
                         ..Default::default()
                     },
