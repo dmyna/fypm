@@ -168,7 +168,14 @@ pub fn match_inforelat_and_sequence(
         }
     } else {
         if is_sequence {
-            if r#type == "SubTask" {
+            if &filter_json.tags.is_some() == &true
+                && &filter_json
+                    .tags
+                    .as_ref()
+                    .unwrap()
+                    .contains(&"SUBTASK".to_string())
+                    == &true
+            {
                 Ok(filter_json.uuid.clone())
             } else {
                 Err(FypmError {

@@ -282,11 +282,14 @@ pub fn task_add_sub(
         let subtask_uuid = get_subtask_uuid.get(0).unwrap();
 
         Command::new("task")
-            .args([subtask_uuid.as_str(), "modify", "TYPE:SubTask"])
+            .args([subtask_uuid.as_str(), "modify", "+SUBTASK"])
             .output()
             .unwrap();
-    } else if other_args.len() >= 2 {
+    } else if other_args.len() >= 3 {
         let project: &String;
+        let description = other_args.get(0).unwrap();
+        let style = other_args.get(1).unwrap();
+        let r#type = other_args.get(2).unwrap();
 
         if let Some(project_arg) = &mother_task_json.project {
             project = project_arg;
@@ -294,12 +297,14 @@ pub fn task_add_sub(
             panic!("The specified mother doesn't have a project setted... Are you writing this stuff right?");
         }
 
+        let args = other_args.get(3..).unwrap().to_vec();
+
         let uuid = task_add(
-            other_args.get(0).unwrap(),
+            description,
             project,
-            other_args.get(1).unwrap(),
-            &"SubTask".to_string(),
-            &other_args.get(2..).map(|x| x.to_vec()),
+            style,
+            r#type,
+            &Some(args),
             skip_confirmation,
         )?;
 
