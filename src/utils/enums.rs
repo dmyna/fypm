@@ -66,6 +66,13 @@ pub enum AliasActions {
     Change,
 }
 
+#[derive(ValueEnum, Clone, PartialEq)]
+pub enum FilterActions {
+    Add,
+    List,
+    Remove,
+    Edit
+}
 
 #[derive(Subcommand)]
 pub enum Commands {
@@ -96,6 +103,12 @@ pub enum Commands {
         action: AliasActions,
         /// Filter to task to be manipulated (max: 1)
         filter: String,
+    },
+
+    /// Manage filters
+    Filter {
+        /// The action to be performed
+        action: FilterActions,
     },
 
     /// Manage instances
