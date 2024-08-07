@@ -45,6 +45,8 @@ lazy_static! {
 fn main() {
     handlers::database::DBHandler::ensure_db_path().unwrap();
     handlers::database::DBHandler::ensure_db().unwrap();
+    handlers::filters::FiltersHandler::ensure_defaults().unwrap();
+
     handlers::config::ConfigHandler::ensure_config_path().unwrap();
     handlers::config::ConfigHandler::ensure_config_files().unwrap();
 
