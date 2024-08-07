@@ -10,3 +10,11 @@ diesel::table! {
         polybar_foreground -> Text,
     }
 }
+
+diesel::table! {
+    filters (id) {
+        id -> Text,
+        name -> Text,
+        filter -> Text,
+    }
+}
