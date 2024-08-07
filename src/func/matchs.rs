@@ -40,8 +40,8 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
             match action {
                 enums::FilterActions::Add => FiltersHandler::add(conn),
                 enums::FilterActions::List => FiltersHandler::list(conn),
-                enums::FilterActions::Remove => todo!(),
-                enums::FilterActions::Edit => todo!(),
+                enums::FilterActions::Remove => FiltersHandler::remove(conn),
+                enums::FilterActions::Edit => FiltersHandler::edit(conn),
             }
         },
 
