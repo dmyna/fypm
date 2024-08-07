@@ -108,6 +108,7 @@ pub fn task_done(
     filter: &Option<String>,
     tastart_filter: &Option<String>,
     annotation: &Option<String>,
+    skip_confirmation: &bool,
     not_necessary: &bool,
     delegated: &bool,
 ) -> Result<(), FypmError> {
@@ -151,7 +152,14 @@ pub fn task_done(
 
     args.extend([join_uuids.as_str()]);
 
-    let confirmation = dialog::verify_selected_tasks(&selected_tasks)?;
+
+    let confirmation: bool;
+
+    if *skip_confirmation {
+        confirmation = true;
+    } else {
+        confirmation = dialog::verify_selected_tasks(&selected_tasks)?;
+    }
 
     if confirmation {
         if let Some(annotation) = annotation {
