@@ -667,7 +667,8 @@ pub fn task_list_mother_and_subtasks(
                 .args([
                     tasks_filter.as_str(),
                     "rc.verbose=0",
-                    format!("rc.report.{modifier}.sort=TYPE-,entry+").as_str(),
+                    "rc.urgency.user.tag.MOTHER.coefficient=1100",
+                    format!("rc.report.{modifier}.sort=urgency-").as_str(),
                     format!("{modifier}").as_str(),
                 ])
                 .stdout(Stdio::inherit())
