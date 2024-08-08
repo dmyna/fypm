@@ -1,7 +1,7 @@
 use chrono::{DateTime, Datelike, Duration, Local, NaiveDate, Weekday};
 //#region           Crates
 use colored::*;
-use dialoguer::Confirm;
+use dialoguer::{Confirm, Input};
 use std::io::Write;
 use std::process::Stdio;
 use std::vec;
@@ -851,25 +851,59 @@ pub fn task_abandon(
     if confirmation {
         let mut modify_args = Vec::new();
         modify_args.extend([
-            "rc.verbose=0",
-            "rc.recurrence.confirmation=0",
-            "rc.confirmation=0",
-            filter,
-            "modify",
+            "rc.verbose=0".to_string(),
+            "rc.recurrence.confirmation=0".to_string(),
+            "rc.confirmation=0".to_string(),
+            filter.clone(),
+            "modify".to_string(),
         ]);
 
         match tag {
             enums::TaAbandonTags::Archived => {
-                modify_args.extend(["+Archived"]);
+                modify_args.extend(["+Archived".to_string()]);
             }
             enums::TaAbandonTags::Failed => {
-                modify_args.extend(["+Failed"]);
+                modify_args.extend(["+Failed".to_string()]);
             }
             enums::TaAbandonTags::Abandoned => {
-                modify_args.extend(["+Abandoned"]);
+                modify_args.extend(["+Abandoned".to_string()]);
+            }
+            enums::TaAbandonTags::Chain => {
+                modify_args.extend(["+Chain".to_string()]);
+
+                let chain_task = Input::<String>::new()
+                    .with_prompt("Specify the chain task that triggered this failure")
+                    .validate_with(|input: &String| {
+                        if input.trim().is_empty() {
+                            Err("You must specify a chain task!".to_string())
+                        } else {
+                            let task = get::get_json_by_filter(input, DEFAULT_GET_JSON_OPTIONS);
+
+                            if task.is_ok() {
+                                Ok(())
+                            } else {
+                                let err = task.unwrap_err();
+                                if err.kind == FypmErrorKind::NoTasksFound {
+                                    Err("This chain task does not exist!".to_string())
+                                } else {
+                                    Err(err.message)
+                                }
+                            }
+                        }
+                    })
+                    .interact_text()
+                    .unwrap();
+
+                let chain_uuid = get::get_uuids_by_filter(&chain_task, DEFAULT_GET_JSON_OPTIONS)
+                    .unwrap()
+                    .get(0)
+                    .unwrap()
+                    .clone();
+
+                modify_args.extend([format!("CHAIN:{}", chain_uuid)]);
             }
             enums::TaAbandonTags::NoControl => {
-                modify_args.extend(["+NoControl"]);
+                modify_args.extend(["+NoControl".to_string()]);
             }
         }
 
