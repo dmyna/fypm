@@ -17,13 +17,20 @@ pub enum TaProjectActions {
     List,
     /// Archive a project (alias: c)
     #[value(alias = "c")]
-    Archive
+    Archive,
+    /// Unarchive a project (alias: u)
+    #[value(alias = "u")]
+    Unarchive,
 }
 #[derive(ValueEnum, Clone, PartialEq)]
 pub enum TaAbandonTags {
     /// Archive a task (alias: c)
     #[value(alias = "c")]
     Archived,
+    /// Unarchive a task (alias: u) // OBS: You
+    /// can't annotate if you use this option.
+    #[value(alias = "u")]
+    Unarchive,
     /// Abandon a task in Failed case (alias: f)
     #[value(alias = "f")]
     Failed,
