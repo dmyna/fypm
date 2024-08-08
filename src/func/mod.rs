@@ -4,3 +4,4 @@ pub mod list;
 pub mod matchs;
 pub mod parser;
 pub mod dialog;
+pub mod command;

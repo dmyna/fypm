@@ -894,27 +894,12 @@ pub fn task_abandon(
             .stderr(Stdio::inherit());
 
         if tasks_count > 2 {
-            let mut modify_child = modify_command.stdin(Stdio::piped()).spawn().unwrap();
+            command::stdin_all(modify_command).unwrap();
 
-            modify_child
-                .stdin
-                .take()
-                .unwrap()
-                .write_all("all\n".as_bytes())
-                .unwrap();
-            modify_child.wait().unwrap();
-
-            let mut delete_child = delete_command.stdin(Stdio::piped()).spawn().unwrap();
-
-            delete_child
-                .stdin
-                .take()
-                .unwrap()
-                .write_all("all\n".as_bytes())
-                .unwrap();
-            delete_child.wait().unwrap();
+            command::stdin_all(delete_command).unwrap();
         } else {
             modify_command.output().unwrap();
+
             delete_command.output().unwrap();
         }
     } else {
