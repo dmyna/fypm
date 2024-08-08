@@ -8,7 +8,7 @@ use std::str::{self, FromStr};
 use crate::func::{date, parser};
 use crate::utils::constants::DEFAULT_GET_JSON_OPTIONS;
 use crate::utils::enums::TimewAction;
-use crate::utils::err::FypmError;
+use crate::utils::err::{FypmError, FypmErrorKind};
 use crate::utils::get;
 //#endregion
 //#region           Functions
@@ -105,99 +105,109 @@ pub fn set_log(
         Err(e) => panic!("Failed to execute timew command, error: {}", e),
     }
 }
-pub fn track(
-    received_id: &String,
-    received_start_time: &String,
-    received_end_time: &String,
-) -> Result<(), FypmError> {
+pub fn track(received_id: &String, params: &Vec<String>) -> Result<(), FypmError> {
     let id = parser::match_special_aliases(received_id);
 
-    let mut start_time = received_start_time.to_string();
-    let mut end_time = received_end_time.to_string();
-
-    {
-        if received_start_time.starts_with("@") {
-            start_time = parser::match_special_timing_properties(received_start_time).unwrap();
-        }
-        if received_end_time.starts_with("@") {
-            end_time = parser::match_special_timing_properties(received_end_time).unwrap();
-        }
+    if params.len() % 2 != 0 {
+        return Err(FypmError {
+            message:
+                "Invalid number of parameters! You have to specify an even number of parameters!"
+                    .to_string(),
+            kind: FypmErrorKind::InvalidInput,
+        });
     }
 
-    if received_id.starts_with("@") {
-        let execute = Command::new("timew")
-            .args([
-                &String::from("continue"),
-                &received_id,
-                &start_time,
-                &String::from("-"),
-                &end_time,
-                &String::from(":adjust"),
-            ])
-            .output();
+    for i in (0..params.len()).step_by(2) {
+        let cur_start = params[i].clone().to_string();
+        let cur_end = params[i + 1].clone().to_string();
 
-        match execute {
-            Ok(output) => {
-                if output.status.success() {
-                    println!("{}", str::from_utf8(&output.stdout).unwrap());
-                } else {
-                    eprintln!("{}", str::from_utf8(&output.stderr).unwrap());
-                }
-            }
-            Err(e) => eprintln!("Failed to execute timew command, error: {}", e),
-        }
-    } else {
-        let max_description_length = 25;
-
-        let get_task_json = get::get_json_by_filter(&id, DEFAULT_GET_JSON_OPTIONS).unwrap();
-        let task_json = get_task_json.get(0).unwrap();
-
-        let mut truncated_description = String::new();
-        if &task_json.description.len() > &25 {
-            truncated_description = format!(
-                "{}...",
-                &task_json.description[..max_description_length - 3]
-            )
+        let start_time = if cur_start.starts_with("@") {
+            parser::match_special_timing_properties(&cur_start).unwrap()
         } else {
-            truncated_description.push_str(&task_json.description);
-        }
+            cur_start
+        };
 
-        let mut args = vec![
-            "track",
-            &start_time,
-            "-",
-            &end_time,
-            &task_json.uuid,
-            &truncated_description,
-            &task_json.wt,
-            ":adjust",
-            &task_json.r#type,
-        ];
+        let end_time = if cur_end.starts_with("@") {
+            parser::match_special_timing_properties(&cur_end).unwrap()
+        } else {
+            cur_end
+        };
 
-        if let Some(style) = &task_json.style {
-            args.push(&style);
-        }
+        if received_id.starts_with("@") {
+            let execute = Command::new("timew")
+                .args([
+                    &String::from("continue"),
+                    &received_id,
+                    &start_time,
+                    &String::from("-"),
+                    &end_time,
+                    &String::from(":adjust"),
+                ])
+                .output();
 
-        if let Some(project) = &task_json.project {
-            args.push(&project);
-        }
-
-        // Add tags
-        if let Some(tags) = &task_json.tags {
-            args.extend(tags.iter().map(|tag| tag.as_str()));
-        }
-
-        let execute = Command::new("timew").args(&args).output();
-
-        match execute {
-            Ok(output) => {
-                if output.status.success() {
-                    println!("{}", str::from_utf8(&output.stdout).unwrap());
-                } else {
-                    eprintln!("{}", str::from_utf8(&output.stderr).unwrap());
+            match execute {
+                Ok(output) => {
+                    if output.status.success() {
+                        println!("{}", str::from_utf8(&output.stdout).unwrap());
+                    } else {
+                        eprintln!("{}", str::from_utf8(&output.stderr).unwrap());
+                    }
                 }
+                Err(e) => eprintln!("Failed to execute timew command, error: {}", e),
             }
-            Err(e) => eprintln!("Failed to execute timew command, error: {}", e),
+        } else {
+            let max_description_length = 25;
+
+            let get_task_json = get::get_json_by_filter(&id, DEFAULT_GET_JSON_OPTIONS).unwrap();
+            let task_json = get_task_json.get(0).unwrap();
+
+            let mut truncated_description = String::new();
+            if &task_json.description.len() > &25 {
+                truncated_description = format!(
+                    "{}...",
+                    &task_json.description[..max_description_length - 3]
+                )
+            } else {
+                truncated_description.push_str(&task_json.description);
+            }
+
+            let mut args = vec![
+                "track",
+                &start_time,
+                "-",
+                &end_time,
+                &task_json.uuid,
+                &truncated_description,
+                &task_json.wt,
+                ":adjust",
+                &task_json.r#type,
+            ];
+
+            if let Some(style) = &task_json.style {
+                args.push(&style);
+            }
+
+            if let Some(project) = &task_json.project {
+                args.push(&project);
+            }
+
+            // Add tags
+            if let Some(tags) = &task_json.tags {
+                args.extend(tags.iter().map(|tag| tag.as_str()));
+            }
+
+            let execute = Command::new("timew").args(&args).output();
+
+            match execute {
+                Ok(output) => {
+                    if output.status.success() {
+                        println!("{}", str::from_utf8(&output.stdout).unwrap());
+                    } else {
+                        eprintln!("{}", str::from_utf8(&output.stderr).unwrap());
+                    }
+                }
+                Err(e) => eprintln!("Failed to execute timew command, error: {}", e),
+            }
         }
     }
 
@@ -214,7 +224,7 @@ pub fn replace(
     let start_time = get::get_timew_time(received_original_id, &TimewAction::Start);
     let end_time = get::get_timew_time(received_original_id, &TimewAction::End);
 
-    track(received_replacement_id, &start_time, &end_time)
+    track(received_replacement_id, &vec![start_time, end_time])
 }
 pub fn list(date: &String, aditional_filters: &Option<Vec<String>>) -> Result<(), FypmError> {
     let initial_date = NaiveDate::from_str(&date::match_aliases(date)).unwrap();
