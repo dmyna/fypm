@@ -7,7 +7,7 @@ use std::process::Stdio;
 use std::vec;
 use std::{fs, process::Command, str};
 
-use crate::func::dialog;
+use crate::func::{command, dialog};
 //#endregion
 //#region           Modules
 use crate::func::{
@@ -151,7 +151,6 @@ pub fn task_done(
         .join(" ");
 
     args.extend([join_uuids.as_str()]);
-
 
     let confirmation: bool;
 
@@ -1019,8 +1018,14 @@ pub fn task_unschedule(
     Ok(())
 }
 pub fn task_und(filter: &String, unarchive: &bool) -> Result<(), FypmError> {
-    let tasks = get::get_json_by_filter(filter, None)?;
-    let tasks_count: usize = tasks.len();
+    let tasks = if *unarchive {
+        println!("Unarchive option is true! Filtering for archived tasks...");
+
+        get::get_json_by_filter(format!("(+Archived and ({}))", filter).as_str(), None)?
+    } else {
+        get::get_json_by_filter(filter, None)?
+    };
+
     let confirmation = dialog::verify_selected_tasks(&tasks)?;
 
     if confirmation {
@@ -1034,7 +1039,9 @@ pub fn task_und(filter: &String, unarchive: &bool) -> Result<(), FypmError> {
         ];
 
         if *unarchive {
-            args.extend(["-Archived"]);
+            action::unarchive(tasks)?;
+
+            return Ok(());
         } else {
             args.extend(["-Failed", "-Abandoned", "-NoControl"]);
         }
@@ -1042,16 +1049,8 @@ pub fn task_und(filter: &String, unarchive: &bool) -> Result<(), FypmError> {
         let mut modify_binding = Command::new("task");
         let modify_command = modify_binding.args(args).stderr(Stdio::inherit());
 
-        if tasks_count > 2 {
-            let mut modify_child = modify_command.stdin(Stdio::piped()).spawn().unwrap();
-
-            modify_child
-                .stdin
-                .take()
-                .unwrap()
-                .write_all("all\n".as_bytes())
-                .unwrap();
-            modify_child.wait().unwrap();
+        if tasks.len() > 2 {
+            command::stdin_all(modify_command).unwrap();
         } else {
             modify_command.output().unwrap();
         }
@@ -1062,6 +1061,11 @@ pub fn task_und(filter: &String, unarchive: &bool) -> Result<(), FypmError> {
     Ok(())
 }
 pub fn task_project(action: &TaProjectActions, arg: &Option<String>) -> Result<(), FypmError> {
+    let no_project_specified = FypmError {
+        message: "Please provide a project name!".to_string(),
+        kind: FypmErrorKind::InvalidInput,
+    };
+
     match *action {
         TaProjectActions::List => {
             let mut args = Vec::new();
@@ -1097,7 +1101,7 @@ pub fn task_project(action: &TaProjectActions, arg: &Option<String>) -> Result<(
                     )?;
                 }
             } else {
-                panic!("Please provide a project name!");
+                return Err(no_project_specified);
             }
         }
         TaProjectActions::Archive => {
@@ -1114,6 +1118,29 @@ pub fn task_project(action: &TaProjectActions, arg: &Option<String>) -> Result<(
                         &None,
                     )?;
                 }
+            } else {
+                return Err(no_project_specified);
+            }
+        }
+        TaProjectActions::Unarchive => {
+            if let Some(project) = arg {
+                let confirmation: bool = Confirm::new()
+                    .with_prompt(format!("Do you want to unarchive '{}' project?", project))
+                    .interact()
+                    .unwrap();
+
+                if confirmation {
+                    println!("Unarchive option is true! Filtering for archived tasks...");
+
+                    let tasks: Vec<TaskWarriorExported> = get::get_json_by_filter(
+                        format!("(project:{} and +Archived)", project).as_str(),
+                        None,
+                    )?;
+
+                    action::unarchive(tasks)?;
+                }
+            } else {
+                return Err(no_project_specified);
             }
         }
     }

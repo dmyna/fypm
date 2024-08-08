@@ -5,11 +5,15 @@ use std::process::Command;
 use std::process::Stdio;
 use std::str;
 
+use itertools::Itertools;
+
 //#region           Modules
 use crate::utils::constants::{DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH};
 use crate::utils::err::{FypmError, FypmErrorKind};
 use crate::utils::get;
 use crate::utils::structs::TaskWarriorExported;
+
+use super::command;
 //#endregion
 //#region           Implementation
 pub fn annotate(
@@ -66,6 +70,33 @@ pub fn annotate(
     Ok(())
 }
 
+pub fn unarchive(tasks: Vec<TaskWarriorExported>) -> Result<(), FypmError> {
+    let mut modify_binding = Command::new("task");
+    let modify_command = modify_binding
+        .args(vec![
+            "rc.verbose=0",
+            "rc.confirmation=0",
+            "rc.recurrence.confirmation=0",
+            tasks
+                .iter()
+                .map(|task| task.uuid.clone())
+                .join(" ")
+                .as_str(),
+            "modify",
+            "status:pending",
+            "-Archived",
+        ])
+        .stderr(Stdio::inherit());
+
+    if tasks.len() > 2 {
+        command::stdin_all(modify_command).unwrap();
+    } else {
+        modify_command.output().unwrap();
+    }
+
+    Ok(())
+}
+
 pub fn receive_last_task() -> Result<String, Error> {
     let get_last_task = fs::read(LAST_TASK_PATH)?;
 
@@ -109,7 +140,6 @@ pub fn match_inforelat_and_sequence(
     filter_json: &TaskWarriorExported,
 ) -> Result<String, FypmError> {
     let state = &filter_json.state;
-    let r#type = &filter_json.r#type;
 
     let is_sequence: bool;
     if let Some(verify_tags) = &filter_json.tags {

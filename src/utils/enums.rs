@@ -27,10 +27,6 @@ pub enum TaAbandonTags {
     /// Archive a task (alias: c)
     #[value(alias = "c")]
     Archived,
-    /// Unarchive a task (alias: u) // OBS: You
-    /// can't annotate if you use this option.
-    #[value(alias = "u")]
-    Unarchive,
     /// Abandon a task in Failed case (alias: f)
     #[value(alias = "f")]
     Failed,
@@ -222,7 +218,8 @@ pub enum Commands {
     /// Set a task as pending, removing the "failed/abandoned/no-control" status or unarchiving it (taund)
     TaUnd {
         filter: String,
-        #[arg(short = 'c', long)]
+        /// Unarchive a task (alias: u)
+        #[arg(short = 'u', long = "unarchive")]
         unarchive: bool,
     },
     TaProject {
