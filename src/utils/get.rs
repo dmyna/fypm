@@ -1,7 +1,6 @@
 use std::{process::Command, str};
 
 use super::{
-    constants::DEFAULT_GET_JSON_OPTIONS,
     enums::TimewAction,
     err::{FypmError, FypmErrorKind},
     structs,
