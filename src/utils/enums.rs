@@ -78,31 +78,23 @@ pub enum FilterActions {
     Add,
     List,
     Remove,
-    Edit
+    Edit,
 }
 
 #[derive(Subcommand)]
 pub enum Commands {
     //#region               Systems
     /// Add a worktime
-    WtAdd {
-        worktime_name: String,
-    },
+    WtAdd { worktime_name: String },
     /// Remove a worktime
-    WtRemove {
-        worktime_name: String,
-    },
+    WtRemove { worktime_name: String },
     /// List worktimes
     WtLs,
     /// Apply a worktime
-    WtApply {
-        worktime_name: String,
-    },
+    WtApply { worktime_name: String },
 
     /// Verify tasks for inconsistencies
-    Verify {
-        script: VerifyScripts,
-    },
+    Verify { script: VerifyScripts },
 
     /// Manage tasks aliases
     Alias {
@@ -231,14 +223,14 @@ pub enum Commands {
     TaUnd {
         filter: String,
         #[arg(short = 'c', long)]
-        unarchive: bool
+        unarchive: bool,
     },
     TaProject {
         #[arg(value_enum)]
         action: TaProjectActions,
         /// Project || Filter. Project is required in "a && c" options. Filter is optional in "l" flag.
         #[arg(short, long)]
-        arg: Option<String>
+        arg: Option<String>,
     },
     /// Get statistics from taskwarrior (tastat-*)
     TaStatistic {
@@ -318,7 +310,7 @@ pub enum FypmReports {
     AllGoals,
     Const,
     Recurring,
-    Visual
+    Visual,
 }
 #[derive(EnumString, Display, Hash, PartialEq, Eq, Debug, Ord, PartialOrd)]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
@@ -448,4 +440,3 @@ pub enum FypmUrgency {
     UrgN30,
     UrgN100,
 }
-
