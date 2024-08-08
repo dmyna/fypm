@@ -393,6 +393,14 @@ impl ConfigHandler {
                     },
                 ),
                 (
+                    FypmUDAs::Chain,
+                    TaskWarriorUDAConfig {
+                        r#type: "string".to_string(),
+                        label: "Chain".to_string(),
+                        ..Default::default()
+                    },
+                ),
+                (
                     FypmUDAs::Wt,
                     TaskWarriorUDAConfig {
                         r#type: "string".to_string(),

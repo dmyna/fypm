@@ -33,6 +33,9 @@ pub enum TaAbandonTags {
     /// Abandon a task in Abandoned case (alias: a)
     #[value(alias = "a")]
     Abandoned,
+    /// Abandon a task in Chain case (alias: h)
+    #[value(alias = "h")]
+    Chain,
     /// Abandon a task in NoControl case (alias: n)
     #[value(alias = "n")]
     NoControl,
@@ -321,6 +324,7 @@ pub enum FypmUDAs {
     SeqCurrent,
     SeqPrevious,
     SeqNext,
+    Chain,
     Wt,
     Goal,
     Alarm,
