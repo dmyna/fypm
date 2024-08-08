@@ -232,9 +232,8 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
         Commands::TiEnd { id, end_time } => timew::set_log(&TimewAction::End, id, end_time),
         Commands::TiTrack {
             id,
-            start_time,
-            end_time,
-        } => timew::track(id, start_time, end_time),
+            args
+        } => timew::track(id, args),
         Commands::TiReplace {
             original_id,
             replacement_id,

@@ -276,8 +276,9 @@ pub enum Commands {
     /// Track a task manually (tir)
     TiTrack {
         id: String,
-        start_time: String,
-        end_time: String,
+        /// Dates to track. You must enter a even number of dates, and all will be tracked in pairs.
+        /// Ex: tir 1 10:00 12:00 18:00 18:10
+        args: Vec<String>,
     },
     /// Quickly replace a log with just ids (tirep)
     TiReplace {
