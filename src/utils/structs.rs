@@ -46,6 +46,7 @@ pub struct TimeWarriorExported {
 
 pub struct GetJsonByFilterOptions {
     pub quantity: Option<usize>,
+    pub aditional_overrides: Option<Vec<String>>,
 }
 
 pub struct TaskWarriorReportConfig {

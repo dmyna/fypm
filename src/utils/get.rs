@@ -11,11 +11,16 @@ pub fn json_by_filter(
     filter: &str,
     options: Option<GetJsonByFilterOptions>,
 ) -> Result<Vec<TaskWarriorExported>, FypmError> {
-    let get_json = Command::new("task")
-        .args([filter, "export"])
-        .output()
-        .unwrap()
-        .stdout;
+    let mut args = Vec::new();
+
+    if let Some(options) = &options {
+        if let Some(overrides) = &options.aditional_overrides {
+            args.extend(overrides.clone());
+        }
+    }
+    args.extend(vec![filter.to_string(), "export".to_string()]);
+
+    let get_json = Command::new("task").args(args).output().unwrap().stdout;
 
     let parsed_json =
         serde_json::from_str::<Vec<TaskWarriorExported>>(str::from_utf8(&get_json).unwrap())
