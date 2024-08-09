@@ -177,6 +177,10 @@ pub enum Commands {
         filter: String,
         /// Required for 'abandoned' (a) and 'no-control' (n).
         annotation: Option<String>,
+        /// If you want to specify the annotation for selected
+        /// tasks only, you can use this flag to specify the
+        /// filter to aplly to the task annotation.
+        annotation_filter: Option<String>,
     },
     /// Start a task (tastart)
     TaStart { filter: String },

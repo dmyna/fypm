@@ -197,7 +197,8 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
             tag,
             filter,
             annotation,
-        } => task::task_abandon(tag, filter, annotation),
+            annotation_filter,
+        } => task::task_abandon(tag, filter, annotation, annotation_filter),
         Commands::TaStatistic { name, no_parents } => task::task_statistic(name, no_parents),
         Commands::TaSchedule {
             filter,
