@@ -51,20 +51,20 @@ pub fn task_stop(
 }
 pub fn task_start(filter: &String) -> Result<(), FypmError> {
     let mut filter = parser::match_special_aliases(filter);
-    let filter_json = get::get_json_by_filter(&filter, DEFAULT_GET_JSON_OPTIONS).unwrap();
-    let filter_length = filter_json.len();
+    let filter_json = if filter.starts_with("+ST_") {
+        get::mother_json_by_sequence_id(&filter)?
+    } else {
+        get::json_by_filter(&filter, DEFAULT_GET_JSON_OPTIONS)?
+            .get(0)
+            .unwrap()
+            .clone()
+    };
 
-    if filter_length == 0 {
-        panic!("No task with filter \"{}\" found!", filter);
-    } else if filter_length > 1 {
-        panic!("Too much tasks with filter \"{}\"!", filter);
-    }
+    verify_if_wt_is_allday(&filter_json).unwrap();
 
-    verify_if_wt_is_allday(&filter_json[0]).unwrap();
+    verify_if_is_divisory(&filter_json).unwrap();
 
-    verify_if_is_divisory(&filter_json[0]).unwrap();
-
-    filter = match_inforelat_and_sequence(&filter_json[0]).unwrap();
+    filter = match_inforelat_and_sequence(&filter_json).unwrap();
 
     {
         let active_tasks = get::get_current_task_json();
