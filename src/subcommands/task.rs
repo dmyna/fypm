@@ -459,6 +459,7 @@ pub fn task_add_seq(
         let mut args = vec![
             subtask_description.clone(),
             style.clone(),
+            "Objective".to_string(),
             final_tag.clone(),
             final_tag_type.clone(),
             "+Sequence".to_string(),
