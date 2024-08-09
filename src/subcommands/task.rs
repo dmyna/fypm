@@ -95,6 +95,7 @@ pub fn task_start(filter: &String) -> Result<(), FypmError> {
             .output()
             .unwrap();
 
+        #[cfg(feature = "fysm")]
         {
             //. DEV: Implement tascripts in Rust later
 
