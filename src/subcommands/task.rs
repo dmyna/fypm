@@ -117,7 +117,7 @@ pub fn task_done(
     let selected_tasks: Vec<TaskWarriorExported>;
 
     if let Some(filter) = filter {
-        let task_json = get::get_json_by_filter(filter, None)?;
+        let task_json = get::json_by_filter(filter, None)?;
 
         if let Some(tastart_filter) = tastart_filter {
             task_start(tastart_filter)?;
@@ -333,7 +333,7 @@ pub fn task_add_sub(
 ) -> Result<String, FypmError> {
     let subtask: String;
 
-    let get_mother_task_json = get::get_json_by_filter(mother_task, DEFAULT_GET_JSON_OPTIONS)?;
+    let get_mother_task_json = get::json_by_filter(mother_task, DEFAULT_GET_JSON_OPTIONS)?;
     let mother_task_json = get_mother_task_json.get(0).unwrap();
 
     if other_args.len() == 1 {
@@ -469,7 +469,7 @@ pub fn task_add_seq(
         if i == *initial_number {
             if let Some(last_season_id) = last_season_id {
                 let get_last_season_json =
-                    get::get_json_by_filter(&last_season_id, DEFAULT_GET_JSON_OPTIONS).unwrap();
+                    get::json_by_filter(&last_season_id, DEFAULT_GET_JSON_OPTIONS).unwrap();
                 let last_season_json = get_last_season_json.get(0).unwrap();
 
                 args.push(format!("SEQ_PREVIOUS:{}", last_season_json.uuid));
@@ -717,7 +717,7 @@ pub fn list_completion_score(date_args: &Vec<String>) -> Result<(), FypmError> {
         let initial_day = date.format("%Y-%m-%d").to_string();
         let final_day = (date + Duration::days(1)).format("%Y-%m-%d").to_string();
 
-        let tasks_json = get::get_json_by_filter(format!("((due.after:{initial_day} or due:{initial_day}) and due.before:{final_day}) and +INSTANCE").as_str(), None)?;
+        let tasks_json = get::json_by_filter(format!("((due.after:{initial_day} or due:{initial_day}) and due.before:{final_day}) and +INSTANCE").as_str(), None)?;
 
         let pending_count = tasks_json
             .iter()
@@ -847,7 +847,7 @@ pub fn task_abandon(
     {
         panic!("You must specify an annotation when mark a task as NoControl or Abandoned!");
     }
-    let tasks = get::get_json_by_filter(filter, None)?;
+    let tasks = get::json_by_filter(filter, None)?;
     let tasks_count: usize = tasks.len();
     let confirmation = dialog::verify_selected_tasks(&tasks)?;
 
@@ -880,7 +880,7 @@ pub fn task_abandon(
                         if input.trim().is_empty() {
                             Err("You must specify a chain task!".to_string())
                         } else {
-                            let task = get::get_json_by_filter(input, DEFAULT_GET_JSON_OPTIONS);
+                            let task = get::json_by_filter(input, DEFAULT_GET_JSON_OPTIONS);
 
                             if task.is_ok() {
                                 Ok(())
@@ -954,7 +954,7 @@ pub fn task_schedule(
     due_date: &Option<String>,
     worktime: &Option<String>,
 ) -> Result<(), FypmError> {
-    let tasks = get::get_json_by_filter(filter, None)?;
+    let tasks = get::json_by_filter(filter, None)?;
     let tasks_count: usize = tasks.len();
     let confirmation = dialog::verify_selected_tasks(&tasks)?;
 
@@ -1009,7 +1009,7 @@ pub fn task_unschedule(
     no_due: &bool,
     no_worktime: &bool,
 ) -> Result<(), FypmError> {
-    let tasks = get::get_json_by_filter(filter, None)?;
+    let tasks = get::json_by_filter(filter, None)?;
     let tasks_count: usize = tasks.len();
     let confirmation = dialog::verify_selected_tasks(&tasks)?;
 
@@ -1062,9 +1062,9 @@ pub fn task_und(filter: &String, unarchive: &bool) -> Result<(), FypmError> {
     let tasks = if *unarchive {
         println!("Unarchive option is true! Filtering for archived tasks...");
 
-        get::get_json_by_filter(format!("(+Archived and ({}))", filter).as_str(), None)?
+        get::json_by_filter(format!("(+Archived and ({}))", filter).as_str(), None)?
     } else {
-        get::get_json_by_filter(filter, None)?
+        get::json_by_filter(filter, None)?
     };
 
     let confirmation = dialog::verify_selected_tasks(&tasks)?;
@@ -1174,7 +1174,7 @@ pub fn task_project(action: &TaProjectActions, arg: &Option<String>) -> Result<(
                 if confirmation {
                     println!("Unarchive option is true! Filtering for archived tasks...");
 
-                    let tasks: Vec<TaskWarriorExported> = get::get_json_by_filter(
+                    let tasks: Vec<TaskWarriorExported> = get::json_by_filter(
                         format!("(project:{} and +Archived)", project).as_str(),
                         None,
                     )?;

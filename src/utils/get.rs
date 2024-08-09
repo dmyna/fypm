@@ -7,7 +7,7 @@ use super::{
 };
 use crate::utils::structs::{GetJsonByFilterOptions, TaskWarriorExported, TimeWarriorExported};
 
-pub fn get_json_by_filter(
+pub fn json_by_filter(
     filter: &str,
     options: Option<GetJsonByFilterOptions>,
 ) -> Result<Vec<TaskWarriorExported>, FypmError> {
@@ -40,7 +40,7 @@ pub fn get_json_by_filter(
     Ok(parsed_json)
 }
 pub fn get_current_task_json() -> Result<TaskWarriorExported, FypmError> {
-    let get_task = get_json_by_filter("+ACTIVE", None)?;
+    let get_task = json_by_filter("+ACTIVE", None)?;
     let active_task = get_task.get(0);
 
     if let Some(active) = active_task {

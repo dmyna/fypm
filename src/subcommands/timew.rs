@@ -158,7 +158,7 @@ pub fn track(received_id: &String, params: &Vec<String>) -> Result<(), FypmError
         } else {
             let max_description_length = 25;
 
-            let get_task_json = get::get_json_by_filter(&id, DEFAULT_GET_JSON_OPTIONS).unwrap();
+            let get_task_json = get::json_by_filter(&id, DEFAULT_GET_JSON_OPTIONS).unwrap();
             let task_json = get_task_json.get(0).unwrap();
 
             let mut truncated_description = String::new();

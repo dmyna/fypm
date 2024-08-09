@@ -9,7 +9,7 @@ pub fn deleted_tasks(no_parents: &bool) -> Result<(), FypmError> {
         format!("({})", base_filter)
     };
 
-    let tasks_json = get::get_json_by_filter(final_filter.as_str(), None)?;
+    let tasks_json = get::json_by_filter(final_filter.as_str(), None)?;
 
     fn get_count(tasks_json: &Vec<TaskWarriorExported>, tag: &String) -> usize {
         tasks_json
@@ -40,7 +40,7 @@ pub fn pending_tasks(no_parents: &bool) -> Result<(), FypmError> {
         format!("({})", base_filter)
     };
 
-    let tasks_json = get::get_json_by_filter(final_filter.as_str(), None)?;
+    let tasks_json = get::json_by_filter(final_filter.as_str(), None)?;
 
     let all_pending = tasks_json.len();
 

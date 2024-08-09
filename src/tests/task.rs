@@ -4,7 +4,7 @@ pub mod done {
     use std::{thread::sleep, time::Duration};
 
     use crate::subcommands::task;
-    use crate::utils::get::get_json_by_filter;
+    use crate::utils::get::json_by_filter;
     use super::super::lib::mock::Mock;
 
     #[test]
@@ -37,7 +37,7 @@ pub mod done {
             )
             .unwrap();
 
-            let tasks = get_json_by_filter("description.is:'Test'", None).unwrap();
+            let tasks = json_by_filter("description.is:'Test'", None).unwrap();
 
             assert_eq!(tasks.len(), 3);
             assert_eq!(

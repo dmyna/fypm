@@ -157,14 +157,14 @@ pub fn match_inforelat_and_sequence(
 
         if let Some(inforelat) = inforelat {
             let new_filter_json =
-                get::get_json_by_filter(&inforelat, DEFAULT_GET_JSON_OPTIONS).unwrap();
+                get::json_by_filter(&inforelat, DEFAULT_GET_JSON_OPTIONS).unwrap();
 
             return match_inforelat_and_sequence(&new_filter_json[0]);
         } else {
             if is_sequence {
                 if let Some(next_task) = &filter_json.seq_current {
                     let mut next_json =
-                        get::get_json_by_filter(&next_task, DEFAULT_GET_JSON_OPTIONS)?;
+                        get::json_by_filter(&next_task, DEFAULT_GET_JSON_OPTIONS)?;
                     let mut status = next_json[0].status.as_str();
 
                     // Loop until find a pending task or there is no next task
@@ -172,7 +172,7 @@ pub fn match_inforelat_and_sequence(
                     while status == "completed" {
                         if let Some(next_task) = &next_json[0].seq_next {
                             next_json =
-                                get::get_json_by_filter(&next_task, DEFAULT_GET_JSON_OPTIONS)?;
+                                get::json_by_filter(&next_task, DEFAULT_GET_JSON_OPTIONS)?;
                             status = next_json[0].status.as_str();
                         } else {
                             return Err(FypmError {
