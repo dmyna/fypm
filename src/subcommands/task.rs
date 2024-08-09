@@ -839,6 +839,7 @@ pub fn task_abandon(
     tag: &enums::TaAbandonTags,
     filter: &String,
     annotation: &Option<String>,
+    annotation_filter: &Option<String>,
 ) -> Result<(), FypmError> {
     if (tag == &enums::TaAbandonTags::Abandoned || tag == &enums::TaAbandonTags::NoControl)
         && annotation.is_none()
@@ -909,7 +910,11 @@ pub fn task_abandon(
         }
 
         if let Some(annotation) = annotation {
-            action::annotate("task", filter, annotation, true)?;
+            if let Some(annotation_filter) = annotation_filter {
+                action::annotate("task", annotation_filter, annotation, true)?;
+            } else {
+                action::annotate("task", filter, annotation, true)?;
+            }
         }
 
         let mut modify_binding = Command::new("task");
@@ -1150,6 +1155,7 @@ pub fn task_project(action: &TaProjectActions, arg: &Option<String>) -> Result<(
                     task_abandon(
                         &enums::TaAbandonTags::Archived,
                         &format!("(project:{} and -DELETED and -COMPLETED)", project),
+                        &None,
                         &None,
                     )?;
                 }
