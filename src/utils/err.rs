@@ -6,6 +6,7 @@ pub enum FypmErrorKind {
     /// It occours when a TYPE has a wrong value (ex: Continuous tasks without aliases)
     TaskTypeError,
     NoTasksFound,
+    NotEnoughTasks,
     NotFound,
     WrongInitialization,
     ProblemWithStoredTask,
