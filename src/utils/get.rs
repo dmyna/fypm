@@ -155,3 +155,62 @@ pub fn filter_by_modifier(modifier: &String) -> Result<String, FypmError> {
 
     Ok(config)
 }
+
+pub fn mother_json_by_sequence_id(seq_id: &String) -> Result<TaskWarriorExported, FypmError> {
+    let tasks = json_by_filter(format!("(status:pending and {})", seq_id).as_str(), None)?;
+
+    if tasks.len() > 1 {
+        let mut mother = (false, 0);
+        for (index, task) in tasks.iter().enumerate() {
+            if task.tags.as_ref().unwrap().contains(&"MOTHER".to_string()) {
+                mother = (true, index);
+            }
+        }
+
+        if mother.0 {
+            let mother_task = tasks.get(mother.1).unwrap();
+
+            if mother_task
+                .tags
+                .as_ref()
+                .unwrap()
+                .contains(&"Sequence".to_string())
+            {
+                Ok(mother_task.clone())
+            } else {
+                Err(FypmError {
+                    message: format!(
+                        "{}\n{}",
+                        "You are trying to get a MOTHER that is not a Sequence. ",
+                        "If you want to get a task by a tag, this task must be a Sequence. ",
+                    ),
+                    kind: FypmErrorKind::TooMuchTasks,
+                })
+            }
+        } else {
+            Err(FypmError {
+                message: format!(
+                    "{}\n{}",
+                    "Not enough tasks! (expected: 1)",
+                    "If you want to get a task by a tag, this task must be a Sequence. ",
+                ),
+                kind: FypmErrorKind::NotEnoughTasks,
+            })
+        }
+    } else if tasks.len() <= 1 {
+        Err(FypmError {
+            message: "No tasks found! (expected: > 1)".to_string(),
+            kind: FypmErrorKind::NoTasksFound,
+        })
+    } else {
+        Err(FypmError {
+            message: format!(
+                "{}\n{}{}",
+                "Not enough tasks! (expected: > 1)",
+                "If you want to get a task by a tag, this task must be a Sequence. ",
+                "If this sequence only have 1 task (mother), there's nothing to start.",
+            ),
+            kind: FypmErrorKind::NotEnoughTasks,
+        })
+    }
+}
