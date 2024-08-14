@@ -168,14 +168,14 @@ pub fn task_done(
 
         // Tags logic
         {
-            let tags: Vec<&str> = vec![];
+            let mut tags: Vec<&str> = vec![];
 
             if *not_necessary {
-                args.push("+NotNecessary");
+                tags.push("+NotNecessary");
             }
 
             if *delegated {
-                args.push("+Delegated");
+                tags.push("+Delegated");
             }
 
             if tags.len() == 2 {
