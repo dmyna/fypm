@@ -1,4 +1,4 @@
-use chrono::{DateTime, Datelike, Duration, Local, NaiveDate, Weekday};
+use chrono::{format, DateTime, Datelike, Duration, Local, NaiveDate, Weekday};
 //#region           Crates
 use colored::*;
 use dialoguer::{Confirm, Input};
@@ -331,22 +331,11 @@ pub fn task_add_sub(
     other_args: &Vec<String>,
     skip_confirmation: &bool,
 ) -> Result<String, FypmError> {
-    let subtask: String;
-
-    let get_mother_task_json = get::json_by_filter(mother_task, DEFAULT_GET_JSON_OPTIONS)?;
-    let mother_task_json = get_mother_task_json.get(0).unwrap();
-
-    if other_args.len() == 1 {
-        subtask = other_args.get(0).unwrap().clone();
-
-        let get_subtask_uuid = get::get_uuids_by_filter(&subtask, DEFAULT_GET_JSON_OPTIONS)?;
-        let subtask_uuid = get_subtask_uuid.get(0).unwrap();
-
-        Command::new("task")
-            .args([subtask_uuid.as_str(), "modify", "+SUBTASK"])
-            .output()
-            .unwrap();
-    } else if other_args.len() >= 3 {
+    fn create_subtask(
+        mother_task_json: &TaskWarriorExported,
+        other_args: &Vec<String>,
+        skip_confirmation: &bool,
+    ) -> Result<String, FypmError> {
         let project: &String;
         let description = other_args.get(0).unwrap();
         let style = other_args.get(1).unwrap();
@@ -369,29 +358,117 @@ pub fn task_add_sub(
             skip_confirmation,
         )?;
 
-        subtask = uuid;
-    } else {
-        return Err(FypmError {
-            message: "You specified a wrong number of arguments! You don't know how to read documentation, do you? :P".to_string(),
-            kind: FypmErrorKind::InvalidInput
-        });
+        Ok(uuid)
     }
 
-    Command::new("task")
-        .args([mother_task.as_str(), "modify", "STATE:Info", "+MOTHER"])
-        .output()
-        .unwrap();
-    println!("Mother task setted.");
+    let wrong_arguments_error = FypmError {
+        message: "You specified a wrong number of arguments! You don't know how to read documentation, do you? :P".to_string(),
+        kind: FypmErrorKind::InvalidInput
+    };
 
-    Command::new("task")
-        .args([
-            &subtask,
-            &"modify".to_string(),
-            &format!("MOTHER:{}", mother_task_json.uuid),
-            &"+SUBTASK".to_string(),
-        ])
-        .output()
-        .unwrap();
+    let subtask: String;
+
+    let get_mother_task_json = get::json_by_filter(mother_task, DEFAULT_GET_JSON_OPTIONS)?;
+    let mother_task_json = get_mother_task_json.get(0).unwrap();
+
+    if mother_task_json.tags.is_some()
+        && mother_task_json
+            .tags
+            .as_ref()
+            .unwrap()
+            .contains(&"Sequence".to_string())
+    {
+        let tags = mother_task_json.tags.as_ref().unwrap();
+        let mut seq_id = "unknown".to_string();
+        {
+            for tag in tags {
+                if tag.starts_with("ST_") {
+                    seq_id = tag.to_string();
+                }
+            }
+
+            if seq_id == "unknown" {
+                return Err(FypmError {
+                    message: "You are trying to add a subtask to a sequence, but this sequence doesn't have a Sequence ID".to_string(),
+                    kind: FypmErrorKind::WrongInitialization,
+                });
+            }
+        }
+
+        let get_last_seq_subtask = get::json_by_filter(
+            format!(
+                "+Sequence and +{} and SEQ_PREVIOUS.any: and SEQ_NEXT.none:",
+                seq_id
+            )
+            .as_str(),
+            DEFAULT_GET_JSON_OPTIONS,
+        )?;
+        let last_seq_subtask = get_last_seq_subtask.get(0).unwrap();
+
+        if other_args.len() == 1 {
+            let get_subtask_uuid =
+                get::get_uuids_by_filter(other_args.get(0).unwrap(), DEFAULT_GET_JSON_OPTIONS)?;
+            let subtask_uuid = get_subtask_uuid.get(0).unwrap();
+
+            subtask = subtask_uuid.to_string();
+        } else if other_args.len() >= 3 {
+            subtask = create_subtask(mother_task_json, other_args, skip_confirmation)?;
+        } else {
+            return Err(wrong_arguments_error);
+        }
+
+        Command::new("task")
+            .args([
+                last_seq_subtask.uuid.as_str(),
+                "modify",
+                format!("SEQ_NEXT:{}", subtask).as_str(),
+            ])
+            .output()
+            .unwrap();
+
+        Command::new("task")
+            .args([
+                subtask.as_str(),
+                "modify",
+                "+SUBTASK",
+                "+Sequence",
+                format!("+{}", seq_id).as_str(),
+                format!("SEQ_PREVIOUS:{}", last_seq_subtask.uuid).as_str(),
+            ])
+            .output()
+            .unwrap();
+    } else {
+        if other_args.len() == 1 {
+            let get_subtask_uuid =
+                get::get_uuids_by_filter(other_args.get(0).unwrap(), DEFAULT_GET_JSON_OPTIONS)?;
+            let subtask_uuid = get_subtask_uuid.get(0).unwrap();
+
+            subtask = subtask_uuid.to_string();
+        } else if other_args.len() >= 3 {
+            subtask = create_subtask(mother_task_json, other_args, skip_confirmation)?;
+        } else {
+            return Err(wrong_arguments_error);
+        }
+    }
+
+    // Define mother task as a mother task and set the subtask to mother task
+    {
+        Command::new("task")
+            .args([mother_task.as_str(), "modify", "STATE:Info", "+MOTHER"])
+            .output()
+            .unwrap();
+        println!("Mother task setted.");
+
+        Command::new("task")
+            .args([
+                &subtask,
+                &"modify".to_string(),
+                &format!("MOTHER:{}", mother_task_json.uuid),
+                &"+SUBTASK".to_string(),
+            ])
+            .output()
+            .unwrap();
+    }
     println!(
         "Subtask added to its MOTHER '{}'!",
         mother_task_json.description
