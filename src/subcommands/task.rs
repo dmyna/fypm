@@ -680,9 +680,8 @@ pub fn task_list_date(
     modifier: &String,
     date_args: &Vec<String>,
 ) -> Result<(), FypmError> {
-    let verbose: &str = "rc.verbose=0";
+    let verbose: &str = "rc.verbose:label";
     let sort = format!("rc.report.{modifier}.sort={property}");
-    let divisory = "                            ";
 
     let initial_date: NaiveDate;
     let final_date: NaiveDate;
@@ -693,6 +692,9 @@ pub fn task_list_date(
         let initial_day = date.format("%Y-%m-%d").to_string();
         let final_day = (date + Duration::days(1)).format("%Y-%m-%d").to_string();
 
+        println!("{}", date.format("%a - %Y-%m-%d").to_string().bold().bright_white());
+        term::print_full_divisory();
+
         Command::new("task")
             .args([
                 format!("{verbose}"), format!("{sort}"),
@@ -701,9 +703,11 @@ pub fn task_list_date(
             .stdout(Stdio::inherit())
             .output()
             .unwrap();
+        println!();
+
 
         if date.weekday() == Weekday::Sun {
-            println!("{divisory}");
+            term::print_full_divisory();
         }
     }
 
