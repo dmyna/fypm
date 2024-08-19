@@ -11,8 +11,6 @@ mod tests;
 mod utils;
 mod db;
 mod values;
-
-use values::enums::Commands;
 //#endregion
 //#region           Structs && Enums
 #[derive(Parser)]
@@ -21,7 +19,7 @@ use values::enums::Commands;
 #[command(about = "Four Years Productivity Manager", long_about = None)]
 pub struct Cli {
     #[command(subcommand)]
-    command: Commands,
+    command: values::enums::Commands,
 }
 
 //#endregion
@@ -55,6 +53,6 @@ fn main() {
 
     let cli = Cli::parse();
 
-    func::matchs::match_subcommand(&cli.command).unwrap();
+    commands::matching(&cli.command).unwrap();
 }
 //#endregion
