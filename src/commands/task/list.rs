@@ -5,7 +5,7 @@ use chrono::{Duration, NaiveDate, Weekday};
 
 use crate::{func::list, handlers::date::NaiveDateIter, utils::{extract, get, term}, values::{enums, err::FypmError}};
 
-pub fn task_statistic(
+pub fn statistic(
     command: &enums::StatisticsCommands,
     no_parents: &bool,
 ) -> Result<(), FypmError> {
@@ -20,7 +20,7 @@ pub fn task_statistic(
 
     Ok(())
 }
-pub fn task_list_date(
+pub fn date(
     property: &String,
     modifier: &String,
     date_args: &Vec<String>,
@@ -58,7 +58,7 @@ pub fn task_list_date(
 
     Ok(())
 }
-pub fn task_list_mother_and_subtasks(
+pub fn mother_and_subtasks(
     modifier: &String,
     filter: &Vec<String>,
 ) -> Result<(), FypmError> {
@@ -129,7 +129,7 @@ pub fn task_list_mother_and_subtasks(
 
     Ok(())
 }
-pub fn list_completion_score(date_args: &Vec<String>) -> Result<(), FypmError> {
+pub fn completion_score(date_args: &Vec<String>) -> Result<(), FypmError> {
     let initial_date: NaiveDate;
     let final_date: NaiveDate;
 

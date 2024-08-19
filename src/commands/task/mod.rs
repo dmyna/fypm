@@ -14,7 +14,7 @@ use crate::{
 
 pub mod add;
 pub mod list;
-pub mod modify;
+pub mod update;
 
 pub fn task_project(action: &TaProjectActions, arg: &Option<String>) -> Result<(), FypmError> {
     let no_project_specified = FypmError {
@@ -47,7 +47,7 @@ pub fn task_project(action: &TaProjectActions, arg: &Option<String>) -> Result<(
                     .unwrap();
 
                 if confirmation {
-                    add::task_add(
+                    add::new(
                         &"Project Marker".to_string(),
                         project,
                         &" ".to_string(),
@@ -68,7 +68,7 @@ pub fn task_project(action: &TaProjectActions, arg: &Option<String>) -> Result<(
                     .unwrap();
 
                 if confirmation {
-                    modify::task_abandon(
+                    update::abandon(
                         &enums::TaAbandonTags::Archived,
                         &format!("(project:{} and -DELETED and -COMPLETED)", project),
                         &None,

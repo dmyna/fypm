@@ -22,7 +22,7 @@ use crate::{
     },
 };
 
-pub fn task_stop(
+pub fn stop(
     filter_option: &Option<String>,
     start_control_task: bool,
 ) -> Result<(), FypmError> {
@@ -42,12 +42,12 @@ pub fn task_stop(
         .unwrap();
 
     if start_control_task {
-        task_start(&CONTROL_TASK.to_string())?;
+        start(&CONTROL_TASK.to_string())?;
     }
 
     Ok(())
 }
-pub fn task_start(filter: &String) -> Result<(), FypmError> {
+pub fn start(filter: &String) -> Result<(), FypmError> {
     let mut filter = parser::match_special_aliases(filter);
     let filter_json = if filter.starts_with("+ST_") {
         get::mother_json_by_sequence_id(&filter)?
@@ -84,7 +84,7 @@ pub fn task_start(filter: &String) -> Result<(), FypmError> {
             fs::write(LAST_TASK_PATH, active_task_uuid.as_bytes()).unwrap();
 
             println!("Stopping active task with uuid: {}", active_task_uuid);
-            task_stop(&Some(active_task_uuid.to_string()), false).unwrap();
+            stop(&Some(active_task_uuid.to_string()), false).unwrap();
         }
 
         println!("Starting task with uuid: {}", filter);
@@ -103,7 +103,7 @@ pub fn task_start(filter: &String) -> Result<(), FypmError> {
         Ok(())
     }
 }
-pub fn task_done(
+pub fn done(
     filter: &Option<String>,
     tastart_filter: &Option<String>,
     annotation: &Option<String>,
@@ -118,13 +118,13 @@ pub fn task_done(
         let task_json = get::json_by_filter(filter, None)?;
 
         if let Some(tastart_filter) = tastart_filter {
-            task_start(tastart_filter)?;
+            start(tastart_filter)?;
         } else {
             let current_task = get::get_current_task_json()?;
 
             for task in &task_json {
                 if task.uuid == current_task.uuid {
-                    task_start(&CONTROL_TASK.to_string())?;
+                    start(&CONTROL_TASK.to_string())?;
                     break;
                 }
             }
@@ -135,9 +135,9 @@ pub fn task_done(
         let current_task = get::get_current_task_json()?;
 
         if let Some(tastart_filter) = tastart_filter {
-            task_start(tastart_filter)?;
+            start(tastart_filter)?;
         } else {
-            task_start(&CONTROL_TASK.to_string())?;
+            start(&CONTROL_TASK.to_string())?;
         }
 
         selected_tasks = vec![current_task];
@@ -235,7 +235,7 @@ pub fn task_done(
     Ok(())
 }
 
-pub fn task_abandon(
+pub fn abandon(
     tag: &enums::TaAbandonTags,
     filter: &String,
     annotation: &Option<String>,
@@ -347,7 +347,7 @@ pub fn task_abandon(
 
     Ok(())
 }
-pub fn task_schedule(
+pub fn schedule(
     filter: &String,
     alarm_date: &String,
     due_date: &Option<String>,
@@ -402,7 +402,7 @@ pub fn task_schedule(
 
     Ok(())
 }
-pub fn task_unschedule(
+pub fn unschedule(
     filter: &String,
     no_alarm: &bool,
     no_due: &bool,
@@ -457,7 +457,7 @@ pub fn task_unschedule(
 
     Ok(())
 }
-pub fn task_und(filter: &String, unarchive: &bool) -> Result<(), FypmError> {
+pub fn und(filter: &String, unarchive: &bool) -> Result<(), FypmError> {
     let tasks = if *unarchive {
         println!("Unarchive option is true! Filtering for archived tasks...");
 

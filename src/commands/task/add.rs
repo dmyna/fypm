@@ -14,7 +14,7 @@ use crate::{
     },
 };
 
-pub fn task_add(
+pub fn new(
     description: &String,
     project: &String,
     style: &String,
@@ -89,7 +89,7 @@ pub fn task_add(
 
     Ok(uuid)
 }
-pub fn task_add_sub(
+pub fn subtask(
     mother_task: &String,
     other_args: &Vec<String>,
     skip_confirmation: &bool,
@@ -112,7 +112,7 @@ pub fn task_add_sub(
 
         let args = other_args.get(3..).unwrap().to_vec();
 
-        let uuid = task_add(
+        let uuid = new(
             description,
             project,
             style,
@@ -239,7 +239,7 @@ pub fn task_add_sub(
 
     Ok(subtask)
 }
-pub fn task_add_seq(
+pub fn sequence(
     seq_type: &TaSequenceTypes,
     style: &String,
     description: &String,
@@ -262,7 +262,7 @@ pub fn task_add_seq(
     }
 
     {
-        let uuid = task_add(
+        let uuid = new(
             &mother_description,
             &project.to_string(),
             &style,
@@ -315,7 +315,7 @@ pub fn task_add_seq(
                 args.push(format!("SEQ_PREVIOUS:{}", last_season_json.uuid));
             }
 
-            let current_task_uuid = task_add_sub(&mother_task_uuid, &args, &true).unwrap();
+            let current_task_uuid = subtask(&mother_task_uuid, &args, &true).unwrap();
 
             if let Some(last_season_id) = last_season_id {
                 Command::new("task")
@@ -343,7 +343,7 @@ pub fn task_add_seq(
                 panic!("previous_task_uuid is empty!");
             }
 
-            let current_task_uuid = task_add_sub(&mother_task_uuid, &args, &true).unwrap();
+            let current_task_uuid = subtask(&mother_task_uuid, &args, &true).unwrap();
 
             Command::new("task")
                 .args([
@@ -368,7 +368,7 @@ pub fn task_add_seq(
 
     Ok(())
 }
-pub fn task_add_brth(birthday_person: &String, date: &String) -> Result<String, FypmError> {
+pub fn birthday(birthday_person: &String, date: &String) -> Result<String, FypmError> {
     let current_year = Local::now().year().to_string();
 
     let date =
@@ -390,7 +390,7 @@ pub fn task_add_brth(birthday_person: &String, date: &String) -> Result<String, 
         }
     }
 
-    let uuid = task_add(
+    let uuid = new(
         &format!("{}'s Birthday", birthday_person),
         &"Social.Events".to_string(),
         &"Dionysian".to_string(),
@@ -407,10 +407,10 @@ pub fn task_add_brth(birthday_person: &String, date: &String) -> Result<String, 
     Ok(uuid)
     //Ok(uuid)
 }
-pub fn task_add_pl(playlist_name: &String, length: &u16) -> Result<String, FypmError> {
+pub fn playlist(playlist_name: &String, length: &u16) -> Result<String, FypmError> {
     let style = "Dionysian".to_string();
 
-    let mother_uuid = task_add(
+    let mother_uuid = new(
         &playlist_name,
         &"Music.Playlist".to_string(),
         &style,
@@ -419,17 +419,17 @@ pub fn task_add_pl(playlist_name: &String, length: &u16) -> Result<String, FypmE
         &true,
     )?;
 
-    task_add_sub(
+    subtask(
         &mother_uuid,
         &vec!["Cover".to_string(), style.clone()],
         &true,
     )?;
-    task_add_sub(
+    subtask(
         &mother_uuid,
         &vec!["Description".to_string(), style.clone()],
         &true,
     )?;
-    task_add_sub(
+    subtask(
         &mother_uuid,
         &vec![format!("Songs ({})", length), style],
         &true,

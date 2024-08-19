@@ -27,7 +27,7 @@ pub mod done {
 
         // Test
         {
-            task::modify::task_done(
+            task::update::done(
                 &Some("2,3,4".to_string()),
                 &None,
                 &None,
