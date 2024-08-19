@@ -85,7 +85,7 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
             other_args,
             skip_confirmation,
         } => {
-            let execute = task::task_add(
+            let execute = task::add::task_add(
                 description,
                 project,
                 style,
@@ -103,7 +103,7 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
             other_args,
             skip_confirmation,
         } => {
-            task::task_add_sub(mother_task, other_args, skip_confirmation)?;
+            task::add::task_add_sub(mother_task, other_args, skip_confirmation)?;
 
             Ok(())
         }
@@ -117,7 +117,7 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
             last_number,
             season,
             last_season_id,
-        } => task::task_add_seq(
+        } => task::add::task_add_seq(
             seq_type,
             style,
             description,
@@ -132,7 +132,7 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
             birthday_person,
             date,
         } => {
-            task::task_add_brth(birthday_person, date)?;
+            task::add::task_add_brth(birthday_person, date)?;
 
             Ok(())
         }
@@ -140,7 +140,7 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
             playlist_name,
             length,
         } => {
-            task::task_add_pl(playlist_name, length)?;
+            task::add::task_add_pl(playlist_name, length)?;
 
             Ok(())
         }
@@ -151,30 +151,30 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
             date_args,
         } => {
             if let Some(date_args) = date_args {
-                task::task_list_date(property, modifier, date_args)?;
+                task::list::task_list_date(property, modifier, date_args)?;
             } else {
-                task::task_list_date(property, modifier, &vec!["-w".to_string()])?;
+                task::list::task_list_date(property, modifier, &vec!["-w".to_string()])?;
             }
 
             Ok(())
         }
         Commands::TaLsMotAndSub { modifier, filter } => {
-            task::task_list_mother_and_subtasks(modifier, filter)?;
+            task::list::task_list_mother_and_subtasks(modifier, filter)?;
 
             Ok(())
         }
         Commands::TaLsScore { date_args } => {
             if let Some(date_args) = date_args {
-                task::list_completion_score(date_args).unwrap();
+                task::list::list_completion_score(date_args).unwrap();
             } else {
-                task::list_completion_score(&vec!["-w".to_string()]).unwrap();
+                task::list::list_completion_score(&vec!["-w".to_string()]).unwrap();
             }
 
             Ok(())
         }
 
-        Commands::TaStart { filter } => task::task_start(filter),
-        Commands::TaStop { filter } => task::task_stop(filter, true),
+        Commands::TaStart { filter } => task::modify::task_start(filter),
+        Commands::TaStop { filter } => task::modify::task_stop(filter, true),
         Commands::TaDone {
             tasks_to_done,
             tastart_filter,
@@ -182,7 +182,7 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
             skip_confirmation,
             not_necessary,
             delegated,
-        } => task::task_done(
+        } => task::modify::task_done(
             tasks_to_done,
             tastart_filter,
             annotation,
@@ -198,21 +198,21 @@ pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {
             filter,
             annotation,
             annotation_filter,
-        } => task::task_abandon(tag, filter, annotation, annotation_filter),
-        Commands::TaStatistic { name, no_parents } => task::task_statistic(name, no_parents),
+        } => task::modify::task_abandon(tag, filter, annotation, annotation_filter),
+        Commands::TaStatistic { name, no_parents } => task::list::task_statistic(name, no_parents),
         Commands::TaSchedule {
             filter,
             alarm_date,
             due_date,
             worktime,
-        } => task::task_schedule(filter, alarm_date, due_date, worktime),
+        } => task::modify::task_schedule(filter, alarm_date, due_date, worktime),
         Commands::TaUnschedule {
             filter,
             no_alarm,
             no_due,
             no_worktime,
-        } => task::task_unschedule(filter, no_alarm, no_due, no_worktime),
-        Commands::TaUnd { filter, unarchive } => task::task_und(filter, unarchive),
+        } => task::modify::task_unschedule(filter, no_alarm, no_due, no_worktime),
+        Commands::TaUnd { filter, unarchive } => task::modify::task_und(filter, unarchive),
         Commands::TaProject { action, arg } => task::task_project(action, arg),
         //#endregion
         //#region               Timew Subcommands
