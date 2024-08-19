@@ -6,9 +6,9 @@ use std::str::{self, FromStr};
 //#endregion
 //#region           Modules
 use crate::func::{date, parser};
-use crate::utils::constants::DEFAULT_GET_JSON_OPTIONS;
-use crate::utils::enums::TimewAction;
-use crate::utils::err::{FypmError, FypmErrorKind};
+use crate::values::constants::DEFAULT_GET_JSON_OPTIONS;
+use crate::values::enums::TimewAction;
+use crate::values::err::{FypmError, FypmErrorKind};
 use crate::utils::get;
 //#endregion
 //#region           Functions

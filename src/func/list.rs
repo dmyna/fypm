@@ -1,4 +1,5 @@
-use crate::utils::{err::FypmError, get, structs::TaskWarriorExported};
+use crate::values::{err::FypmError, structs::TaskWarriorExported};
+use crate::utils::get;
 
 pub fn deleted_tasks(no_parents: &bool) -> Result<(), FypmError> {
     let base_filter = "+DELETED and -COMPLETED and -PENDING";

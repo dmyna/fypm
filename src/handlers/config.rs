@@ -1,11 +1,11 @@
-use crate::utils::comments::{
+use crate::values::comments::{
     COLORS_CONFIG_COMMENT, OVERLAY_CONFIG_COMMENT, REPORT_CONFIG_COMMENT, TASK_CONFIG_COMMENT,
     UDA_CONFIG_COMMENT, URGENCY_CONFIG_COMMENT,
 };
-use crate::utils::constants::DEFAULT_CONFIG_FILES;
-use crate::utils::enums::{FypmReports, FypmUDAs, FypmUrgency};
-use crate::utils::err::{FypmError, FypmErrorKind};
-use crate::utils::structs::{
+use crate::values::constants::DEFAULT_CONFIG_FILES;
+use crate::values::enums::{FypmReports, FypmUDAs, FypmUrgency};
+use crate::values::err::{FypmError, FypmErrorKind};
+use crate::values::structs::{
     FypmConfigFile, TaskWarriorReportConfig, TaskWarriorUDAConfig, TaskWarriorUrgencyConfig,
     TaskWarriorUrgencyConfigScope, TaskWarriorUserScopeProperty,
 };

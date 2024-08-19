@@ -8,10 +8,10 @@ use std::str;
 use itertools::Itertools;
 
 //#region           Modules
-use crate::utils::constants::{DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH};
-use crate::utils::err::{FypmError, FypmErrorKind};
+use crate::values::constants::{DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH};
+use crate::values::err::{FypmError, FypmErrorKind};
 use crate::utils::get;
-use crate::utils::structs::TaskWarriorExported;
+use crate::values::structs::TaskWarriorExported;
 
 use super::command;
 //#endregion

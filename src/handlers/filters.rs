@@ -5,7 +5,7 @@ use ratatui::style::Stylize;
 
 use crate::{
     db::{models::Filter, schema::filters},
-    utils::err::{FypmError, FypmErrorKind},
+    values::err::{FypmError, FypmErrorKind},
     DATABASE_URL,
 };
 

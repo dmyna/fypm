@@ -10,8 +10,9 @@ mod subcommands;
 mod tests;
 mod utils;
 mod db;
+mod values;
 
-use utils::enums::Commands;
+use values::enums::Commands;
 //#endregion
 //#region           Structs && Enums
 #[derive(Parser)]

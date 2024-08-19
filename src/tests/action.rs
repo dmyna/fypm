@@ -1,11 +1,11 @@
 #[cfg(test)]
-use crate::utils;
+use crate::values;
 #[cfg(test)]
 use crate::func;
 
 #[test]
 fn verify_if_wt_is_allday() {
-    let json = utils::structs::TaskWarriorExported {
+    let json = values::structs::TaskWarriorExported {
         id: 1,
         description: "test".to_string(),
         tags: Some(vec!["Test_Tag".to_string()]),

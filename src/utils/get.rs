@@ -1,11 +1,11 @@
 use std::{process::Command, str};
 
-use super::{
+use crate::values::{
     enums::TimewAction,
     err::{FypmError, FypmErrorKind},
     structs,
 };
-use crate::utils::structs::{GetJsonByFilterOptions, TaskWarriorExported, TimeWarriorExported};
+use crate::values::structs::{GetJsonByFilterOptions, TaskWarriorExported, TimeWarriorExported};
 
 pub fn json_by_filter(
     filter: &str,

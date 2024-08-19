@@ -11,10 +11,10 @@ use crate::subcommands::instance;
 use crate::subcommands::worktime;
 use crate::subcommands::worktime::WorktimeHandler;
 use crate::subcommands::{task, timew};
-use crate::utils::enums;
-use crate::utils::enums::AliasActions;
-use crate::utils::enums::{Commands, TimewAction};
-use crate::utils::err::FypmError;
+use crate::values::enums;
+use crate::values::enums::AliasActions;
+use crate::values::enums::{Commands, TimewAction};
+use crate::values::err::FypmError;
 use crate::DATABASE_URL;
 
 pub fn match_subcommand(command: &Commands) -> Result<(), FypmError> {

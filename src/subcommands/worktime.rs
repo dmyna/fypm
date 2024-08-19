@@ -15,10 +15,10 @@ use std::process::Command;
 
 use crate::db::models::Worktime;
 use crate::db::schema::worktimes;
-use crate::utils::err::FypmError;
+use crate::values::err::FypmError;
 //#endregion
 //#region           Modules
-use crate::utils::err::FypmErrorKind;
+use crate::values::err::FypmErrorKind;
 use crate::utils::verify;
 use crate::DATABASE_URL;
 //#endregion
