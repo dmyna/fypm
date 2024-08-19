@@ -6,7 +6,7 @@ use std::env;
 //#region           Modules
 mod func;
 mod handlers;
-mod subcommands;
+mod commands;
 mod tests;
 mod utils;
 mod db;

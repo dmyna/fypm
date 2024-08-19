@@ -3,7 +3,7 @@ pub mod done {
     use std::process::{Command, Stdio};
     use std::{thread::sleep, time::Duration};
 
-    use crate::subcommands::task;
+    use crate::commands::task;
     use crate::utils::get::json_by_filter;
     use super::super::lib::mock::Mock;
 
