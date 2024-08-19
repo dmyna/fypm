@@ -160,8 +160,9 @@ pub fn subtask(
 
         let get_last_seq_subtask = get::json_by_filter(
             format!(
-                "+Sequence and +{} and SEQ_PREVIOUS.any: and SEQ_NEXT.none:",
-                seq_id
+                "+Sequence and +{} and SEQ_PREVIOUS.any: and SEQ_NEXT.none: and MOTHER:{}",
+                seq_id,
+                mother_task_json.uuid
             )
             .as_str(),
             DEFAULT_GET_JSON_OPTIONS,
