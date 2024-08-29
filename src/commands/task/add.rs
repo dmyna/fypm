@@ -161,13 +161,11 @@ pub fn subtask(
         let get_last_seq_subtask = get::json_by_filter(
             format!(
                 "+Sequence and +{} and SEQ_PREVIOUS.any: and SEQ_NEXT.none: and MOTHER:{}",
-                seq_id,
-                mother_task_json.uuid
+                seq_id, mother_task_json.uuid
             )
             .as_str(),
             DEFAULT_GET_JSON_OPTIONS,
-        )?;
-        let last_seq_subtask = get_last_seq_subtask.get(0).unwrap();
+        );
 
         if other_args.len() == 1 {
             let get_subtask_uuid =
@@ -181,24 +179,37 @@ pub fn subtask(
             return Err(wrong_arguments_error);
         }
 
-        Command::new("task")
-            .args([
-                last_seq_subtask.uuid.as_str(),
-                "modify",
-                format!("SEQ_NEXT:{}", subtask).as_str(),
-            ])
-            .output()
-            .unwrap();
+        let mut new_seq_subtask_args = vec![
+            subtask.clone(),
+            "modify".to_string(),
+            "+SUBTASK".to_string(),
+            "+Sequence".to_string(),
+            format!("+{}", seq_id),
+        ];
+
+        match get_last_seq_subtask {
+            Ok(last_seq_subtask_vec) => {
+                let last_seq_subtask = last_seq_subtask_vec.get(0).unwrap();
+
+                Command::new("task")
+                    .args([
+                        &last_seq_subtask.uuid,
+                        &"modify".to_string(),
+                        &format!("SEQ_NEXT:{}", subtask),
+                    ])
+                    .output()
+                    .unwrap();
+
+                new_seq_subtask_args.push(format!("SEQ_PREVIOUS:{}", last_seq_subtask.uuid));
+            }
+            Err(err) => match err.kind {
+                FypmErrorKind::NoTasksFound => {}
+                _ => return Err(err),
+            },
+        }
 
         Command::new("task")
-            .args([
-                subtask.as_str(),
-                "modify",
-                "+SUBTASK",
-                "+Sequence",
-                format!("+{}", seq_id).as_str(),
-                format!("SEQ_PREVIOUS:{}", last_seq_subtask.uuid).as_str(),
-            ])
+            .args(new_seq_subtask_args)
             .output()
             .unwrap();
     } else {
