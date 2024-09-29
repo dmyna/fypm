@@ -1,6 +1,6 @@
 //#region           Crates
-use clap::Parser;
 use lazy_static::lazy_static;
+use clap::Parser;
 use std::env;
 //#endregion
 //#region           Modules
@@ -11,17 +11,6 @@ mod tests;
 mod utils;
 mod db;
 mod values;
-//#endregion
-//#region           Structs && Enums
-#[derive(Parser)]
-#[command(name = "fypm")]
-#[command(version = "0.2.0")]
-#[command(about = "Four Years Productivity Manager", long_about = None)]
-pub struct Cli {
-    #[command(subcommand)]
-    command: values::enums::Commands,
-}
-
 //#endregion
 //#region           Constants
 lazy_static! {
@@ -51,8 +40,8 @@ fn main() {
 
     handlers::config::ConfigHandler::handle_config().unwrap();
 
-    let cli = Cli::parse();
+    let cli = values::enums::Cli::parse();
 
-    commands::matching(&cli.command).unwrap();
+    commands::matching(&cli.commands).unwrap();
 }
 //#endregion

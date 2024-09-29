@@ -1,7 +1,15 @@
-use clap::{Subcommand, ValueEnum};
+use clap::{Subcommand, ValueEnum, Parser};
 use strum::{Display, EnumString};
 
-#[derive(ValueEnum, Clone, PartialEq)]
+#[derive(Parser)]
+#[command(name = "fypm")]
+#[command(version = "0.2.0")]
+#[command(about = "Four Years Productivity Manager", long_about = None)]
+pub struct Cli {
+    #[command(subcommand)]
+    pub commands: Commands,
+}
+
 pub enum VerifyScripts {
     /// Verify if exists Continuous tasks without aliases
     Aliases,
