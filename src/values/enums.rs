@@ -10,12 +10,13 @@ pub struct Cli {
     pub commands: Commands,
 }
 
+#[derive(Debug, ValueEnum, Clone, PartialEq)]
 pub enum VerifyScripts {
     /// Verify if exists Continuous tasks without aliases
     Aliases,
 }
 
-#[derive(ValueEnum, Clone, PartialEq, strum_macros::Display)]
+#[derive(Debug, ValueEnum, Clone, PartialEq, strum_macros::Display)]
 pub enum TaProjectActions {
     /// Add a project (alias: a)
     #[value(alias = "a")]
@@ -30,7 +31,7 @@ pub enum TaProjectActions {
     #[value(alias = "u")]
     Unarchive,
 }
-#[derive(ValueEnum, Clone, PartialEq)]
+#[derive(Debug, ValueEnum, Clone, PartialEq)]
 pub enum TaAbandonTags {
     /// Archive a task (alias: c)
     #[value(alias = "c")]
@@ -48,7 +49,7 @@ pub enum TaAbandonTags {
     #[value(alias = "n")]
     NoControl,
 }
-#[derive(ValueEnum, Clone, PartialEq, strum_macros::Display)]
+#[derive(Debug, ValueEnum, Clone, PartialEq, strum_macros::Display)]
 pub enum TaSequenceTypes {
     /// Create a book sequence
     #[value(alias = "b")]
@@ -64,7 +65,7 @@ pub enum TaSequenceTypes {
     YoutubePlaylist,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 pub enum StatisticsCommands {
     Deleted,
     Pending,
@@ -74,13 +75,13 @@ pub enum TimewAction {
     End,
 }
 
-#[derive(ValueEnum, Clone, PartialEq)]
+#[derive(Debug, ValueEnum, Clone, PartialEq)]
 pub enum AliasActions {
     Add,
     Change,
 }
 
-#[derive(ValueEnum, Clone, PartialEq)]
+#[derive(Debug, ValueEnum, Clone, PartialEq)]
 pub enum FilterActions {
     Add,
     List,
@@ -88,7 +89,7 @@ pub enum FilterActions {
     Edit,
 }
 
-#[derive(Subcommand)]
+#[derive(Subcommand, Debug, PartialEq)]
 pub enum Commands {
     //#region               Systems
     /// Add a worktime
