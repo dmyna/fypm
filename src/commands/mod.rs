@@ -19,6 +19,9 @@ use crate::{func, DATABASE_URL};
 
 pub fn matching(command: &Commands) -> Result<(), FypmError> {
     match command {
+        //#region               Misc
+        Commands::Completion => func::completion::generate_completion(),
+        //#endregion
         //#region               Systems
         Commands::InitDay => todo!(),
 

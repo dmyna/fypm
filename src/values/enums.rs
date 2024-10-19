@@ -1,5 +1,8 @@
 use clap::{Subcommand, ValueEnum, Parser};
+use clap_complete::ArgValueCompleter;
 use strum::{Display, EnumString};
+
+use crate::func::completion;
 
 #[derive(Parser)]
 #[command(name = "fypm")]
@@ -91,6 +94,10 @@ pub enum FilterActions {
 
 #[derive(Subcommand, Debug, PartialEq)]
 pub enum Commands {
+    //#region               Misc
+    /// Generate completions in the current directory
+    Completion,
+    //#endregion
     //#region               Systems
     /// Add a worktime
     WtAdd { worktime_name: String },
@@ -131,6 +138,7 @@ pub enum Commands {
     /// Add a task to taskwarrior (taadd)
     TaAdd {
         description: String,
+        #[arg(add = ArgValueCompleter::new(completion::project))]
         project: String,
         style: String,
         r#type: String,
