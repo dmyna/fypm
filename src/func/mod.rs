@@ -5,3 +5,4 @@ pub mod matchs;
 pub mod parser;
 pub mod dialog;
 pub mod command;
+pub mod completion;
