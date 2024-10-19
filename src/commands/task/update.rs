@@ -369,9 +369,12 @@ pub fn schedule(
 
         if alarm_date != "cur" {
             modify_args.extend([format!("ALARM:{}", alarm_date)]);
+            modify_args.extend([format!("scheduled:{}", alarm_date)]);
         }
         if let Some(due_date) = due_date {
-            modify_args.extend([format!("due:{}", due_date)]);
+            if due_date != "cur" {
+                modify_args.extend([format!("due:{}", due_date)]);
+            }
         }
         if let Some(worktime) = worktime {
             modify_args.extend([format!("WT:{}", worktime)]);
