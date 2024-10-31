@@ -5,10 +5,7 @@ use chrono::{Duration, NaiveDate, Weekday};
 
 use crate::{func::list, handlers::date::NaiveDateIter, utils::{extract, get, term}, values::{enums, err::FypmError}};
 
-pub fn statistic(
-    command: &enums::StatisticsCommands,
-    no_parents: &bool,
-) -> Result<(), FypmError> {
+pub fn statistic(command: &enums::StatisticsCommands, no_parents: &bool) -> Result<(), FypmError> {
     match command {
         enums::StatisticsCommands::Deleted => {
             list::deleted_tasks(no_parents)?;
@@ -37,7 +34,13 @@ pub fn date(
         let initial_day = date.format("%Y-%m-%d").to_string();
         let final_day = (date + Duration::days(1)).format("%Y-%m-%d").to_string();
 
-        println!("{}", date.format("%a - %Y-%m-%d").to_string().bold().bright_white());
+        println!(
+            "{}",
+            date.format("%a - %Y-%m-%d")
+                .to_string()
+                .bright_white()
+                .bold()
+        );
         term::print_full_divisory();
 
         Command::new("task")
@@ -50,7 +53,6 @@ pub fn date(
             .unwrap();
         println!();
 
-
         if date.weekday() == Weekday::Sun {
             term::print_full_divisory();
         }
@@ -58,10 +60,7 @@ pub fn date(
 
     Ok(())
 }
-pub fn mother_and_subtasks(
-    modifier: &String,
-    filter: &Vec<String>,
-) -> Result<(), FypmError> {
+pub fn mother_and_subtasks(modifier: &String, filter: &Vec<String>) -> Result<(), FypmError> {
     let modifier_filter: String;
 
     let mut tasks_count = 0;

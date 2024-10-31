@@ -24,10 +24,7 @@ use crate::{
     },
 };
 
-pub fn stop(
-    filter_option: &Option<String>,
-    start_control_task: bool,
-) -> Result<(), FypmError> {
+pub fn stop(filter_option: &Option<String>, start_control_task: bool) -> Result<(), FypmError> {
     let final_filter: String;
 
     if let Some(filter) = filter_option {
