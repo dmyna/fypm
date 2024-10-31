@@ -66,7 +66,7 @@ calculate_time() {
     
     echo "Sleep Points: $SLEEP_POINTS"
 
-    SLEEP_TASK_UUID=$(task "Sleep" due.after:yesterday due.before:today uuids)
+    SLEEP_TASK_UUID=$(task "Sleep" due.after:$(date -d "$DAY - 1 day" +%Y-%m-%d) due.before:$DAY uuids)
 
     if [[ -n "$SLEEP_TASK_UUID" ]]; then
         _ask_dialog "Do you want to record this in the sleep task?" || return

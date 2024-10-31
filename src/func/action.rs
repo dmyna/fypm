@@ -5,11 +5,15 @@ use std::process::Command;
 use std::process::Stdio;
 use std::str;
 
+use itertools::Itertools;
+
 //#region           Modules
-use crate::utils::constants::{DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH};
-use crate::utils::err::{FypmError, FypmErrorKind};
+use crate::values::constants::{DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH};
+use crate::values::err::{FypmError, FypmErrorKind};
 use crate::utils::get;
-use crate::utils::structs::TaskWarriorExported;
+use crate::values::structs::{TaskWarriorExported, TaskWarriorStatus};
+
+use super::command;
 //#endregion
 //#region           Implementation
 pub fn annotate(
@@ -66,6 +70,33 @@ pub fn annotate(
     Ok(())
 }
 
+pub fn unarchive(tasks: Vec<TaskWarriorExported>) -> Result<(), FypmError> {
+    let mut modify_binding = Command::new("task");
+    let modify_command = modify_binding
+        .args(vec![
+            "rc.verbose=0",
+            "rc.confirmation=0",
+            "rc.recurrence.confirmation=0",
+            tasks
+                .iter()
+                .map(|task| task.uuid.clone())
+                .join(" ")
+                .as_str(),
+            "modify",
+            "status:pending",
+            "-Archived",
+        ])
+        .stderr(Stdio::inherit());
+
+    if tasks.len() > 2 {
+        command::stdin_all(modify_command).unwrap();
+    } else {
+        modify_command.output().unwrap();
+    }
+
+    Ok(())
+}
+
 pub fn receive_last_task() -> Result<String, Error> {
     let get_last_task = fs::read(LAST_TASK_PATH)?;
 
@@ -109,7 +140,6 @@ pub fn match_inforelat_and_sequence(
     filter_json: &TaskWarriorExported,
 ) -> Result<String, FypmError> {
     let state = &filter_json.state;
-    let r#type = &filter_json.r#type;
 
     let is_sequence: bool;
     if let Some(verify_tags) = &filter_json.tags {
@@ -127,23 +157,23 @@ pub fn match_inforelat_and_sequence(
 
         if let Some(inforelat) = inforelat {
             let new_filter_json =
-                get::get_json_by_filter(&inforelat, DEFAULT_GET_JSON_OPTIONS).unwrap();
+                get::json_by_filter(&inforelat, DEFAULT_GET_JSON_OPTIONS).unwrap();
 
             return match_inforelat_and_sequence(&new_filter_json[0]);
         } else {
             if is_sequence {
                 if let Some(next_task) = &filter_json.seq_current {
                     let mut next_json =
-                        get::get_json_by_filter(&next_task, DEFAULT_GET_JSON_OPTIONS)?;
-                    let mut status = next_json[0].status.as_str();
+                        get::json_by_filter(&next_task, DEFAULT_GET_JSON_OPTIONS)?;
+                    let mut status = next_json[0].status;
 
                     // Loop until find a pending task or there is no next task
 
-                    while status == "completed" {
+                    while status == TaskWarriorStatus::Completed {
                         if let Some(next_task) = &next_json[0].seq_next {
                             next_json =
-                                get::get_json_by_filter(&next_task, DEFAULT_GET_JSON_OPTIONS)?;
-                            status = next_json[0].status.as_str();
+                                get::json_by_filter(&next_task, DEFAULT_GET_JSON_OPTIONS)?;
+                            status = next_json[0].status;
                         } else {
                             return Err(FypmError {
                                     kind: FypmErrorKind::NoTasksFound,
@@ -168,7 +198,14 @@ pub fn match_inforelat_and_sequence(
         }
     } else {
         if is_sequence {
-            if r#type == "SubTask" {
+            if &filter_json.tags.is_some() == &true
+                && &filter_json
+                    .tags
+                    .as_ref()
+                    .unwrap()
+                    .contains(&"SUBTASK".to_string())
+                    == &true
+            {
                 Ok(filter_json.uuid.clone())
             } else {
                 Err(FypmError {

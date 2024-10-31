@@ -2,12 +2,12 @@ use chrono::{DateTime, Local, Offset, ParseError};
 use regex::Regex;
 
 use super::action;
-use crate::utils::{
+use crate::values::{
     constants::CONTROL_TASK,
     enums::TimewAction,
     err::{FypmError, FypmErrorKind},
-    get,
 };
+use crate::utils::get;
 
 pub fn transform_dates_to_iso(received_time: String) -> Result<String, ParseError> {
     let transformed_time_str = Regex::new(r"(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z")
@@ -32,7 +32,20 @@ pub fn transform_dates_to_iso(received_time: String) -> Result<String, ParseErro
 pub fn match_special_aliases(filter: &String) -> String {
     match filter.as_str() {
         // Last Task
-        "last" => action::receive_last_task().unwrap(),
+        "last" => {
+            let get_task = action::receive_last_task();
+
+            match get_task {
+                Ok(task) => task,
+                Err(error) => {
+                    if error.kind() == std::io::ErrorKind::NotFound {
+                        CONTROL_TASK.to_string()
+                    } else {
+                        panic!("{}", error);
+                    }
+                }
+            }
+        },
         // Time without specific use
         "t" => CONTROL_TASK.to_string(),
         // Lost time
@@ -69,9 +82,9 @@ pub fn match_special_timing_properties(id: &String) -> Result<String, FypmError>
             let received_action = properties.clone().nth(1).unwrap();
             let action: TimewAction;
 
-            if received_action == "start" {
+            if received_action == "start" || received_action == "s" {
                 action = TimewAction::Start;
-            } else if received_action == "end" {
+            } else if received_action == "end" || received_action == "e" {
                 action = TimewAction::End;
             } else {
                 return Err(FypmError {

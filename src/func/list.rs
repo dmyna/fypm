@@ -1,4 +1,5 @@
-use crate::utils::{err::FypmError, get, structs::TaskWarriorExported};
+use crate::values::{err::FypmError, structs::TaskWarriorExported};
+use crate::utils::get;
 
 pub fn deleted_tasks(no_parents: &bool) -> Result<(), FypmError> {
     let base_filter = "+DELETED and -COMPLETED and -PENDING";
@@ -9,7 +10,7 @@ pub fn deleted_tasks(no_parents: &bool) -> Result<(), FypmError> {
         format!("({})", base_filter)
     };
 
-    let tasks_json = get::get_json_by_filter(final_filter.as_str(), None)?;
+    let tasks_json = get::json_by_filter(final_filter.as_str(), None)?;
 
     fn get_count(tasks_json: &Vec<TaskWarriorExported>, tag: &String) -> usize {
         tasks_json
@@ -40,7 +41,7 @@ pub fn pending_tasks(no_parents: &bool) -> Result<(), FypmError> {
         format!("({})", base_filter)
     };
 
-    let tasks_json = get::get_json_by_filter(final_filter.as_str(), None)?;
+    let tasks_json = get::json_by_filter(final_filter.as_str(), None)?;
 
     let all_pending = tasks_json.len();
 
@@ -73,10 +74,6 @@ pub fn pending_tasks(no_parents: &bool) -> Result<(), FypmError> {
         .iter()
         .filter(|task| task.r#type == "Continuous".to_string())
         .count();
-    let subtask = tasks_json
-        .iter()
-        .filter(|task| task.r#type == "SubTask".to_string())
-        .count();
     let event = tasks_json
         .iter()
         .filter(|task| task.r#type == "Event".to_string())
@@ -84,6 +81,19 @@ pub fn pending_tasks(no_parents: &bool) -> Result<(), FypmError> {
     let check = tasks_json
         .iter()
         .filter(|task| task.r#type == "Check".to_string())
+        .count();
+
+    let mother = tasks_json
+        .iter()
+        .filter(|task| {
+            task.tags.is_some() && task.tags.as_ref().unwrap().contains(&"MOTHER".to_string())
+        })
+        .count();
+    let subtask = tasks_json
+        .iter()
+        .filter(|task| {
+            task.tags.is_some() && task.tags.as_ref().unwrap().contains(&"SUBTASK".to_string())
+        })
         .count();
 
     let style_none = tasks_json.iter().filter(|task| task.style == None).count();
@@ -98,9 +108,10 @@ pub fn pending_tasks(no_parents: &bool) -> Result<(), FypmError> {
     println!("Eventual: {} ({})", eventual, all_pending - eventual);
     println!("Objective: {} ({})", objective, all_pending - objective);
     println!("Continuous: {} ({})", continuous, all_pending - continuous);
-    println!("SubTask: {} ({})", subtask, all_pending - subtask);
     println!("Event: {} ({})", event, all_pending - event);
     println!("Check: {} ({})", check, all_pending - check);
+    println!("Mother: {} ({})", mother, all_pending - mother);
+    println!("SubTask: {} ({})", subtask, all_pending - subtask);
     println!("Style None: {}", style_none);
     println!("");
     println!(

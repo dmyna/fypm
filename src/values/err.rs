@@ -1,6 +1,4 @@
-use std::io::Error;
-
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum FypmErrorKind {
     Aborted,
     AlreadyExists,
@@ -8,19 +6,16 @@ pub enum FypmErrorKind {
     /// It occours when a TYPE has a wrong value (ex: Continuous tasks without aliases)
     TaskTypeError,
     NoTasksFound,
+    NotEnoughTasks,
     NotFound,
     WrongInitialization,
     ProblemWithStoredTask,
     InvalidInput,
+    InvalidConfig,
 }
 
 #[derive(Debug)]
 pub struct FypmError {
     pub message: String,
     pub kind: FypmErrorKind,
-}
-
-pub enum SomeErr {
-    Internal(FypmError),
-    System(Error),
 }

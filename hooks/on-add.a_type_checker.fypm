@@ -14,7 +14,7 @@ if [[ $TYPE == "Habit" ]]; then
     if [[ $(echo $JSON | jq -r '.recur') == "null" ]]; then
         errprint "Habit tasks must have a recur!"
     fi
-    
+
     # Check if a Habit task has STATE set to 'Time'
     if [[ $(echo $JSON | jq -r '.STATE') != "Time" ]]; then
         errprint "Habit tasks must have STATE set to 'Time'!"
@@ -53,14 +53,19 @@ elif [[ $TYPE == "Event" ]]; then
         JSON="$(echo $JSON | jq -r --arg NEW_DUE "$NEW_UTC_DATE" '.due = $NEW_DUE')"
     fi
 elif [[ $TYPE == "Check" ]]; then
-    # Check if a Check task has a recur
-    if [[ $(echo $JSON | jq -r '.recur') == "null" ]]; then
-        errprint "Check tasks must have a recur!"
-    fi
-    
     # Check if a Check task has STATE set to 'Info'
     if [[ $(echo $JSON | jq -r '.STATE') != "Info" ]]; then
-        errprint "Habit tasks must have STATE set to 'Info'!"
+        errprint "Check tasks must have STATE set to 'Info'!"
+    fi
+elif [[ $TYPE == "Continuous" ]]; then
+    # Check if a Continuous task has STATE set to 'Time'
+    if [[ $(echo $JSON | jq -r '.STATE') != "Time" ]]; then
+        errprint "Continuous tasks must have STATE set to 'Time'!"
+    fi
+
+    # Check if a Continuous task has a ALIAS
+    if [[ $(echo $JSON | jq -r '.ALIAS') == "null" ]]; then
+        errprint "Continuous tasks must have an ALIAS!"
     fi
 fi
 

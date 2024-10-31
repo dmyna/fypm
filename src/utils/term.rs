@@ -12,4 +12,6 @@ pub fn print_full_divisory() -> () {
             print!("{}", divisory_char.to_string().bright_black());
         }
     }
+
+    println!();
 }

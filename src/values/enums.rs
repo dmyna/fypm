@@ -1,12 +1,25 @@
-use clap::{Subcommand, ValueEnum};
+use clap::{Subcommand, ValueEnum, Parser};
+use clap_complete::ArgValueCompleter;
+use strum::{Display, EnumString};
 
-#[derive(ValueEnum, Clone, PartialEq)]
+use crate::func::completion;
+
+#[derive(Parser)]
+#[command(name = "fypm")]
+#[command(version = "0.2.0")]
+#[command(about = "Four Years Productivity Manager", long_about = None)]
+pub struct Cli {
+    #[command(subcommand)]
+    pub commands: Commands,
+}
+
+#[derive(Debug, ValueEnum, Clone, PartialEq)]
 pub enum VerifyScripts {
     /// Verify if exists Continuous tasks without aliases
     Aliases,
 }
 
-#[derive(ValueEnum, Clone, PartialEq, strum_macros::Display)]
+#[derive(Debug, ValueEnum, Clone, PartialEq, strum_macros::Display)]
 pub enum TaProjectActions {
     /// Add a project (alias: a)
     #[value(alias = "a")]
@@ -16,9 +29,12 @@ pub enum TaProjectActions {
     List,
     /// Archive a project (alias: c)
     #[value(alias = "c")]
-    Archive
+    Archive,
+    /// Unarchive a project (alias: u)
+    #[value(alias = "u")]
+    Unarchive,
 }
-#[derive(ValueEnum, Clone, PartialEq)]
+#[derive(Debug, ValueEnum, Clone, PartialEq)]
 pub enum TaAbandonTags {
     /// Archive a task (alias: c)
     #[value(alias = "c")]
@@ -29,11 +45,14 @@ pub enum TaAbandonTags {
     /// Abandon a task in Abandoned case (alias: a)
     #[value(alias = "a")]
     Abandoned,
+    /// Abandon a task in Chain case (alias: h)
+    #[value(alias = "h")]
+    Chain,
     /// Abandon a task in NoControl case (alias: n)
     #[value(alias = "n")]
     NoControl,
 }
-#[derive(ValueEnum, Clone, PartialEq, strum_macros::Display)]
+#[derive(Debug, ValueEnum, Clone, PartialEq, strum_macros::Display)]
 pub enum TaSequenceTypes {
     /// Create a book sequence
     #[value(alias = "b")]
@@ -44,12 +63,12 @@ pub enum TaSequenceTypes {
     /// Create an anime sequence
     #[value(alias = "a")]
     Anime,
-    /// Create a manga sequence
+    /// Create a Youtube playlist sequence
     #[value(alias = "yp")]
-    YTPlaylist,
+    YoutubePlaylist,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 pub enum StatisticsCommands {
     Deleted,
     Pending,
@@ -59,42 +78,38 @@ pub enum TimewAction {
     End,
 }
 
-#[derive(ValueEnum, Clone, PartialEq)]
+#[derive(Debug, ValueEnum, Clone, PartialEq)]
 pub enum AliasActions {
     Add,
     Change,
 }
 
+#[derive(Debug, ValueEnum, Clone, PartialEq)]
+pub enum FilterActions {
+    Add,
+    List,
+    Remove,
+    Edit,
+}
 
-#[derive(Subcommand)]
+#[derive(Subcommand, Debug, PartialEq)]
 pub enum Commands {
+    //#region               Misc
+    /// Generate completions in the current directory
+    Completion,
+    //#endregion
     //#region               Systems
-    /// Manage daemon processes
-    Daemon {
-        action: String,
-        #[arg(long)]
-        name: String,
-    },
-
     /// Add a worktime
-    WtAdd {
-        worktime_name: String,
-    },
+    WtAdd { worktime_name: String },
     /// Remove a worktime
-    WtRemove {
-        worktime_name: String,
-    },
+    WtRemove { worktime_name: String },
     /// List worktimes
     WtLs,
     /// Apply a worktime
-    WtApply {
-        worktime_name: String,
-    },
+    WtApply { worktime_name: String },
 
     /// Verify tasks for inconsistencies
-    Verify {
-        script: VerifyScripts,
-    },
+    Verify { script: VerifyScripts },
 
     /// Manage tasks aliases
     Alias {
@@ -102,6 +117,12 @@ pub enum Commands {
         action: AliasActions,
         /// Filter to task to be manipulated (max: 1)
         filter: String,
+    },
+
+    /// Manage filters
+    Filter {
+        /// The action to be performed
+        action: FilterActions,
     },
 
     /// Manage instances
@@ -114,9 +135,16 @@ pub enum Commands {
     InitDay,
     //#endregion
     //#region               Task Subcommands
+    /// Show task information
+    TaInfo {
+        /// Filter to the task (max: 1)
+        filter: String
+    },
+
     /// Add a task to taskwarrior (taadd)
     TaAdd {
         description: String,
+        #[arg(add = ArgValueCompleter::new(completion::project))]
         project: String,
         style: String,
         r#type: String,
@@ -127,7 +155,7 @@ pub enum Commands {
     /// Add a subtask to a objective task (taadd-sub)
     TaAddSub {
         mother_task: String,
-        /// The args to be passed to taadd (description and STYLE or simply more than 1 parameter)
+        /// The args to be passed to taadd (required: description, STYLE, TYPE)
         /// or the existent subtask (1 parameter)
         other_args: Vec<String>,
         #[arg(short = 'y', long)]
@@ -172,6 +200,10 @@ pub enum Commands {
         filter: String,
         /// Required for 'abandoned' (a) and 'no-control' (n).
         annotation: Option<String>,
+        /// If you want to specify the annotation for selected
+        /// tasks only, you can use this flag to specify the
+        /// filter to aplly to the task annotation.
+        annotation_filter: Option<String>,
     },
     /// Start a task (tastart)
     TaStart { filter: String },
@@ -182,6 +214,19 @@ pub enum Commands {
         tasks_to_done: Option<String>,
         #[arg(short = 's', long = "start")]
         tastart_filter: Option<String>,
+        /// Add an annotation to selected tasks
+        #[arg(short = 'a', long = "annotation")]
+        annotation: Option<String>,
+        /// Skip confirmation
+        #[arg(short = 'y', long = "skip")]
+        skip_confirmation: bool,
+        /// Didn't need to do a task and it's done? Tag it with this tag!
+        /// (If you're prevented from doing the task, use `taban n` even if it's no longer needed)
+        #[arg(short = 'n', long = "not-necessary")]
+        not_necessary: bool,
+        /// Have you delegated this task and it was done? Tag it with this tag!
+        #[arg(short = 'd', long = "delegated")]
+        delegated: bool,
     },
     TaSchedule {
         filter: String,
@@ -203,15 +248,23 @@ pub enum Commands {
     /// Set a task as pending, removing the "failed/abandoned/no-control" status or unarchiving it (taund)
     TaUnd {
         filter: String,
-        #[arg(short = 'c', long)]
-        unarchive: bool
+        /// Unarchive a task (alias: u)
+        #[arg(short = 'u', long = "unarchive")]
+        unarchive: bool,
     },
+
+    /// Change a recurring task's time (tarecur-t)
+    TaRecurTime {
+        filter: String,
+        new_time: String,
+    },
+
     TaProject {
         #[arg(value_enum)]
         action: TaProjectActions,
         /// Project || Filter. Project is required in "a && c" options. Filter is optional in "l" flag.
         #[arg(short, long)]
-        arg: Option<String>
+        arg: Option<String>,
     },
     /// Get statistics from taskwarrior (tastat-*)
     TaStatistic {
@@ -260,8 +313,9 @@ pub enum Commands {
     /// Track a task manually (tir)
     TiTrack {
         id: String,
-        start_time: String,
-        end_time: String,
+        /// Dates to track. You must enter a even number of dates, and all will be tracked in pairs.
+        /// Ex: tir 1 10:00 12:00 18:00 18:10
+        args: Vec<String>,
     },
     /// Quickly replace a log with just ids (tirep)
     TiReplace {
@@ -275,4 +329,150 @@ pub enum Commands {
         filters: Option<Vec<String>>,
     },
     //#endregion
+}
+
+#[derive(EnumString, Display, Hash, PartialEq, Eq, Debug, Ord, PartialOrd)]
+#[strum(serialize_all = "kebab-case")]
+pub enum FypmReports {
+    Waiting,
+    Next,
+    List,
+    All,
+    Blist,
+    Wlist,
+    Goals,
+    Alarms,
+    AllGoals,
+    Const,
+    Recurring,
+    Visual,
+}
+#[derive(EnumString, Display, Hash, PartialEq, Eq, Debug, Ord, PartialOrd)]
+#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+pub enum FypmUDAs {
+    Style,
+    Type,
+    State,
+    Mother,
+    Inforelat,
+    SeqCurrent,
+    SeqPrevious,
+    SeqNext,
+    Chain,
+    Wt,
+    Goal,
+    Alarm,
+    #[strum(serialize = "effort")]
+    Effort,
+    #[strum(serialize = "quadrant")]
+    Quadrant,
+    #[strum(serialize = "estimate")]
+    Estimate,
+}
+#[derive(EnumString, Display, Hash, PartialEq, Eq, Debug, Ord, PartialOrd)]
+#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+pub enum FypmUrgency {
+    // General
+    #[strum(serialize = "active")]
+    Active,
+    #[strum(serialize = "tags")]
+    Tags,
+    #[strum(serialize = "project")]
+    Project,
+    #[strum(serialize = "annotations")]
+    Annotations,
+    #[strum(serialize = "scheduled")]
+    Scheduled,
+
+    // Virtual Tags
+    #[strum(serialize = "OVERDUE")]
+    Overdue,
+    #[strum(serialize = "WAITING")]
+    Waiting,
+    #[strum(serialize = "TEMPLATE")]
+    Template,
+    #[strum(serialize = "COMPLETED")]
+    Completed,
+    #[strum(serialize = "DELETED")]
+    Deleted,
+
+    // WorkTime
+    #[strum(serialize = "WT-Quantify!")]
+    WtQuantify,
+    #[strum(serialize = "WT-AllDay!")]
+    WtAllDay,
+    #[strum(serialize = "WT-NonSched!")]
+    WtNonSched,
+
+    // Type
+    #[strum(serialize = "TYPE-Eventual")]
+    TypeEventual,
+    #[strum(serialize = "TYPE-Habit")]
+    TypeHabit,
+    #[strum(serialize = "TYPE-Objective")]
+    TypeObjective,
+    #[strum(serialize = "TYPE-Continuous")]
+    TypeContinuous,
+    #[strum(serialize = "TYPE-Check")]
+    TypeCheck,
+    #[strum(serialize = "TYPE-Event")]
+    TypeEvent,
+    #[strum(serialize = "TYPE-Goal")]
+    TypeGoal,
+
+    // Style
+    #[strum(serialize = "STYLE-Apollonian")]
+    StyleApollonian,
+    #[strum(serialize = "STYLE-Creative")]
+    StyleCreative,
+    #[strum(serialize = "STYLE-Dionysian")]
+    StyleDionysian,
+    #[strum(serialize = "STYLE-Necessity")]
+    StyleNecessity,
+    #[strum(serialize = "STYLE-Idle")]
+    StyleIdle,
+
+    // Effort
+    #[strum(serialize = "effort-Zero")]
+    EffortZero,
+    #[strum(serialize = "effort-One")]
+    EffortOne,
+    #[strum(serialize = "effort-Two")]
+    EffortTwo,
+    #[strum(serialize = "effort-Three")]
+    EffortThree,
+    #[strum(serialize = "effort-Four")]
+    EffortFour,
+    #[strum(serialize = "effort-Five")]
+    EffortFive,
+
+    // Quadrant
+    #[strum(serialize = "quadrant-One")]
+    QuadrantOne,
+    #[strum(serialize = "quadrant-Two")]
+    QuadrantTwo,
+    #[strum(serialize = "quadrant-Three")]
+    QuadrantThree,
+    #[strum(serialize = "quadrant-Four")]
+    QuadrantNone,
+
+    // Fypm Tags
+    #[strum(serialize = "SUBTASK")]
+    SubTask,
+
+    // Urgency Increment
+    UrgP5,
+    UrgP10,
+    UrgP15,
+    UrgP20,
+    UrgP25,
+    UrgP30,
+    UrgP100,
+    UrgN5,
+    UrgN10,
+    UrgN15,
+    UrgN20,
+    UrgN25,
+    UrgN30,
+    UrgN100,
 }

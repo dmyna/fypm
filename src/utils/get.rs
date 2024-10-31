@@ -1,22 +1,26 @@
 use std::{process::Command, str};
 
-use super::{
-    constants::DEFAULT_GET_JSON_OPTIONS,
+use crate::values::{
     enums::TimewAction,
     err::{FypmError, FypmErrorKind},
     structs,
 };
-use crate::utils::structs::{GetJsonByFilterOptions, TaskWarriorExported, TimeWarriorExported};
+use crate::values::structs::{GetJsonByFilterOptions, TaskWarriorExported, TimeWarriorExported};
 
-pub fn get_json_by_filter(
+pub fn json_by_filter(
     filter: &str,
     options: Option<GetJsonByFilterOptions>,
 ) -> Result<Vec<TaskWarriorExported>, FypmError> {
-    let get_json = Command::new("task")
-        .args([filter, "export"])
-        .output()
-        .unwrap()
-        .stdout;
+    let mut args = Vec::new();
+
+    if let Some(options) = &options {
+        if let Some(overrides) = &options.aditional_overrides {
+            args.extend(overrides.clone());
+        }
+    }
+    args.extend(vec![filter.to_string(), "export".to_string()]);
+
+    let get_json = Command::new("task").args(args).output().unwrap().stdout;
 
     let parsed_json =
         serde_json::from_str::<Vec<TaskWarriorExported>>(str::from_utf8(&get_json).unwrap())
@@ -41,16 +45,16 @@ pub fn get_json_by_filter(
     Ok(parsed_json)
 }
 pub fn get_current_task_json() -> Result<TaskWarriorExported, FypmError> {
-    let get_task = get_json_by_filter(&"+ACTIVE".to_string(), DEFAULT_GET_JSON_OPTIONS)?;
+    let get_task = json_by_filter("+ACTIVE", None)?;
     let active_task = get_task.get(0);
 
-    if active_task.is_none() {
-        return Err(FypmError {
+    if let Some(active) = active_task {
+        Ok(active.clone())
+    } else {
+        Err(FypmError {
             message: "There is no active task!".to_string(),
             kind: FypmErrorKind::NoTasksFound,
-        });
-    } else {
-        return Ok(active_task.unwrap().clone());
+        })
     }
 }
 pub fn get_timew_json_by_filter(
@@ -150,4 +154,63 @@ pub fn filter_by_modifier(modifier: &String) -> Result<String, FypmError> {
         .to_string();
 
     Ok(config)
+}
+
+pub fn mother_json_by_sequence_id(seq_id: &String) -> Result<TaskWarriorExported, FypmError> {
+    let tasks = json_by_filter(format!("(status:pending and {})", seq_id).as_str(), None)?;
+
+    if tasks.len() > 1 {
+        let mut mother = (false, 0);
+        for (index, task) in tasks.iter().enumerate() {
+            if task.tags.as_ref().unwrap().contains(&"MOTHER".to_string()) {
+                mother = (true, index);
+            }
+        }
+
+        if mother.0 {
+            let mother_task = tasks.get(mother.1).unwrap();
+
+            if mother_task
+                .tags
+                .as_ref()
+                .unwrap()
+                .contains(&"Sequence".to_string())
+            {
+                Ok(mother_task.clone())
+            } else {
+                Err(FypmError {
+                    message: format!(
+                        "{}\n{}",
+                        "You are trying to get a MOTHER that is not a Sequence. ",
+                        "If you want to get a task by a tag, this task must be a Sequence. ",
+                    ),
+                    kind: FypmErrorKind::TooMuchTasks,
+                })
+            }
+        } else {
+            Err(FypmError {
+                message: format!(
+                    "{}\n{}",
+                    "Not enough tasks! (expected: 1)",
+                    "If you want to get a task by a tag, this task must be a Sequence. ",
+                ),
+                kind: FypmErrorKind::NotEnoughTasks,
+            })
+        }
+    } else if tasks.len() <= 1 {
+        Err(FypmError {
+            message: "No tasks found! (expected: > 1)".to_string(),
+            kind: FypmErrorKind::NoTasksFound,
+        })
+    } else {
+        Err(FypmError {
+            message: format!(
+                "{}\n{}{}",
+                "Not enough tasks! (expected: > 1)",
+                "If you want to get a task by a tag, this task must be a Sequence. ",
+                "If this sequence only have 1 task (mother), there's nothing to start.",
+            ),
+            kind: FypmErrorKind::NotEnoughTasks,
+        })
+    }
 }

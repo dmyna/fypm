@@ -1,0 +1,19 @@
+#!/bin/zsh
+DATE="11:00"
+
+usage() {
+    echo "Usage: tapp <filter> - Postpone a task"
+}
+verify_args() {
+    if [[ -n $1 ]]; then
+        FILTER=$1
+    else
+        usage
+        return 1
+    fi
+}
+main() {
+    tsched "$FILTER" tomorrow+$DATE tomorrow+$DATE -w NonSched!
+}
+verify_args $@ || exit 1
+main

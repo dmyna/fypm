@@ -1,9 +1,9 @@
 use dialoguer::{Confirm, Input};
 
-use crate::utils::constants::DEFAULT_GET_JSON_OPTIONS;
-use crate::utils::err::{FypmError, FypmErrorKind};
+use crate::values::constants::DEFAULT_GET_JSON_OPTIONS;
+use crate::values::err::{FypmError, FypmErrorKind};
 use crate::utils::get;
-use crate::utils::structs::TaskWarriorExported;
+use crate::values::structs::TaskWarriorExported;
 
 pub struct AliasesHandler;
 
@@ -12,7 +12,7 @@ impl AliasesHandler {
         let mut tasks_with_alias: Vec<TaskWarriorExported> = Vec::new();
         let mut tasks_without_alias: Vec<TaskWarriorExported> = Vec::new();
 
-        let tasks = get::get_json_by_filter("(TYPE:Continuous and status:pending)", None)?;
+        let tasks = get::json_by_filter("(TYPE:Continuous and status:pending)", None)?;
 
         for task in tasks {
             if let Some(_) = &task.alias {
@@ -38,7 +38,7 @@ impl AliasesHandler {
     }
 
     pub fn add(filter: &String) -> Result<(), FypmError> {
-        let get_task = get::get_json_by_filter(filter, DEFAULT_GET_JSON_OPTIONS)?;
+        let get_task = get::json_by_filter(filter, DEFAULT_GET_JSON_OPTIONS)?;
         let task = get_task
             .get(0)
             .unwrap();
@@ -46,7 +46,7 @@ impl AliasesHandler {
         if let Some(alias) = &task.alias {
             println!("Task {} already has alias {}. Are you trying to change? You can use `fypm alias change`!", task.uuid, alias);
         } else {
-            let mut valid_alias = false;
+            let valid_alias = false;
 
             while !valid_alias {
                 let get_input = Input::<String>::new()
@@ -63,7 +63,7 @@ impl AliasesHandler {
                     .interact_text()
                     .unwrap();
 
-                let tasks_with_this_alias = get::get_json_by_filter(
+                let tasks_with_this_alias = get::json_by_filter(
                     &format!(
                         "(TYPE:Continuous and status:pending and ALIAS:\"{}\")",
                         get_input

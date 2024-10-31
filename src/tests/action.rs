@@ -1,11 +1,13 @@
 #[cfg(test)]
-use crate::utils;
+use crate::values;
 #[cfg(test)]
 use crate::func;
+#[cfg(test)]
+use crate::values::structs::TaskWarriorStatus;
 
 #[test]
 fn verify_if_wt_is_allday() {
-    let json = utils::structs::TaskWarriorExported {
+    let json = values::structs::TaskWarriorExported {
         id: 1,
         description: "test".to_string(),
         tags: Some(vec!["Test_Tag".to_string()]),
@@ -21,7 +23,9 @@ fn verify_if_wt_is_allday() {
         style: None,
         entry: "2023-08-22T00:00:00Z".to_string(),
         modified: "2023-08-22T00:00:00Z".to_string(),
-        status: "pending".to_string(),
+        due: None,
+        parent: None,
+        status: TaskWarriorStatus::Pending,
         uuid: "1".to_string(),
         annotations: None,
         urgency: 0.0,

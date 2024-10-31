@@ -25,7 +25,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Workflow/Properties/Urgency Properties.md",
+                "file": "Workflow/Rules.md",
                 "mode": "source",
                 "source": false
               }
@@ -98,7 +98,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Workflow/Properties/Urgency Properties.md",
+                "file": "Workflow/Rules.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -115,7 +115,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Workflow/Properties/Urgency Properties.md",
+                "file": "Workflow/Rules.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -138,7 +138,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Workflow/Properties/Urgency Properties.md"
+                "file": "Workflow/Rules.md"
               }
             }
           }
@@ -161,10 +161,11 @@
   },
   "active": "2e3f54fce3259996",
   "lastOpenFiles": [
+    "Workflow/Properties/Urgency Properties.md",
+    "Workflow/Rules.md",
     "Workflow/Properties/Timing Properties.md",
     "Workflow/Properties/Behavior Properties.md",
     "Workflow/Commands/Introduction.md",
-    "Workflow/Properties/Urgency Properties.md",
     "Workflow/Commands",
     "fypm/Workflow/Properties/Urgency Properties.md",
     "fypm/Workflow/Properties/Behavior Properties.md",

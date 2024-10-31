@@ -1,30 +1,53 @@
-use crate::subcommands::task;
-
 #[cfg(test)]
-fn mock_tasks() {
-    use std::process::Command;
+pub mod done {
+    use std::process::{Command, Stdio};
+    use std::{thread::sleep, time::Duration};
 
-    Command::new("task")
-        .args(["add", "Test1"])
-        .output()
-        .unwrap();
+    use crate::commands::task;
+    use crate::utils::get::json_by_filter;
+    use crate::values::structs::TaskWarriorStatus;
+    use super::super::lib::mock::Mock;
 
-    Command::new("task")
-        .args(["add", "Test2"])
-        .output()
-        .unwrap();
+    #[test]
+    pub fn simple_done() {
+        // Prepair test
+        let mock = Mock;
+        {
+            mock.mock_db();
+            mock.mock_tasks();
 
-    Command::new("task")
-        .args(["add", "Test3"])
-        .output()
-        .unwrap();
-}
+            Command::new("task")
+                .args(["1", "start"])
+                .stdout(Stdio::inherit())
+                .stderr(Stdio::inherit())
+                .output()
+                .unwrap();
 
-#[test]
-pub fn test_done() {
-    mock_tasks();
+            sleep(Duration::from_millis(1000));
+        }
 
-    let execute = task::task_done(&Some("1,2,3".to_string()), &None);
+        // Test
+        {
+            task::update::done(
+                &Some("2,3,4".to_string()),
+                &None,
+                &None,
+                &true,
+                &false,
+                &false,
+            )
+            .unwrap();
 
-    assert!(execute.is_ok());
+            let tasks = json_by_filter("description.is:'Test'", None).unwrap();
+
+            assert_eq!(tasks.len(), 3);
+            assert_eq!(
+                tasks
+                    .iter()
+                    .filter(|task| task.status == TaskWarriorStatus::Completed)
+                    .count(),
+                3
+            );
+        }
+    }
 }
