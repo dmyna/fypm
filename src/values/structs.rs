@@ -1,5 +1,19 @@
 use std::collections::BTreeMap;
 
+#[derive(Clone, Copy, PartialEq, serde::Deserialize, Debug)]
+pub enum TaskWarriorStatus {
+    #[serde(rename = "pending")]
+    Pending,
+    #[serde(rename = "completed")]
+    Completed,
+    #[serde(rename = "deleted")]
+    Deleted,
+    #[serde(rename = "recurring")]
+    Recurring,
+    #[serde(rename = "waiting")]
+    Waiting,
+}
+
 #[derive(Clone, serde::Deserialize, Debug)]
 pub struct TaskAnnotation {
     pub entry: String,
@@ -30,7 +44,7 @@ pub struct TaskWarriorExported {
     pub entry: String,
     pub modified: String,
     pub project: Option<String>,
-    pub status: String,
+    pub status: TaskWarriorStatus,
     pub uuid: String,
     pub annotations: Option<Vec<TaskAnnotation>>,
     pub tags: Option<Vec<String>>,
