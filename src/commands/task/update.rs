@@ -4,8 +4,10 @@ use std::{
     process::{Command, Stdio},
 };
 
+use chrono::NaiveTime;
 use dialoguer::Input;
 
+use crate::values::structs::TaskWarriorStatus;
 use crate::{
     func::{
         action::{
@@ -502,4 +504,106 @@ pub fn und(filter: &String, unarchive: &bool) -> Result<(), FypmError> {
     }
 
     Ok(())
+}
+pub fn recur_time(filter: &String, new_time: &String) -> Result<(), FypmError> {
+    let recur_without_due_msg = "What?? A recurring task must have a due! Is it a TaskWarrior bug?";
+    let date_format = "%H:%M";
+
+    let get_task = get::json_by_filter(filter, DEFAULT_GET_JSON_OPTIONS)?;
+    let received_task = get_task.get(0).unwrap();
+
+    let old_parent_due: String;
+    let parent_task_uuid: &String;
+    {
+        let time = NaiveTime::parse_from_str(new_time, date_format);
+        match time {
+            Err(_) => {
+                return Err(FypmError {
+                    message: format!("Specify a valid time! (Format: {})", date_format),
+                    kind: FypmErrorKind::InvalidInput,
+                })
+            }
+            Ok(_) => {}
+        };
+    }
+    {
+        if received_task.status == TaskWarriorStatus::Recurring {
+            old_parent_due = parser::transform_dates_to_iso(
+                received_task.due.clone().expect(recur_without_due_msg),
+            )
+            .unwrap();
+
+            parent_task_uuid = &received_task.uuid;
+        } else if let Some(get_parent_task_uuid) = &received_task.parent {
+            let get_parent_task =
+                get::json_by_filter(get_parent_task_uuid, DEFAULT_GET_JSON_OPTIONS)?;
+            let parent_task = get_parent_task.get(0).unwrap();
+
+            parent_task_uuid = get_parent_task_uuid;
+
+            old_parent_due = parser::transform_dates_to_iso(
+                parent_task.due.clone().expect(recur_without_due_msg),
+            )
+            .unwrap();
+        } else {
+            return Err(FypmError {
+                message: "Selected task is not recurring!".to_string(),
+                kind: FypmErrorKind::InvalidInput,
+            });
+        }
+    }
+
+    if let Some((date, _)) = old_parent_due.split_once("T") {
+        let new_parent_due = format!("{}T{}", date, new_time);
+        let pending_instances = get::json_by_filter(
+            format!("+PENDING and +INSTANCE and parent:{}", parent_task_uuid).as_str(),
+            None,
+        );
+
+        Command::new("task")
+            .args(vec![
+                "rc.confirmation=0",
+                "rc.recurrence.confirmation=0",
+                parent_task_uuid,
+                "modify",
+                format!("due:{}", new_parent_due).as_str(),
+            ])
+            .stderr(Stdio::inherit())
+            .output()
+            .unwrap();
+
+        println!("Parent task updated! ({})", parent_task_uuid);
+
+        for (_, task) in pending_instances.unwrap().iter().enumerate() {
+            let new_instance_parsed_due = parser::transform_dates_to_iso(
+                task.due.clone().expect("An instance task needs a due!"),
+            )
+            .unwrap();
+
+            if let Some((date, _)) = new_instance_parsed_due.split_once("T") {
+                let new_instance_due = format!("{}T{}", date, new_time);
+
+                Command::new("task")
+                    .args(vec![
+                        "rc.confirmation=0",
+                        "rc.recurrence.confirmation=0",
+                        &task.uuid,
+                        "modify",
+                        format!("due:{}", new_instance_due).as_str(),
+                    ])
+                    .stderr(Stdio::inherit())
+                    .output()
+                    .unwrap();
+
+                println!("Instance task updated! ({})", &task.uuid);
+            }
+        }
+
+        Ok(())
+    } else {
+        Err(FypmError {
+            message: "The format of the due date is invalid!".to_string(),
+            kind: FypmErrorKind::InvalidInput,
+        })
+    }
 }

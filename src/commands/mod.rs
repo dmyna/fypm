@@ -216,6 +216,9 @@ pub fn matching(command: &Commands) -> Result<(), FypmError> {
             no_worktime,
         } => task::update::unschedule(filter, no_alarm, no_due, no_worktime),
         Commands::TaUnd { filter, unarchive } => task::update::und(filter, unarchive),
+        Commands::TaRecurTime { filter, new_time } => {
+            task::update::recur_time(filter, new_time)
+        }
         Commands::TaProject { action, arg } => task::task_project(action, arg),
         //#endregion
         //#region               Timew Subcommands

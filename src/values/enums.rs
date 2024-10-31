@@ -246,6 +246,13 @@ pub enum Commands {
         #[arg(short = 'u', long = "unarchive")]
         unarchive: bool,
     },
+
+    /// Change a recurring task's time (tarecur-t)
+    TaRecurTime {
+        filter: String,
+        new_time: String,
+    },
+
     TaProject {
         #[arg(value_enum)]
         action: TaProjectActions,
