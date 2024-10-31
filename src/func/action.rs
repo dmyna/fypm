@@ -11,7 +11,7 @@ use itertools::Itertools;
 use crate::values::constants::{DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH};
 use crate::values::err::{FypmError, FypmErrorKind};
 use crate::utils::get;
-use crate::values::structs::TaskWarriorExported;
+use crate::values::structs::{TaskWarriorExported, TaskWarriorStatus};
 
 use super::command;
 //#endregion
@@ -165,15 +165,15 @@ pub fn match_inforelat_and_sequence(
                 if let Some(next_task) = &filter_json.seq_current {
                     let mut next_json =
                         get::json_by_filter(&next_task, DEFAULT_GET_JSON_OPTIONS)?;
-                    let mut status = next_json[0].status.as_str();
+                    let mut status = next_json[0].status;
 
                     // Loop until find a pending task or there is no next task
 
-                    while status == "completed" {
+                    while status == TaskWarriorStatus::Completed {
                         if let Some(next_task) = &next_json[0].seq_next {
                             next_json =
                                 get::json_by_filter(&next_task, DEFAULT_GET_JSON_OPTIONS)?;
-                            status = next_json[0].status.as_str();
+                            status = next_json[0].status;
                         } else {
                             return Err(FypmError {
                                     kind: FypmErrorKind::NoTasksFound,

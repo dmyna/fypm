@@ -5,6 +5,7 @@ pub mod done {
 
     use crate::commands::task;
     use crate::utils::get::json_by_filter;
+    use crate::values::structs::TaskWarriorStatus;
     use super::super::lib::mock::Mock;
 
     #[test]
@@ -43,7 +44,7 @@ pub mod done {
             assert_eq!(
                 tasks
                     .iter()
-                    .filter(|task| task.status == "completed")
+                    .filter(|task| task.status == TaskWarriorStatus::Completed)
                     .count(),
                 3
             );
