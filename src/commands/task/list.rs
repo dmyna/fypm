@@ -200,19 +200,19 @@ pub fn completion_score(date_args: &Vec<String>) -> Result<(), FypmError> {
 
         let pending_count = tasks_json
             .iter()
-            .filter(|task| task.status.as_str() == "pending")
+            .filter(|task| task.status == TaskWarriorStatus::Pending)
             .count();
         week_pending += pending_count;
 
         let completed_count = tasks_json
             .iter()
-            .filter(|task| task.status.as_str() == "completed")
+            .filter(|task| task.status == TaskWarriorStatus::Completed)
             .count();
         week_completed += completed_count;
 
         let deleted_count = tasks_json
             .iter()
-            .filter(|task| task.status.as_str() == "deleted")
+            .filter(|task| task.status == TaskWarriorStatus::Deleted)
             .count();
         week_deleted += deleted_count;
 
