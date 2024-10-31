@@ -1,9 +1,63 @@
-use std::process::{Command, Stdio};
-use colored::*;
 use chrono::{Datelike, Local};
 use chrono::{Duration, NaiveDate, Weekday};
+use colored::*;
+use ratatui::style::Stylize;
+use std::process::{Command, Stdio};
 
-use crate::{func::list, handlers::date::NaiveDateIter, utils::{extract, get, term}, values::{enums, err::FypmError}};
+use crate::values::constants::DEFAULT_GET_JSON_OPTIONS;
+use crate::values::structs::TaskWarriorStatus;
+use crate::{
+    func::list,
+    handlers::date::NaiveDateIter,
+    utils::{extract, get, term},
+    values::{enums, err::FypmError},
+};
+
+pub fn info(filter: &String) -> Result<(), FypmError> {
+    let task = get::json_by_filter(filter, DEFAULT_GET_JSON_OPTIONS)?;
+    let normal_max_chars = 13;
+
+    let normal_properties = vec!["Description", "Project", "Style", "Type", "Tags"];
+    let mut normal_values = vec![
+        task[0].description.clone(),
+        task[0].project.clone().unwrap_or("".to_string()),
+        task[0].style.clone().unwrap_or("".to_string()),
+        task[0].r#type.clone(),
+    ];
+    if let Some(tags) = &task[0].tags {
+        normal_values.push(tags.join(", "));
+    };
+
+    for i in 0..(normal_properties.len() - 1) {
+        let property = normal_properties[i];
+        let value = &normal_values[i];
+
+        let spaces_to_value = normal_max_chars - property.chars().count() - 1; // 1 = separator
+
+        if i % 2 == 0 {
+            let bg_color = Color::TrueColor {
+                r: 40,
+                g: 40,
+                b: 40,
+            };
+
+            print!("{}", Colorize::bold(property).on_color(bg_color));
+            print!("{}", ":".on_color(bg_color));
+            for _ in 0..spaces_to_value {
+                print!("{}", " ".on_color(bg_color));
+            }
+            println!("{}", value.clone().on_color(bg_color));
+        } else {
+            print!("{}:", Colorize::bold(property));
+            for _ in 0..spaces_to_value {
+                print!("{}", " ");
+            }
+            println!("{}", value);
+        }
+    }
+
+    Ok(())
+}
 
 pub fn statistic(command: &enums::StatisticsCommands, no_parents: &bool) -> Result<(), FypmError> {
     match command {

@@ -80,6 +80,10 @@ pub fn matching(command: &Commands) -> Result<(), FypmError> {
         Commands::Instance { action, actionargs } => instance::match_action(action, actionargs),
         //#endregion
         //#region               Task Subcommands
+        Commands::TaInfo {
+            filter,
+        } => task::list::info(filter),
+
         Commands::TaAdd {
             description,
             project,

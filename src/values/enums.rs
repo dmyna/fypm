@@ -135,6 +135,12 @@ pub enum Commands {
     InitDay,
     //#endregion
     //#region               Task Subcommands
+    /// Show task information
+    TaInfo {
+        /// Filter to the task (max: 1)
+        filter: String
+    },
+
     /// Add a task to taskwarrior (taadd)
     TaAdd {
         description: String,
