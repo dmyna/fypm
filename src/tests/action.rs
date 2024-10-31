@@ -23,6 +23,8 @@ fn verify_if_wt_is_allday() {
         style: None,
         entry: "2023-08-22T00:00:00Z".to_string(),
         modified: "2023-08-22T00:00:00Z".to_string(),
+        due: None,
+        parent: None,
         status: TaskWarriorStatus::Pending,
         uuid: "1".to_string(),
         annotations: None,

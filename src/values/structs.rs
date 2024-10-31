@@ -41,8 +41,10 @@ pub struct TaskWarriorExported {
     #[serde(rename = "SEQ_PREVIOUS")]
     pub seq_prev: Option<String>,
     pub description: String,
+    pub due: Option<String>,
     pub entry: String,
     pub modified: String,
+    pub parent: Option<String>,
     pub project: Option<String>,
     pub status: TaskWarriorStatus,
     pub uuid: String,
