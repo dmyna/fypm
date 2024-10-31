@@ -1,6 +1,8 @@
 [package]
 name = "fypm"
 version = "0.2.0"
+description = "Four Years Productivity Manager: The productivity manager for Four Years Workflow."
+license = "MIT"
 edition = "2021"
 
 [features]
