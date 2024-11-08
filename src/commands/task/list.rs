@@ -1,10 +1,10 @@
 use chrono::{Datelike, Local};
 use chrono::{Duration, NaiveDate, Weekday};
 use colored::*;
-use ratatui::style::Stylize;
 use std::process::{Command, Stdio};
 
 use crate::values::constants::DEFAULT_GET_JSON_OPTIONS;
+use crate::values::err::FypmErrorKind;
 use crate::values::structs::TaskWarriorStatus;
 use crate::{
     func::list,
@@ -14,45 +14,100 @@ use crate::{
 };
 
 pub fn info(filter: &String) -> Result<(), FypmError> {
+    let grid_separator_len = 1;
     let task = get::json_by_filter(filter, DEFAULT_GET_JSON_OPTIONS)?;
-    let normal_max_chars = 13;
 
-    let normal_properties = vec!["Description", "Project", "Style", "Type", "Tags"];
-    let mut normal_values = vec![
-        task[0].description.clone(),
-        task[0].project.clone().unwrap_or("".to_string()),
-        task[0].style.clone().unwrap_or("".to_string()),
-        task[0].r#type.clone(),
-    ];
-    if let Some(tags) = &task[0].tags {
-        normal_values.push(tags.join(", "));
-    };
+    let mut left_lines: Vec<String> = vec![];
+    let mut right_lines: Vec<String> = vec![];
 
-    for i in 0..(normal_properties.len() - 1) {
-        let property = normal_properties[i];
-        let value = &normal_values[i];
+    let mut left_values = vec![];
+    let mut right_values = vec![];
 
-        let spaces_to_value = normal_max_chars - property.chars().count() - 1; // 1 = separator
-
-        if i % 2 == 0 {
-            let bg_color = Color::TrueColor {
-                r: 40,
-                g: 40,
-                b: 40,
-            };
-
-            print!("{}", Colorize::bold(property).on_color(bg_color));
-            print!("{}", ":".on_color(bg_color));
-            for _ in 0..spaces_to_value {
-                print!("{}", " ".on_color(bg_color));
-            }
-            println!("{}", value.clone().on_color(bg_color));
+    {
+        if task[0].id == 0 {
+            left_values.push(task[0].uuid.chars().take(8).collect::<String>());
         } else {
-            print!("{}:", Colorize::bold(property));
-            for _ in 0..spaces_to_value {
-                print!("{}", " ");
+            left_values.push(task[0].id.to_string());
+        }
+
+        left_values.extend(vec![
+            "Project".to_string(),
+            "Style".to_string(),
+            "WorkTime".to_string(),
+            "Type".to_string(),
+            "Quadrant".to_string(),
+            "Effort".to_string(),
+            "".to_string(),
+            "Tags".to_string(),
+        ]);
+
+        right_values.extend(vec![
+            task[0].description.clone(),
+            task[0].project.clone().unwrap_or("".to_string()),
+            task[0].style.clone().unwrap_or("".to_string()),
+            task[0].wt.clone(),
+            task[0].r#type.clone(),
+            task[0].quadrant.clone().unwrap_or("".to_string()),
+            task[0].effort.clone().unwrap_or("".to_string()),
+            "".to_string(),
+        ]);
+
+        if let Some(tags) = &task[0].tags {
+            right_values.push(tags.join(", "));
+        } else {
+            right_values.push("".to_string());
+        }
+    }
+
+    let left_side_len = left_values.iter().map(|s| s.chars().count()).max().unwrap();
+    let right_side_len = right_values
+        .iter()
+        .map(|s| s.chars().count())
+        .max()
+        .unwrap();
+
+    for i in 0..(left_values.len()) {
+        let left_value = &left_values[i];
+        let right_value = &right_values[i];
+
+        let left_spaces = ' '
+            .to_string()
+            .repeat(left_side_len - left_value.len() + grid_separator_len);
+        let right_spaces = ' '.to_string().repeat(right_side_len - right_value.len());
+
+        left_lines.push(format!("{}{}", left_value, left_spaces));
+        right_lines.push(format!("{}{}", right_value, right_spaces));
+    }
+
+    if left_lines.len() != right_lines.len() {
+        return Err(FypmError {
+            message: "Left values and right values have different length!".to_string(),
+            kind: FypmErrorKind::ProblemWithStoredTask,
+        });
+    }
+
+    let max_len = left_lines[0].len() + right_lines[0].len();
+
+    // Pretty print the table
+    {
+        let bg_color = Color::TrueColor {
+            r: 40,
+            g: 40,
+            b: 40,
+        };
+
+        for i in 0..(left_values.len()) {
+            if i == 0 {
+                print!("{}", left_lines[i].italic().bold());
+                println!("{}", right_lines[i]);
+                println!("{}", " ".to_string().repeat(max_len).underline())
+            } else if i % 2 == 0 {
+                print!("{}", left_lines[i].on_color(bg_color));
+                println!("{}", right_lines[i].on_color(bg_color));
+            } else {
+                print!("{}", left_lines[i]);
+                println!("{}", right_lines[i]);
             }
-            println!("{}", value);
         }
     }
 
