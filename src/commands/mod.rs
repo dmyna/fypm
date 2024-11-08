@@ -226,8 +226,8 @@ pub fn matching(command: &Commands) -> Result<(), FypmError> {
         Commands::TaProject { action, arg } => task::task_project(action, arg),
         //#endregion
         //#region               Timew Subcommands
-        Commands::TiLs { date, filters } => {
-            timew::list(date, filters)?;
+        Commands::TiLs { initial_date, final_date } => {
+            timew::list(initial_date, final_date)?;
 
             Ok(())
         }

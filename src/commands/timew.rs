@@ -1,15 +1,19 @@
 //#region           External Imports
 use chrono::{Duration, NaiveDate};
+use colored::Colorize;
+use std::collections::HashMap;
 use std::process::{Command, Stdio};
 use std::str::{self, FromStr};
+use uuid::Uuid;
 
 //#endregion
 //#region           Modules
 use crate::func::{date, parser};
+use crate::utils::get;
 use crate::values::constants::DEFAULT_GET_JSON_OPTIONS;
 use crate::values::enums::TimewAction;
 use crate::values::err::{FypmError, FypmErrorKind};
-use crate::utils::get;
+use crate::values::structs::{TaskWarriorExported, TimeWarriorExported};
 //#endregion
 //#region           Functions
 pub fn move_log(
@@ -226,29 +230,60 @@ pub fn replace(
 
     track(received_replacement_id, &vec![start_time, end_time])
 }
-pub fn list(date: &String, aditional_filters: &Option<Vec<String>>) -> Result<(), FypmError> {
-    let initial_date = NaiveDate::from_str(&date::match_aliases(date)).unwrap();
-    let final_date = initial_date + Duration::days(1);
+pub fn list(initial_date: &String, final_date: &Option<String>) -> Result<(), FypmError> {
+    let start: NaiveDate;
+    let end: NaiveDate;
 
-    let mut args = Vec::new();
+    start = NaiveDate::from_str(&date::match_aliases(initial_date)).unwrap();
 
-    args.extend([
-        "summary".to_string(),
-        ":ids".to_string(),
-        initial_date.to_string(),
-        "-".to_string(),
-        final_date.to_string(),
-    ]);
-    if let Some(filters) = aditional_filters {
-        args.extend(filters.clone())
+    if let Some(final_date) = final_date {
+        end = NaiveDate::from_str(&date::match_aliases(final_date)).unwrap();
+    } else {
+        end = start + Duration::days(1);
     }
 
-    Command::new("timew")
-        .args(args)
-        .stdin(Stdio::inherit())
-        .stdout(Stdio::inherit())
-        .output()
-        .unwrap();
+    let timew_json =
+        get::get_timew_json_by_filter(&vec![start.to_string(), "-".to_string(), end.to_string()])
+            .unwrap();
+
+    let mut timew_entries: Vec<(String, TimeWarriorExported)> = Vec::new();
+
+    for timew_entry in timew_json {
+        for tag in timew_entry.tags.as_ref().unwrap_or(&vec![]) {
+            match Uuid::parse_str(&tag) {
+                Ok(uuid) => {
+                    timew_entries.push((uuid.to_string(), timew_entry.clone()));
+                }
+                Err(_) => {}
+            }
+        }
+    }
+
+    let tasks_json = get::json_by_filter(
+        timew_entries
+            .iter()
+            .map(|timew_entry| timew_entry.0.clone())
+            .collect::<Vec<_>>()
+            .join(" ")
+            .as_str(),
+        None,
+    )?;
+
+    let tasks_map = tasks_json
+        .iter()
+        .map(|task| (task.uuid.clone(), task.clone()))
+        .collect::<HashMap<String, TaskWarriorExported>>();
+
+    for entry in timew_entries {
+        println!(
+            "{} - {}",
+            format!("@{}", entry.1.id).to_string().bold().truecolor(180, 0, 230),
+            tasks_map
+                .get(&entry.0)
+                .expect("There is a problem with the UUID!")
+                .description
+        );
+    }
 
     Ok(())
 }

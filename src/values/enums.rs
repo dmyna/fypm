@@ -325,8 +325,8 @@ pub enum Commands {
     /// List logs for a day (tils)
     TiLs {
         #[arg(default_value_t = String::from("today"))]
-        date: String,
-        filters: Option<Vec<String>>,
+        initial_date: String,
+        final_date: Option<String>,
     },
     //#endregion
 }

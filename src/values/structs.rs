@@ -54,7 +54,7 @@ pub struct TaskWarriorExported {
     pub effort: Option<String>,
     pub quadrant: Option<String>,
 }
-#[derive(serde::Deserialize, Debug)]
+#[derive(serde::Deserialize, Debug, Clone )]
 pub struct TimeWarriorExported {
     pub id: i32,
     pub start: String,
