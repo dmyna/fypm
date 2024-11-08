@@ -51,6 +51,8 @@ pub struct TaskWarriorExported {
     pub annotations: Option<Vec<TaskAnnotation>>,
     pub tags: Option<Vec<String>>,
     pub urgency: f64,
+    pub effort: Option<String>,
+    pub quadrant: Option<String>,
 }
 #[derive(serde::Deserialize, Debug)]
 pub struct TimeWarriorExported {

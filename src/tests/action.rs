@@ -29,6 +29,8 @@ fn verify_if_wt_is_allday() {
         uuid: "1".to_string(),
         annotations: None,
         urgency: 0.0,
+        effort: None,
+        quadrant: None
     };
 
     let exec = func::action::verify_if_wt_is_allday(&json);
