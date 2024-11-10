@@ -1,3 +1,9 @@
 /target
 /scripts/pending/tascripts
 /docs/fypm/.obsidian/workspace.json
+
+# Front-end
+/src-tauri/target
+/src-tauri/gen
+/frontend/target
+/frontend/dist
