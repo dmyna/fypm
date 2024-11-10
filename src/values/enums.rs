@@ -99,6 +99,9 @@ pub enum Commands {
     Completion,
     //#endregion
     //#region               Systems
+    /// Start API daemon
+    Daemon,
+
     /// Add a worktime
     WtAdd { worktime_name: String },
     /// Remove a worktime

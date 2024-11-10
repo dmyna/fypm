@@ -8,6 +8,7 @@ pub mod instance;
 use diesel::SqliteConnection;
 use diesel::Connection;
 
+use crate::api;
 use crate::handlers::aliases;
 use crate::handlers::filters::FiltersHandler;
 use crate::handlers::worktime::WorktimeHandler;
@@ -17,12 +18,17 @@ use crate::values::enums::{Commands, TimewAction};
 use crate::values::err::FypmError;
 use crate::{func, DATABASE_URL};
 
-pub fn matching(command: &Commands) -> Result<(), FypmError> {
+pub async fn matching(command: &Commands) -> Result<(), FypmError> {
     match command {
         //#region               Misc
         Commands::Completion => func::completion::generate_completion(),
         //#endregion
         //#region               Systems
+        Commands::Daemon => {
+            api::index::rocket().launch().await.unwrap();
+
+            Ok(())
+        },
         Commands::InitDay => todo!(),
 
         Commands::Verify { script } => func::matchs::match_verify_script(script),
