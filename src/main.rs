@@ -1,4 +1,7 @@
 //#region           Crates
+#[macro_use] extern crate rocket;
+
+use tokio;
 use lazy_static::lazy_static;
 use clap::Parser;
 use std::env;
@@ -11,6 +14,7 @@ mod tests;
 mod utils;
 mod db;
 mod values;
+mod api;
 //#endregion
 //#region           Constants
 lazy_static! {
@@ -30,7 +34,8 @@ lazy_static! {
 }
 //#endregion
 //#region           Implementation
-fn main() {
+#[tokio::main]
+async fn main() {
     handlers::database::DBHandler::ensure_db_path().unwrap();
     handlers::database::DBHandler::ensure_db().unwrap();
     handlers::filters::FiltersHandler::ensure_defaults().unwrap();
@@ -42,6 +47,8 @@ fn main() {
 
     let cli = values::enums::Cli::parse();
 
-    commands::matching(&cli.commands).unwrap();
+    commands::matching(&cli.commands).await.unwrap();
+
+    ()
 }
 //#endregion
