@@ -9,6 +9,7 @@ edition = "2021"
 fysm = []
 
 [dependencies]
+rocket = "0.5.1"
 chrono = "0.4.31"
 colored = "2.1.0"
 daemonize = "0.5.0"
@@ -34,3 +35,4 @@ ratatui = "0.27.0"
 serde_ini = "0.2.0"
 strum = { version = "0.26.3", features = ["derive"] }
 diesel_migrations = { version = "2.2.0", features = ["sqlite"] }
+tokio = "1.41.1"
