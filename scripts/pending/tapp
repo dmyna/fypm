@@ -13,7 +13,7 @@ verify_args() {
     fi
 }
 main() {
-    tsched "$FILTER" tomorrow+$DATE tomorrow+$DATE -w NonSched!
+    fypm ta-schedule "$FILTER" tomorrow+$DATE tomorrow+$DATE -w NonSched!
 }
 verify_args $@ || exit 1
 main
