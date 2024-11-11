@@ -1,10 +1,9 @@
 //#region           Crates
 #[macro_use] extern crate rocket;
 
-use tokio;
+use std::env;
 use lazy_static::lazy_static;
 use clap::Parser;
-use std::env;
 //#endregion
 //#region           Modules
 mod func;
@@ -33,12 +32,6 @@ lazy_static! {
 }
 //#endregion
 //#region           Implementation
-#[cfg(feature = "frontend")]
-fn main() {
-    yew::Renderer::<App>::new().render();
-}
-
-#[cfg(not(feature = "frontend"))]
 fn main() {
     handlers::database::DBHandler::ensure_db_path().unwrap();
     handlers::database::DBHandler::ensure_db().unwrap();
