@@ -1,6 +1,6 @@
 [package]
-name = "fypm_tauri"
-version = "0.1.0"
+name = "fypm_desktop"
+version = "0.3.0"
 description = "Tauri app for fypm"
 authors = ["Myna <var.devmyna@gmail.com>"]
 license = "MIT"

@@ -1,6 +1,6 @@
 [package]
-name = "fypm"
-version = "0.2.0"
+name = "fypm_cli"
+version = "0.3.0"
 description = "Four Years Productivity Manager: The productivity manager for Four Years Workflow."
 license = "MIT"
 edition = "2021"
@@ -36,3 +36,4 @@ serde_ini = "0.2.0"
 strum = { version = "0.26.3", features = ["derive"] }
 diesel_migrations = { version = "2.2.0", features = ["sqlite"] }
 tokio = "1.41.1"
+fypm_lib = { path = "../lib" }
