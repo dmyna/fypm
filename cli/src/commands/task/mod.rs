@@ -2,14 +2,15 @@ use std::process::{Command, Stdio};
 
 use dialoguer::Confirm;
 
+use fypm_lib::values::{
+    err::{FypmError, FypmErrorKind},
+    structs::TaskWarriorExported,
+};
+
 use crate::{
     func::action,
     utils::get,
-    values::{
-        enums::{self, TaProjectActions},
-        err::{FypmError, FypmErrorKind},
-        structs::TaskWarriorExported,
-    },
+    commands::{TaProjectActions, TaAbandonTags},
 };
 
 pub mod add;
@@ -69,7 +70,7 @@ pub fn task_project(action: &TaProjectActions, arg: &Option<String>) -> Result<(
 
                 if confirmation {
                     update::abandon(
-                        &enums::TaAbandonTags::Archived,
+                        &TaAbandonTags::Archived,
                         &format!("(project:{} and -DELETED and -COMPLETED)", project),
                         &None,
                         &None,

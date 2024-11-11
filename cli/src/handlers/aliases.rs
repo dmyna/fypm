@@ -1,9 +1,9 @@
 use dialoguer::{Confirm, Input};
 
-use crate::values::constants::DEFAULT_GET_JSON_OPTIONS;
-use crate::values::err::{FypmError, FypmErrorKind};
+use fypm_lib::values::constants::DEFAULT_GET_JSON_OPTIONS;
+use fypm_lib::values::err::{FypmError, FypmErrorKind};
 use crate::utils::get;
-use crate::values::structs::TaskWarriorExported;
+use fypm_lib::values::structs::TaskWarriorExported;
 
 pub struct AliasesHandler;
 

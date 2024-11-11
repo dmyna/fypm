@@ -1,7 +1,7 @@
 // use dialoguer::{console::Term, Confirm, Input};
 // use std::io::Error;
 
-use crate::values::err::FypmError;
+use fypm_lib::values::err::FypmError;
 
 #[derive(Debug)]
 struct Instance {

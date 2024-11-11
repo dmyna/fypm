@@ -1,9 +1,9 @@
 #[cfg(test)]
-use crate::values;
+use fypm_lib::values;
 #[cfg(test)]
 use crate::func;
 #[cfg(test)]
-use crate::values::structs::TaskWarriorStatus;
+use fypm_lib::values::structs::TaskWarriorStatus;
 
 #[test]
 fn verify_if_wt_is_allday() {

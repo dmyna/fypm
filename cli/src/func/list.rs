@@ -1,4 +1,4 @@
-use crate::values::{err::FypmError, structs::TaskWarriorExported};
+use fypm_lib::values::{err::FypmError, structs::TaskWarriorExported};
 use crate::utils::get;
 
 pub fn deleted_tasks(no_parents: &bool) -> Result<(), FypmError> {

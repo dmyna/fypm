@@ -7,21 +7,23 @@ use std::{
 use chrono::NaiveTime;
 use dialoguer::Input;
 
-use crate::values::structs::TaskWarriorStatus;
+use fypm_lib::utils::parser;
+use fypm_lib::values::{
+    constants::{CONTROL_TASK, DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH},
+    err::{FypmError, FypmErrorKind},
+    structs::{TaskWarriorExported, TaskWarriorStatus},
+};
+
+use crate::func::matchs;
 use crate::{
+    commands,
     func::{
         action::{
             self, match_inforelat_and_sequence, verify_if_is_divisory, verify_if_wt_is_allday,
         },
-        command, dialog, parser,
+        command, dialog,
     },
     utils::get,
-    values::{
-        constants::{CONTROL_TASK, DEFAULT_GET_JSON_OPTIONS, LAST_TASK_PATH},
-        enums,
-        err::{FypmError, FypmErrorKind},
-        structs::TaskWarriorExported,
-    },
 };
 
 pub fn stop(filter_option: &Option<String>, start_control_task: bool) -> Result<(), FypmError> {
@@ -47,7 +49,7 @@ pub fn stop(filter_option: &Option<String>, start_control_task: bool) -> Result<
     Ok(())
 }
 pub fn start(filter: &String) -> Result<(), FypmError> {
-    let mut filter = parser::match_special_aliases(filter);
+    let mut filter = matchs::match_special_aliases(filter);
     let filter_json = if filter.starts_with("+ST_") {
         get::mother_json_by_sequence_id(&filter)?
     } else {
@@ -235,12 +237,12 @@ pub fn done(
 }
 
 pub fn abandon(
-    tag: &enums::TaAbandonTags,
+    tag: &commands::TaAbandonTags,
     filter: &String,
     annotation: &Option<String>,
     annotation_filter: &Option<String>,
 ) -> Result<(), FypmError> {
-    if (tag == &enums::TaAbandonTags::Abandoned || tag == &enums::TaAbandonTags::NoControl)
+    if (tag == &commands::TaAbandonTags::Abandoned || tag == &commands::TaAbandonTags::NoControl)
         && annotation.is_none()
     {
         panic!("You must specify an annotation when mark a task as NoControl or Abandoned!");
@@ -260,16 +262,16 @@ pub fn abandon(
         ]);
 
         match tag {
-            enums::TaAbandonTags::Archived => {
+            commands::TaAbandonTags::Archived => {
                 modify_args.extend(["+Archived".to_string()]);
             }
-            enums::TaAbandonTags::Failed => {
+            commands::TaAbandonTags::Failed => {
                 modify_args.extend(["+Failed".to_string()]);
             }
-            enums::TaAbandonTags::Abandoned => {
+            commands::TaAbandonTags::Abandoned => {
                 modify_args.extend(["+Abandoned".to_string()]);
             }
-            enums::TaAbandonTags::Chain => {
+            commands::TaAbandonTags::Chain => {
                 modify_args.extend(["+Chain".to_string()]);
 
                 let chain_task = Input::<String>::new()
@@ -303,7 +305,7 @@ pub fn abandon(
 
                 modify_args.extend([format!("CHAIN:{}", chain_uuid)]);
             }
-            enums::TaAbandonTags::NoControl => {
+            commands::TaAbandonTags::NoControl => {
                 modify_args.extend(["+NoControl".to_string()]);
             }
         }

@@ -4,14 +4,13 @@ use std::str;
 use chrono::{DateTime, Datelike, Local};
 use dialoguer::Confirm;
 
-use crate::{
-    utils::get,
-    values::{
-        constants::DEFAULT_GET_JSON_OPTIONS,
-        enums::TaSequenceTypes,
-        err::{FypmError, FypmErrorKind},
-        structs::TaskWarriorExported,
-    },
+use crate::utils::get;
+use crate::commands::TaSequenceTypes;
+
+use fypm_lib::values::{
+    constants::DEFAULT_GET_JSON_OPTIONS,
+    err::{FypmError, FypmErrorKind},
+    structs::TaskWarriorExported,
 };
 
 pub fn new(

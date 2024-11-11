@@ -3,14 +3,16 @@ use chrono::{Duration, NaiveDate, Weekday};
 use colored::*;
 use std::process::{Command, Stdio};
 
-use crate::values::constants::DEFAULT_GET_JSON_OPTIONS;
-use crate::values::err::FypmErrorKind;
-use crate::values::structs::TaskWarriorStatus;
+use fypm_lib::utils::parser;
+use fypm_lib::values::constants::DEFAULT_GET_JSON_OPTIONS;
+use fypm_lib::values::err::{FypmErrorKind, FypmError};
+use fypm_lib::values::structs::TaskWarriorStatus;
+
+use crate::commands;
 use crate::{
     func::list,
     handlers::date::NaiveDateIter,
-    utils::{extract, get, term},
-    values::{enums, err::FypmError},
+    utils::{get, term},
 };
 
 pub fn info(filter: &String) -> Result<(), FypmError> {
@@ -114,12 +116,12 @@ pub fn info(filter: &String) -> Result<(), FypmError> {
     Ok(())
 }
 
-pub fn statistic(command: &enums::StatisticsCommands, no_parents: &bool) -> Result<(), FypmError> {
+pub fn statistic(command: &commands::StatisticsCommands, no_parents: &bool) -> Result<(), FypmError> {
     match command {
-        enums::StatisticsCommands::Deleted => {
+        commands::StatisticsCommands::Deleted => {
             list::deleted_tasks(no_parents)?;
         }
-        enums::StatisticsCommands::Pending => {
+        commands::StatisticsCommands::Pending => {
             list::pending_tasks(no_parents)?;
         }
     }
@@ -137,7 +139,7 @@ pub fn date(
     let initial_date: NaiveDate;
     let final_date: NaiveDate;
 
-    [initial_date, final_date] = extract::date_period(date_args);
+    [initial_date, final_date] = parser::date_period(date_args);
 
     for date in NaiveDateIter::new(initial_date, final_date) {
         let initial_day = date.format("%Y-%m-%d").to_string();
@@ -241,7 +243,7 @@ pub fn completion_score(date_args: &Vec<String>) -> Result<(), FypmError> {
     let initial_date: NaiveDate;
     let final_date: NaiveDate;
 
-    [initial_date, final_date] = extract::date_period(date_args);
+    [initial_date, final_date] = parser::date_period(date_args);
 
     let mut week_pending = 0;
     let mut week_completed = 0;

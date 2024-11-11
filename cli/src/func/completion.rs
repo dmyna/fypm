@@ -1,9 +1,11 @@
-use clap::CommandFactory;
 use clap::ValueEnum;
+use clap::CommandFactory;
 use clap_complete::{aot, CompletionCandidate};
 use std::process::Command;
 
-use crate::values::{self, err::FypmError};
+use crate::commands;
+
+use fypm_lib::values::err::FypmError;
 
 pub fn project(current: &std::ffi::OsStr) -> Vec<CompletionCandidate> {
     let mut completions = vec![];
@@ -43,7 +45,7 @@ pub fn generate_completion() -> Result<(), FypmError> {
     for shell in aot::Shell::value_variants() {
         aot::generate_to(
             shell.clone(),
-            &mut values::enums::Cli::command(),
+            &mut commands::Cli::command(),
             "fypm",
             &outdir,
         )

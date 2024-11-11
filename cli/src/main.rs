@@ -42,7 +42,7 @@ fn main() {
 
     handlers::config::ConfigHandler::handle_config().unwrap();
 
-    let cli = values::enums::Cli::parse();
+    let cli = commands::Cli::parse();
 
     commands::matching(&cli.commands).unwrap();
 

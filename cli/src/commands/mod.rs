@@ -380,10 +380,10 @@ pub fn matching(command: &Commands) -> Result<(), FypmError> {
             let conn = &mut SqliteConnection::establish(DATABASE_URL.as_str()).unwrap();
 
             match action {
-                enums::FilterActions::Add => FiltersHandler::add(conn),
-                enums::FilterActions::List => FiltersHandler::list(conn),
-                enums::FilterActions::Remove => FiltersHandler::remove(conn),
-                enums::FilterActions::Edit => FiltersHandler::edit(conn),
+                FilterActions::Add => FiltersHandler::add(conn),
+                FilterActions::List => FiltersHandler::list(conn),
+                FilterActions::Remove => FiltersHandler::remove(conn),
+                FilterActions::Edit => FiltersHandler::edit(conn),
             }
         },
 

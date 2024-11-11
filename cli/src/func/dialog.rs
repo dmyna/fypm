@@ -1,6 +1,6 @@
 use dialoguer::Confirm;
 
-use crate::values::{err::FypmError, structs::TaskWarriorExported};
+use fypm_lib::values::{err::FypmError, structs::TaskWarriorExported};
 
 pub fn verify_selected_tasks(tasks_json: &Vec<TaskWarriorExported>) -> Result<bool, FypmError> {
     let mut tasks_descriptions = Vec::new();

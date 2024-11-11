@@ -7,8 +7,8 @@ use diesel::{QueryDsl, RunQueryDsl, SqliteConnection, TextExpressionMethods};
 use crate::{
     db::{models::Worktime, schema::worktimes},
     utils::verify,
-    values::err::FypmError,
 };
+use fypm_lib::values::err::FypmError;
 
 pub struct WorktimeHandler;
 

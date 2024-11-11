@@ -5,7 +5,7 @@ pub mod done {
 
     use crate::commands::task;
     use crate::utils::get::json_by_filter;
-    use crate::values::structs::TaskWarriorStatus;
+    use fypm_lib::values::structs::TaskWarriorStatus;
     use super::super::lib::mock::Mock;
 
     #[test]

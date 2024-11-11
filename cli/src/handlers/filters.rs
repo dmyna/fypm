@@ -5,9 +5,9 @@ use ratatui::style::Stylize;
 
 use crate::{
     db::{models::Filter, schema::filters},
-    values::err::{FypmError, FypmErrorKind},
     DATABASE_URL,
 };
+use fypm_lib::values::err::{FypmError, FypmErrorKind};
 
 pub struct FiltersHandler;
 

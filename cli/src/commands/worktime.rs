@@ -9,10 +9,10 @@ use std::path::Path;
 use std::process::Command;
 
 use crate::handlers::worktime::WorktimeHandler;
-use crate::values::err::FypmError;
+use fypm_lib::values::err::FypmError;
 //#endregion
 //#region           Modules
-use crate::values::err::FypmErrorKind;
+use fypm_lib::values::err::FypmErrorKind;
 use crate::DATABASE_URL;
 //#endregion
 //#endregion

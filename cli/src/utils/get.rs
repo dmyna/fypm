@@ -4,9 +4,10 @@ use std::{process::Command, str, vec};
 use chrono::NaiveDate;
 use uuid::Uuid;
 
-use crate::values::structs::{GetJsonByFilterOptions, TaskWarriorExported, TimeWarriorExported};
-use crate::values::{
-    enums::TimewAction,
+use crate::commands::TimewAction;
+
+use fypm_lib::values::structs::{GetJsonByFilterOptions, TaskWarriorExported, TimeWarriorExported};
+use fypm_lib::values::{
     err::{FypmError, FypmErrorKind},
     structs,
 };
