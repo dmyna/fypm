@@ -1,43 +1,110 @@
-use chrono::NaiveDate;
-
-use crate::func;
 use crate::handlers;
-use crate::values::enums;
-use crate::values::err::FypmError;
+use crate::commands;
+use super::action;
 
-// pub fn match_exec_command(
-//     executed_command: Result<std::process::Output, Error>,
-// ) -> Result<(), Error> {
-//     match executed_command {
-//         Ok(output) => {
-//             if output.status.success() {
-//                 println!("{}", str::from_utf8(&output.stdout).unwrap());
-//             } else {
-//                 eprintln!("{}", str::from_utf8(&output.stderr).unwrap());
-//             }
+use fypm_lib::utils::parser::transform_dates_to_iso;
+use fypm_lib::values::{
+    constants::CONTROL_TASK,
+    err::{FypmError, FypmErrorKind},
+};
+use crate::commands::TimewAction;
+use crate::utils::get;
 
-//             Ok(())
-//         }
-//         Err(e) => {
-//             eprintln!("Failed to execute command, error: {}", e);
-
-//             Err(e)
-//         }
-//     }
-// }
-pub fn match_date_arg(option: &String, option_arg: Option<&String>) -> [NaiveDate; 2] {
-    match option.as_str() {
-        "-y" | "--year" => func::date::get_year(option_arg),
-        "-m" | "--month" => func::date::get_month(option_arg),
-        "-w" | "--week" => func::date::get_week(option_arg),
-        _ => {
-            panic!("You entered an invalid option to date_args!");
-        }
+pub fn match_verify_script(script: &commands::VerifyScripts) -> Result<(), FypmError> {
+    match script {
+        commands::VerifyScripts::Aliases => handlers::aliases::verify_aliases_tasks(),
     }
 }
+pub fn match_special_aliases(filter: &String) -> String {
+    match filter.as_str() {
+        // Last Task
+        "last" => {
+            let get_task = action::receive_last_task();
 
-pub fn match_verify_script(script: &enums::VerifyScripts) -> Result<(), FypmError> {
-    match script {
-        enums::VerifyScripts::Aliases => handlers::aliases::verify_aliases_tasks(),
+            match get_task {
+                Ok(task) => task,
+                Err(error) => {
+                    if error.kind() == std::io::ErrorKind::NotFound {
+                        CONTROL_TASK.to_string()
+                    } else {
+                        panic!("{}", error);
+                    }
+                }
+            }
+        },
+        // Time without specific use
+        "t" => CONTROL_TASK.to_string(),
+        // Lost time
+        "l" => "1469ac5d-78ab-463d-bf77-f56a9f042f48".to_string(),
+        // Rest and breaks
+        "d" => "309d9b37-cd99-4b2c-b3c7-a9c60cb1754f".to_string(),
+        // Hygiene and Selfcare
+        "h" => "a371cb4e-6fad-452f-a22c-abc932f0a83f".to_string(),
+        // Singing
+        "s" => "2d5d97b5-fe43-415f-8501-045aca46cdbb".to_string(),
+        // Active Thought || DNM
+        "p" => "dd67efbb-f010-42c7-b84c-5d0da1936e57".to_string(),
+        // Calisthenics and Stretching
+        "e" => "7806d5f7-db60-4841-ba83-97c2106499d3".to_string(),
+        // Chess Practice
+        "x" => "100372a8-5ca2-493a-b6f3-4b74195c8848".to_string(),
+        // House Maintening
+        "hm" => "ef5dbc2c-326e-4443-b0dc-b2595de6e012".to_string(),
+        // Workflow Maintening
+        "wm" => "b719a399-0b21-4fed-9118-017096466073".to_string(),
+        // Tasks Maintening
+        "tm" => "8980c7be-1fda-4888-b45a-1a2e52345947".to_string(),
+        _ => filter.to_string(),
+        // Need to implement a filter to prevent cases like "r", "ab", etc.
+        // Now, if I write "r", it will pass and break
+    }
+}
+pub fn match_special_timing_properties(id: &String) -> Result<String, FypmError> {
+    if id.starts_with("@") {
+        let properties = id.split(".").clone();
+
+        if properties.clone().count() == 2 {
+            let id = properties.clone().nth(0).unwrap();
+            let received_action = properties.clone().nth(1).unwrap();
+            let action: TimewAction;
+
+            if received_action == "start" || received_action == "s" {
+                action = TimewAction::Start;
+            } else if received_action == "end" || received_action == "e" {
+                action = TimewAction::End;
+            } else {
+                return Err(FypmError {
+                    message: "You are trying to access a wrong property!".to_string(),
+                    kind: FypmErrorKind::InvalidInput,
+                });
+            }
+
+            let received_time = get::get_timew_time(&id.to_string(), &action);
+
+            let parsed_time = transform_dates_to_iso(received_time).unwrap();
+
+            Ok(parsed_time)
+        } else if properties.count() > 2 {
+            Err(FypmError {
+                message: concat!(
+                    "You are trying to access properties that doesn't exist (maybe... yet)! ",
+                    "Try to use one property (like '@id.start' instead '@id.start.this_is_wrong')."
+                )
+                .to_string(),
+                kind: FypmErrorKind::InvalidInput,
+            })
+        } else {
+            Err(FypmError {
+                message: "Why are you trying to access an id here? You need to write a property!"
+                    .to_string(),
+                kind: FypmErrorKind::InvalidInput,
+            })
+        }
+    } else {
+        Err(FypmError {
+            message: "You are trying to access timew properties from a taskwarrior task!"
+                .to_string(),
+            kind: FypmErrorKind::InvalidInput,
+        })
     }
 }
