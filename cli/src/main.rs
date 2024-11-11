@@ -13,7 +13,6 @@ mod commands;
 mod tests;
 mod utils;
 mod db;
-mod values;
 mod api;
 //#endregion
 //#region           Constants

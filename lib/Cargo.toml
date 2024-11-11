@@ -1,0 +1,7 @@
+[package]
+name = "fypm_lib"
+version = "0.3.0"
+authors = ["Myna <var.devmyna@gmail.com>"]
+edition = "2021"
+
+[dependencies]
