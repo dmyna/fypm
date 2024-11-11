@@ -18,14 +18,14 @@ use crate::values::enums::{Commands, TimewAction};
 use crate::values::err::FypmError;
 use crate::{func, DATABASE_URL};
 
-pub async fn matching(command: &Commands) -> Result<(), FypmError> {
+pub fn matching(command: &Commands) -> Result<(), FypmError> {
     match command {
         //#region               Misc
         Commands::Completion => func::completion::generate_completion(),
         //#endregion
         //#region               Systems
         Commands::Daemon => {
-            api::index::rocket().launch().await.unwrap();
+            api::index::rocket().unwrap();
 
             Ok(())
         },

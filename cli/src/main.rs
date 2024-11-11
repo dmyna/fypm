@@ -34,8 +34,13 @@ lazy_static! {
 }
 //#endregion
 //#region           Implementation
-#[tokio::main]
-async fn main() {
+#[cfg(feature = "frontend")]
+fn main() {
+    yew::Renderer::<App>::new().render();
+}
+
+#[cfg(not(feature = "frontend"))]
+fn main() {
     handlers::database::DBHandler::ensure_db_path().unwrap();
     handlers::database::DBHandler::ensure_db().unwrap();
     handlers::filters::FiltersHandler::ensure_defaults().unwrap();
@@ -47,7 +52,7 @@ async fn main() {
 
     let cli = values::enums::Cli::parse();
 
-    commands::matching(&cli.commands).await.unwrap();
+    commands::matching(&cli.commands).unwrap();
 
     ()
 }

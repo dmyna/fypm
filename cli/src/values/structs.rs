@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-#[derive(Clone, Copy, PartialEq, serde::Deserialize, Debug)]
+#[derive(Clone, Copy, PartialEq, serde::Deserialize, serde::Serialize, Debug)]
 pub enum TaskWarriorStatus {
     #[serde(rename = "pending")]
     Pending,
@@ -14,12 +14,12 @@ pub enum TaskWarriorStatus {
     Waiting,
 }
 
-#[derive(Clone, serde::Deserialize, Debug)]
+#[derive(Clone, serde::Deserialize, serde::Serialize, Debug)]
 pub struct TaskAnnotation {
     pub entry: String,
     pub description: String,
 }
-#[derive(Clone, serde::Deserialize, Debug)]
+#[derive(Clone, serde::Deserialize, serde::Serialize, Debug)]
 pub struct TaskWarriorExported {
     pub id: u32,
     #[serde(rename = "STATE")]
@@ -54,7 +54,7 @@ pub struct TaskWarriorExported {
     pub effort: Option<String>,
     pub quadrant: Option<String>,
 }
-#[derive(serde::Deserialize, Debug, Clone )]
+#[derive(serde::Deserialize, serde::Serialize, Debug, Clone )]
 pub struct TimeWarriorExported {
     pub id: i32,
     pub start: String,

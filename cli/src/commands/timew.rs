@@ -242,37 +242,7 @@ pub fn list(initial_date: &String, final_date: &Option<String>) -> Result<(), Fy
         end = start + Duration::days(1);
     }
 
-    let timew_json =
-        get::get_timew_json_by_filter(&vec![start.to_string(), "-".to_string(), end.to_string()])
-            .unwrap();
-
-    let mut timew_entries: Vec<(String, TimeWarriorExported)> = Vec::new();
-
-    for timew_entry in timew_json {
-        for tag in timew_entry.tags.as_ref().unwrap_or(&vec![]) {
-            match Uuid::parse_str(&tag) {
-                Ok(uuid) => {
-                    timew_entries.push((uuid.to_string(), timew_entry.clone()));
-                }
-                Err(_) => {}
-            }
-        }
-    }
-
-    let tasks_json = get::json_by_filter(
-        timew_entries
-            .iter()
-            .map(|timew_entry| timew_entry.0.clone())
-            .collect::<Vec<_>>()
-            .join(" ")
-            .as_str(),
-        None,
-    )?;
-
-    let tasks_map = tasks_json
-        .iter()
-        .map(|task| (task.uuid.clone(), task.clone()))
-        .collect::<HashMap<String, TaskWarriorExported>>();
+    let (timew_entries, tasks_map) = get::timew_entries(start, end)?;
 
     for entry in timew_entries {
         println!(
