@@ -1,5 +1,5 @@
 #!/bin/zsh
-DATE="11:00"
+DATE="11h"
 
 usage() {
     echo "Usage: tapp <filter> - Postpone a task"
