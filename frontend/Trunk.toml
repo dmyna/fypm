@@ -37,7 +37,7 @@ ignore = []
 # The address to serve on.
 addresses = ["127.0.0.1"]
 # The port to serve on.
-port = 8080
+port = 3050
 # Aliases to serve, typically found in an /etc/hosts file.
 # aliases = ["http://localhost.mywebsite.com"]
 # Disable the reverse DNS lookup during startup

@@ -5,7 +5,7 @@
     "identifier": "com.tauri.dev",
     "build": {
         "frontendDist": "public",
-        "devUrl": "http://localhost:8080"
+        "devUrl": "http://localhost:3050"
     },
     "app": {
         "windows": [
