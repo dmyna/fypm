@@ -6,6 +6,15 @@ use fypm_lib::values::structs::{TaskWarriorExported, TimeWarriorExported};
 
 const API_PORT: u16 = 8000;
 
+/// Fetches the time logs from the local API and updates the provided state handle
+/// with the rendered HTML list of time entries.
+///
+/// # Arguments
+///
+/// * `time_list` - A state handle to a virtual DOM node that will be updated with
+///   the list of time entries fetched from the API. Each entry is represented as
+///   an HTML list item displaying the task description or an error message if the
+///   task UUID is not found in the task map.
 async fn get_time_list(time_list: UseStateHandle<VNode>) {
     let api_url = format!("http://localhost:{}/api", API_PORT.to_string());
     let url = format!("{}/time/today/tomorrow", api_url);
