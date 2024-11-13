@@ -61,14 +61,12 @@ ws_protocol = "ws"
 # headers = { "X-Foo" = "bar" }
 
 [clean]
-# The output dir for all final assets.
-dist = "dist"
 # Optionally perform a cargo clean.
 cargo = false
 
 [tools]
 # Default wasm-bindgen version to download.
-wasm_bindgen = "0.2.89"
+wasm_bindgen = "0.2.95"
 # Default wasm-opt version to download.
 wasm_opt = "version_116"
 # Default tailwindcss-cli version to download.
