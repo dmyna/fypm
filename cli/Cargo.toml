@@ -37,3 +37,4 @@ strum = { version = "0.26.3", features = ["derive"] }
 diesel_migrations = { version = "2.2.0", features = ["sqlite"] }
 tokio = "1.41.1"
 fypm_lib = { path = "../lib" }
+rocket_cors = "0.6.0"

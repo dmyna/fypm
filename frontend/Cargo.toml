@@ -4,4 +4,9 @@ version = "0.3.0"
 edition = "2021"
 
 [dependencies]
+reqwest = "0.12.9"
 yew = { version = "0.21.0", features = ["csr"] }
+fypm_lib = { path = "../lib" }
+serde_json = "1.0"
+wasm-bindgen-futures = "0.4.45"
+web-sys = "0.3.72"
