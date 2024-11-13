@@ -1,9 +1,19 @@
+use chrono::{DateTime, Local, NaiveDate, Offset, ParseError};
 use regex::Regex;
 use std::str::FromStr;
-use chrono::{DateTime, Local, Offset, ParseError, NaiveDate};
 
 use super::matchs;
 
+/// Transform a date string received from taskwarrior from the format
+/// "YYYYMMDDTHHMMSSZ" to "YYYY-MM-DDTHH:MM:SSZ" and then to the local
+/// timezone. The space in the middle of the date string is added because
+/// otherwise the date would be parsed as "YYYY-MM-DD:00:00:00", which is
+/// not what we want.
+///
+/// # Errors
+///
+/// This function returns a `ParseError` if the date string can't be parsed
+/// or if the date string is not in the correct format.
 pub fn transform_dates_to_iso(received_time: String) -> Result<String, ParseError> {
     let transformed_time_str = Regex::new(r"(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z")
         .unwrap()
@@ -24,6 +34,16 @@ pub fn transform_dates_to_iso(received_time: String) -> Result<String, ParseErro
 
     Ok(final_time)
 }
+/// Given a vector of strings representing date arguments, parse the strings into
+/// `NaiveDate` objects and return them as an array of two elements. If the vector
+/// has three elements, the first element is the initial date and the third element
+/// is the final date. If the vector has two elements, it is processed by
+/// `matchs::match_date_arg` and the result is returned.
+///
+/// # Errors
+///
+/// This function will panic if the vector of date arguments has more than three
+/// elements. It will also panic if the date strings are not in the correct format.
 pub fn date_period(date_args: &Vec<String>) -> [NaiveDate; 2] {
     let args_len = date_args.len();
     if args_len > 3 {
