@@ -1,6 +1,8 @@
-use fypm_lib::values::{err::FypmError, structs::TaskWarriorExported};
 use crate::utils::get;
+use fypm_lib::values::{err::FypmError, structs::TaskWarriorExported};
 
+/// Print the number of deleted tasks (by status) filtered by the '+DELETED and -COMPLETED and -PENDING' filter.
+/// If `no_parents` is `true`, the filter will also include the '-PARENT' modifier, to only show tasks without parents.
 pub fn deleted_tasks(no_parents: &bool) -> Result<(), FypmError> {
     let base_filter = "+DELETED and -COMPLETED and -PENDING";
 
@@ -31,6 +33,16 @@ pub fn deleted_tasks(no_parents: &bool) -> Result<(), FypmError> {
 
     Ok(())
 }
+/// Print the number of pending tasks (by style, type and tags) filtered by the '-DELETED and -COMPLETED' filter.
+/// If `no_parents` is `true`, the filter will also include the '-PARENT' modifier, to only show tasks without parents.
+///
+/// The output will be a table with the following columns:
+/// - All pending tasks: The total number of tasks.
+/// - Style: The number of tasks with a specific style.
+/// - Type: The number of tasks with a specific type.
+/// - Tags: The number of tasks with a specific tag.
+///
+/// The table will also display the total number of tasks without the respective counting.
 pub fn pending_tasks(no_parents: &bool) -> Result<(), FypmError> {
     let divisory = "----------------------";
     let base_filter = "-DELETED and -COMPLETED";

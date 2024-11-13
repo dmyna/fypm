@@ -8,6 +8,10 @@ use fypm_lib::values::structs::TaskWarriorExported;
 pub struct AliasesHandler;
 
 impl AliasesHandler {
+    /// Separates continuous tasks into two vectors, one with aliases and one without.
+    ///
+    /// # Returns
+    /// A vector containing two elements: a vector of tasks with aliases and a vector of tasks without aliases.
     pub fn get_tasks_by_alias_existence() -> Result<[Vec<TaskWarriorExported>; 2], FypmError> {
         let mut tasks_with_alias: Vec<TaskWarriorExported> = Vec::new();
         let mut tasks_without_alias: Vec<TaskWarriorExported> = Vec::new();
@@ -24,6 +28,16 @@ impl AliasesHandler {
 
         Ok([tasks_with_alias, tasks_without_alias])
     }
+    /// Verifies if all tasks with Continuous TYPE have an alias set.
+    ///
+    /// If there are tasks without aliases, it will return an error.
+    /// This function is used internally to ensure that all Continuous tasks have an alias.
+    ///
+    /// # Returns
+    /// * `Result<(), FypmError>` - Returns `Ok(())` if all Continuous tasks have an alias, or a `FypmError` if some tasks are missing an alias.
+    ///
+    /// # Errors
+    /// If there are tasks with Continuous TYPE without an alias, it will return a `FypmError` with `kind` set to `TaskTypeError`.
     pub fn ensure_aliases_tasks() -> Result<(), FypmError> {
         let [_, tasks_without_alias] = Self::get_tasks_by_alias_existence()?;
 
@@ -36,7 +50,14 @@ impl AliasesHandler {
             Ok(())
         }
     }
-
+    /// Adds an alias to a task.
+    ///
+    /// It will ask to input an alias for the task and will verify if the alias is already used by another Continuous task.
+    /// If the alias is already used, it will show a message and ask if you want to try again.
+    /// If the alias is not used, it will add the alias to the task.
+    ///
+    /// # Returns
+    /// * `Result<(), FypmError>` - Returns `Ok(())` if the alias was added successfully, or a `FypmError` if something went wrong.
     pub fn add(filter: &String) -> Result<(), FypmError> {
         let get_task = get::json_by_filter(filter, DEFAULT_GET_JSON_OPTIONS)?;
         let task = get_task
@@ -95,6 +116,16 @@ impl AliasesHandler {
     //pub fn change(self, name: &String) -> Result<(), FypmError> {}
 }
 
+/// Verifies and reports the status of Continuous tasks with respect to their alias assignment.
+///
+/// This function retrieves Continuous tasks and categorizes them into those with aliases and 
+/// those without. It prints the count of tasks with aliases and provides a warning if there 
+/// are tasks missing aliases. If any tasks are missing aliases, the function prompts the user 
+/// to list them, displaying their UUIDs and descriptions if the user confirms.
+///
+/// # Returns
+/// * `Result<(), FypmError>` - Returns `Ok(())` if the operation is successful or a `FypmError` 
+///   if an error occurs during task retrieval.
 pub fn verify_aliases_tasks() -> Result<(), FypmError> {
     let [tasks_with_alias, tasks_without_alias] = AliasesHandler::get_tasks_by_alias_existence()?;
 

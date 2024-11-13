@@ -1,5 +1,19 @@
 use std::io::{Error, ErrorKind};
 
+/// Verifies if a given string is a valid HEX color.
+///
+/// # Args
+///
+/// * `string` - A `String` containing the HEX color to be verified.
+///
+/// # Returns
+///
+/// * `Result<bool, std::io::Error>` - `Ok(true)` if the given string is a valid HEX color,
+///   `Err(std::io::Error)` if the given string is not a valid HEX color.
+///
+/// # Errors
+///
+/// * `std::io::ErrorKind::InvalidInput` - If the given string is not a valid HEX color.
 pub fn verify_hex(string: String) -> Result<bool, Error> {
     let raw = string.strip_prefix("#").unwrap_or(string.as_str());
 

@@ -1,20 +1,39 @@
-use crate::handlers;
-use crate::commands;
 use super::action;
+use crate::commands;
+use crate::handlers;
 
+use crate::commands::TimewAction;
+use crate::utils::get;
 use fypm_lib::utils::parser::transform_dates_to_iso;
 use fypm_lib::values::{
     constants::CONTROL_TASK,
     err::{FypmError, FypmErrorKind},
 };
-use crate::commands::TimewAction;
-use crate::utils::get;
 
+/// Verify the existence of some control tasks.
+///
+/// This functions is a factory for multiple verify scripts.
+///
+/// # Errors
+///
+/// Returns a `FypmError` if any of the verify script fails.
 pub fn match_verify_script(script: &commands::VerifyScripts) -> Result<(), FypmError> {
     match script {
         commands::VerifyScripts::Aliases => handlers::aliases::verify_aliases_tasks(),
     }
 }
+/// Matches a special alias filter to its corresponding task identifier.
+///
+/// This function takes a filter string and returns a specific task UUID or control task based
+/// on predefined aliases. It handles special cases such as "last" to fetch the last task,
+/// and predefined single-letter filters for various activities. If the filter does not match
+/// any known alias, it is returned as is.
+///
+/// # Parameters
+/// - `filter`: A string reference representing the alias filter to match.
+///
+/// # Returns
+/// A string representing the task identifier corresponding to the matched alias.
 pub fn match_special_aliases(filter: &String) -> String {
     match filter.as_str() {
         // Last Task
@@ -31,7 +50,7 @@ pub fn match_special_aliases(filter: &String) -> String {
                     }
                 }
             }
-        },
+        }
         // Time without specific use
         "t" => CONTROL_TASK.to_string(),
         // Lost time
@@ -59,6 +78,11 @@ pub fn match_special_aliases(filter: &String) -> String {
         // Now, if I write "r", it will pass and break
     }
 }
+/// This function receives a special id string that looks like "@id.action" (or "@id.property"), where "action" can be "start", "end" or "s" and "e" respectively, and "property" can be any property of the taskwarrior task.
+///
+/// If the id is not a special id, it will return an error.
+///
+/// If the id is a special id, it will return the value of the property that was asked.
 pub fn match_special_timing_properties(id: &String) -> Result<String, FypmError> {
     if id.starts_with("@") {
         let properties = id.split(".").clone();

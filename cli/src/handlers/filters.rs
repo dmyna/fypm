@@ -12,6 +12,17 @@ use fypm_lib::values::err::{FypmError, FypmErrorKind};
 pub struct FiltersHandler;
 
 impl FiltersHandler {
+    /// Ensures that the default filters exist in the database.
+    ///
+    /// The function checks if the default filters exist in the database. If a default filter does not exist,
+    /// it creates it. The default filters are:
+    ///
+    /// - `late_alarm`: `(ALARM.before:now -PARENT -COMPLETED -DELETED)`.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if it fails to connect to the database or if it fails to execute
+    /// the SQL query.
     pub fn ensure_defaults() -> Result<(), FypmError> {
         let conn = &mut SqliteConnection::establish(DATABASE_URL.as_str()).unwrap();
 
@@ -43,6 +54,21 @@ impl FiltersHandler {
         Ok(())
     }
 
+    /// Checks if a filter with the given name already exists in the list of filters.
+    ///
+    /// This function iterates over the provided list of `filters` and checks if any filter
+    /// has a name that matches the `input` name. If a matching filter is found, it returns
+    /// an error indicating that the filter already exists.
+    ///
+    /// # Arguments
+    ///
+    /// * `input` - A reference to a `String` representing the name of the filter to check.
+    /// * `filters` - A reference to a `Vec<Filter>` representing the list of filters to search.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<(), String>` - Returns `Ok(())` if no matching filter is found, otherwise returns
+    /// an `Err` with a message indicating that a filter with the given name already exists.
     pub fn verify_filter_already_exists(
         input: &String,
         filters: &Vec<Filter>,
@@ -58,6 +84,22 @@ impl FiltersHandler {
 
         Ok(())
     }
+    /// Checks if a filter with the given name does not exist in the list of filters.
+    ///
+    /// This function iterates over the provided list of `filters` and checks if any filter
+    /// has a name that matches the `input` name. If a matching filter is found, it returns
+    /// an `Ok(())`, otherwise returns an `Err` with a message indicating that a filter with
+    /// the given name does not exist.
+    ///
+    /// # Arguments
+    ///
+    /// * `input` - A reference to a `String` representing the name of the filter to check.
+    /// * `filters` - A reference to a `Vec<Filter>` representing the list of filters to search.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<(), String>` - Returns `Ok(())` if a matching filter is found, otherwise returns
+    /// an `Err` with a message indicating that a filter with the given name does not exist.
     pub fn verify_filter_not_exists(input: &String, filters: &Vec<Filter>) -> Result<(), String> {
         for filter in filters {
             if filter.name == *input {
@@ -71,10 +113,25 @@ impl FiltersHandler {
         ))
     }
 
+    /// Retrieves all filters from the database.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if it fails to connect to the database or if it fails to execute
+    /// the SQL query.
     pub fn get_filters(conn: &mut SqliteConnection) -> QueryResult<Vec<Filter>> {
         filters::dsl::filters.load(conn)
     }
 
+    /// Adds a filter to the database.
+    ///
+    /// This function will ask for a name and a filter and will verify that the name does not already exist in the database.
+    /// If the name does not exist, it will add the filter to the database.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if it fails to connect to the database or if it fails to execute
+    /// the SQL query.
     pub fn add(conn: &mut SqliteConnection) -> Result<(), FypmError> {
         let filters = FiltersHandler::get_filters(conn).unwrap();
 
@@ -106,6 +163,15 @@ impl FiltersHandler {
 
         Ok(())
     }
+    /// Removes a filter from the database.
+    ///
+    /// This function will ask for a name and will verify that the name exists in the database.
+    /// If the name exists, it will remove the filter from the database.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if it fails to connect to the database or if it fails to execute
+    /// the SQL query.
     pub fn remove(conn: &mut SqliteConnection) -> Result<(), FypmError> {
         let filters = FiltersHandler::get_filters(conn).unwrap();
 
@@ -127,6 +193,18 @@ impl FiltersHandler {
         Ok(())
     }
 
+    /// Edits a filter in the database.
+    ///
+    /// This function will ask for a name and will verify that the name exists in the database.
+    /// If the name exists, it will ask for a new name and a new filter.
+    /// If the new name is empty, it will keep the same name.
+    /// If the new filter is empty, it will keep the same filter.
+    /// If the new name is not empty and the new filter is not empty, it will update the filter in the database.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if it fails to connect to the database or if it fails to execute
+    /// the SQL query.
     pub fn edit(conn: &mut SqliteConnection) -> Result<(), FypmError> {
         let filters = FiltersHandler::get_filters(conn).unwrap();
 
@@ -206,6 +284,15 @@ impl FiltersHandler {
 
         Ok(())
     }
+    /// Lists all filters in the database.
+    ///
+    /// This function retrieves all filters from the database and prints them to the console.
+    /// Each filter is displayed with its name and filter details.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if it fails to connect to the database or if it fails to execute
+    /// the SQL query.
     pub fn list(conn: &mut SqliteConnection) -> Result<(), FypmError> {
         let filters: Vec<Filter> = FiltersHandler::get_filters(conn).unwrap();
 

@@ -1,3 +1,4 @@
+use crate::CONFIG_PATH;
 use fypm_lib::values::comments::{
     COLORS_CONFIG_COMMENT, OVERLAY_CONFIG_COMMENT, REPORT_CONFIG_COMMENT, TASK_CONFIG_COMMENT,
     UDA_CONFIG_COMMENT, URGENCY_CONFIG_COMMENT,
@@ -9,7 +10,6 @@ use fypm_lib::values::structs::{
     FypmConfigFile, TaskWarriorReportConfig, TaskWarriorUDAConfig, TaskWarriorUrgencyConfig,
     TaskWarriorUrgencyConfigScope, TaskWarriorUserScopeProperty,
 };
-use crate::CONFIG_PATH;
 use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::{Read, Write};
@@ -24,11 +24,26 @@ pub struct FypmConfigs {
 
 pub struct ConfigHandler;
 impl ConfigHandler {
+    /// Ensures that the configuration directory exists by creating it if it does not.
+    ///
+    /// Returns:
+    ///     Result<(), FypmError>: An Ok result if the directory is successfully created
+    ///     or already exists, otherwise returns an error.
     pub fn ensure_config_path() -> Result<(), FypmError> {
         fs::create_dir_all(CONFIG_PATH.to_string()).unwrap();
 
         Ok(())
     }
+    /// Ensures that all default configuration files are present by creating them if they do not exist.
+    ///
+    /// This function iterates over a list of default configuration files and writes initial content
+    /// to each file if it is missing. Each file corresponds to a specific configuration aspect
+    /// (e.g., task, UDA, report, urgency, colors, overlay) and is initialized with a predefined comment
+    /// explaining its purpose.
+    ///
+    /// Returns:
+    ///     Result<(), FypmError>: An Ok result if all files are successfully ensured or created,
+    ///     otherwise returns an error.
     pub fn ensure_config_files() -> Result<(), FypmError> {
         fn ensure_file_existence(config_file: &str, initial_content: &str) {
             let file_path = Path::new(&CONFIG_PATH.to_string()).join(config_file);
@@ -50,6 +65,20 @@ impl ConfigHandler {
         Ok(())
     }
 
+    /// Creates and returns the default configuration settings for the application.
+    ///
+    /// This function initializes the default configurations for reports, UDAs (User Defined Attributes),
+    /// and urgency settings. It constructs a `FypmConfigs` struct, which contains BTreeMaps for each
+    /// configuration type:
+    ///
+    /// - **Reports**: Defines various task reports with specific columns, labels, sorting, and filtering.
+    /// - **UDAs**: Specifies custom attributes for tasks, including their types, labels, possible values,
+    ///   and defaults.
+    /// - **Urgency**: Sets urgency coefficients for different task attributes, determining their importance
+    ///   in scheduling and prioritization.
+    ///
+    /// Returns:
+    ///     FypmConfigs: A struct containing the initialized default configurations.
     fn create_config_defaults() -> FypmConfigs {
         FypmConfigs {
             report: BTreeMap::from([
@@ -850,6 +879,19 @@ impl ConfigHandler {
             ]),
         }
     }
+    /// Converts the `FypmConfigs` struct into a `BTreeMap<String, String>`.
+    ///
+    /// This is a helper function that is used to generate the default configuration file.
+    ///
+    /// The keys in the returned `BTreeMap` are in the format `section.key` or `section.key.subkey`.
+    ///
+    /// The values are the string representation of the values in the `FypmConfigs` struct.
+    ///
+    /// The returned `BTreeMap` is ordered by key, so this function can be used to generate a configuration file with a predictable order.
+    ///
+    /// # Errors
+    ///
+    /// This function will never return an error, so you can safely unwrap the result.
     fn get_defaults_btreemap(
         defaults: &FypmConfigs,
     ) -> Result<BTreeMap<String, String>, FypmError> {
@@ -928,6 +970,15 @@ impl ConfigHandler {
         Ok(hashmap)
     }
 
+    /// Reads a configuration file and returns its content as a `FypmConfigFile`.
+    ///
+    /// The function takes a config file name as a parameter and returns a `FypmConfigFile` that contains the content of the file.
+    ///
+    /// The function will return an error if the config file name is invalid.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the config file name is invalid.
     fn get_config(config_file_name: &str) -> Result<FypmConfigFile, FypmError> {
         let config_file_path = Path::new(&CONFIG_PATH.to_string()).join(config_file_name);
 
@@ -950,6 +1001,21 @@ impl ConfigHandler {
             map: config_hashmap,
         })
     }
+    /// Verifies the entries of a configuration file.
+    ///
+    /// This function takes a configuration file as a parameter, as well as two vectors of strings: `forbidden_keys` and `allowed_keys`.
+    ///
+    /// The function will return an error if any of the keys in the configuration file are in the `forbidden_keys` vector.
+    ///
+    /// Otherwise, the function will return the number of entries in the configuration file that are in the `allowed_keys` vector.
+    ///
+    /// The function will also return an error if any key in the configuration file is not in the `allowed_keys` vector.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if any of the keys in the configuration file are in the `forbidden_keys` vector.
+    ///
+    /// This function will also return an error if any key in the configuration file is not in the `allowed_keys` vector.
     fn verify_config_entries(
         config: &FypmConfigFile,
         forbidden_keys: &Vec<&str>,
@@ -988,7 +1054,28 @@ impl ConfigHandler {
 
         Ok(entries_count)
     }
-
+    /// Mounts all the configurations in a single `BTreeMap` and returns it.
+    ///
+    /// This function will verify if the config entries are valid, and if any
+    /// invalid key is found, it will return an `Err` variant with a `FypmError`
+    /// containing the message and the kind of error.
+    ///
+    /// It will also extend the `BTreeMap` with the default configurations
+    /// returned by `create_config_defaults`.
+    ///
+    /// The priority of the configurations is as follows:
+    ///
+    /// 1. Taskwarrior user-defined and fypm defaults
+    /// 2. General user-defined configs
+    /// 3. Overlay configs
+    ///
+    /// If any key in the overlay configs is not present in any other config,
+    /// it will return an `Err` variant with a `FypmError` containing the message
+    /// and the kind of error.
+    ///
+    /// The returned `BTreeMap` can be used to generate a `.taskrc` file or
+    /// to be used by any other function that requires a `BTreeMap` with the
+    /// configurations.
     fn mount_taskrc() -> Result<BTreeMap<String, String>, FypmError> {
         let mut configs_map = BTreeMap::new();
 
@@ -1072,6 +1159,21 @@ impl ConfigHandler {
 
         Ok(configs_map)
     }
+    /// Handles the configuration file by checking and updating the `.taskrc` file.
+    ///
+    /// This function checks for the existence of a `TASKRC` environment variable to determine
+    /// the path of the `.taskrc` configuration file. If the environment variable is not set,
+    /// it defaults to the user's home directory. The function mounts all configuration settings
+    /// into a `BTreeMap` and serializes it to an INI string format for comparison.
+    ///
+    /// If the `.taskrc` file exists and the content matches the serialized configuration,
+    /// the function exits without changes. If the file is not a regular file, an error is returned.
+    /// If the file does not exist or the content is different, the function writes the new
+    /// configuration to the specified path.
+    ///
+    /// Returns:
+    ///     Result<(), FypmError>: An Ok result if the configuration is successfully handled,
+    ///     otherwise returns an error indicating the issue.
     pub fn handle_config() -> Result<(), FypmError> {
         let taskrc_env = env::var("TASKRC").unwrap_or("".to_string());
 

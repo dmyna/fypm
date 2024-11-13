@@ -12,6 +12,28 @@ use fypm_lib::values::{
     structs,
 };
 
+/// Retrieves a list of tasks from TaskWarrior based on the specified filter.
+/// Optionally, additional overrides can be applied to the command arguments.
+///
+/// # Arguments
+///
+/// * `filter` - A string slice that holds the filter criteria for the tasks.
+/// * `options` - An optional `GetJsonByFilterOptions` struct that may contain
+///               additional overrides and a quantity constraint.
+///
+/// # Returns
+///
+/// * `Result<Vec<TaskWarriorExported>, FypmError>` - A result containing a vector
+///   of `TaskWarriorExported` structs if successful, or a `FypmError` if an error occurs.
+///
+/// # Errors
+///
+/// * `FypmErrorKind::TooMuchTasks` - If the number of tasks retrieved exceeds the specified quantity.
+/// * `FypmErrorKind::NoTasksFound` - If the number of tasks retrieved is less than the specified quantity.
+///
+/// # Panics
+///
+/// This function will panic if the command execution fails or if JSON parsing fails.
 pub fn json_by_filter(
     filter: &str,
     options: Option<GetJsonByFilterOptions>,
@@ -49,6 +71,16 @@ pub fn json_by_filter(
 
     Ok(parsed_json)
 }
+/// Retrieves the active task from TaskWarrior.
+///
+/// # Returns
+///
+/// * `Result<TaskWarriorExported, FypmError>` - A result containing the active task if successful,
+///   or a `FypmError` if an error occurs or there is no active task.
+///
+/// # Errors
+///
+/// * `FypmErrorKind::NoTasksFound` - If there is no active task.
 pub fn get_current_task_json() -> Result<TaskWarriorExported, FypmError> {
     let get_task = json_by_filter("+ACTIVE", None)?;
     let active_task = get_task.get(0);
@@ -62,6 +94,17 @@ pub fn get_current_task_json() -> Result<TaskWarriorExported, FypmError> {
         })
     }
 }
+/// Retrieves timewarrior records from a given filter.
+///
+/// # Arguments
+///
+/// * `filter` - A vector of strings that will be passed as arguments to `timew export`.
+///
+/// # Returns
+///
+/// * `Result<Vec<TimeWarriorExported>, serde_json::Error>` - A result containing a vector of
+///   `TimeWarriorExported` structs if successful, or a `serde_json::Error` if the JSON parsing
+///   fails.
 pub fn get_timew_json_by_filter(
     filter: &Vec<String>,
 ) -> Result<Vec<TimeWarriorExported>, serde_json::Error> {
@@ -77,6 +120,16 @@ pub fn get_timew_json_by_filter(
 
     serde_json::from_str::<Vec<structs::TimeWarriorExported>>(str_json)
 }
+/// Retrieves the start or end time of a timewarrior task.
+///
+/// # Arguments
+///
+/// * `id` - The id of the task.
+/// * `action` - The type of time to retrieve. Use `TimewAction::Start` to get the start time or `TimewAction::End` to get the end time.
+///
+/// # Returns
+///
+/// * `String` - The time of the task in ISO format. If the task doesn't have an end time, it will return `"now"`.
 pub fn get_timew_time(id: &String, action: &TimewAction) -> String {
     let get_task_json = get_timew_json_by_filter(&vec![id.clone()]).unwrap();
     let task_json = get_task_json.get(0).unwrap();
@@ -87,6 +140,27 @@ pub fn get_timew_time(id: &String, action: &TimewAction) -> String {
         task_json.end.clone().unwrap_or("now".to_string())
     }
 }
+/// Retrieves the UUIDs of tasks from TaskWarrior that match a given filter.
+///
+/// # Arguments
+///
+/// * `filter` - A string slice that holds the filter criteria for the tasks.
+/// * `options` - An optional `GetJsonByFilterOptions` struct that may contain
+///               additional overrides and a quantity constraint.
+///
+/// # Returns
+///
+/// * `Result<Vec<String>, FypmError>` - A result containing a vector of UUIDs if successful,
+///   or a `FypmError` if an error occurs.
+///
+/// # Errors
+///
+/// * `FypmErrorKind::TooMuchTasks` - If the number of tasks retrieved exceeds the specified quantity.
+/// * `FypmErrorKind::NoTasksFound` - If the number of tasks retrieved is less than the specified quantity.
+///
+/// # Panics
+///
+/// This function will panic if the command execution fails.
 pub fn get_uuids_by_filter(
     filter: &str,
     options: Option<GetJsonByFilterOptions>,
@@ -120,6 +194,21 @@ pub fn get_uuids_by_filter(
 
     Ok(uuids)
 }
+/// Retrieves the number of tasks that matches the given filter.
+///
+/// # Arguments
+///
+/// * `filter` - A string slice that holds the filter criteria for the tasks.
+///
+/// # Returns
+///
+/// * `Result<u32, FypmError>` - A result containing the number of tasks if successful,
+///   or a `FypmError` if an error occurs.
+///
+/// # Panics
+///
+/// This function will panic if the command execution fails or if the output is not a valid
+/// number.
 pub fn get_count_by_filter(filter: &String) -> Result<u32, FypmError> {
     let mut tasks_count: u32 = 0;
 
@@ -138,6 +227,20 @@ pub fn get_count_by_filter(filter: &String) -> Result<u32, FypmError> {
 
     Ok(tasks_count)
 }
+/// Retrieves the filter for a given TaskWarrior modifier.
+///
+/// # Arguments
+///
+/// * `modifier` - A string slice that holds the modifier name.
+///
+/// # Returns
+///
+/// * `Result<String, FypmError>` - A result containing the filter associated with the modifier if successful,
+///   or a `FypmError` if an error occurs.
+///
+/// # Errors
+///
+/// * `FypmErrorKind::TaskWarriorError` - If the command execution fails.
 pub fn filter_by_modifier(modifier: &String) -> Result<String, FypmError> {
     let cfg_key = format!("report.{modifier}.filter");
 
@@ -164,6 +267,23 @@ pub fn filter_by_modifier(modifier: &String) -> Result<String, FypmError> {
     Ok(config)
 }
 
+/// Retrieves the MOTHER task from TaskWarrior that matches a given Sequence ID.
+///
+/// # Arguments
+///
+/// * `seq_id` - The Sequence ID to search for.
+///
+/// # Returns
+///
+/// * `Result<TaskWarriorExported, FypmError>` - A result containing the MOTHER task if successful,
+///   or a `FypmError` if an error occurs.
+///
+/// # Errors
+///
+/// * `FypmErrorKind::TooMuchTasks` - If the number of tasks retrieved exceeds the specified quantity.
+/// * `FypmErrorKind::NoTasksFound` - If the number of tasks retrieved is less than the specified quantity.
+/// * `FypmErrorKind::NotEnoughTasks` - If the number of tasks retrieved is not enough to get a MOTHER task.
+///
 pub fn mother_json_by_sequence_id(seq_id: &String) -> Result<TaskWarriorExported, FypmError> {
     let tasks = json_by_filter(format!("(status:pending and {})", seq_id).as_str(), None)?;
 
@@ -223,6 +343,10 @@ pub fn mother_json_by_sequence_id(seq_id: &String) -> Result<TaskWarriorExported
     }
 }
 
+/// Get all timew entries between a start and end date, and their respective tasks as a HashMap.
+///
+/// # Errors
+/// If there is an error parsing the UUID from the timewarrior tag, it will propagate the error.
 pub fn timew_entries(
     start: NaiveDate,
     end: NaiveDate,

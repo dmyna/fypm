@@ -1,6 +1,7 @@
 use std::str::FromStr;
 use rocket_cors::{AllowedHeaders, AllowedOrigins, CorsOptions};
 
+
 #[rocket::main]
 pub async fn rocket() -> Result<(), rocket::Error> {
     let cors = CorsOptions {

@@ -2,6 +2,11 @@ use dialoguer::Confirm;
 
 use fypm_lib::values::{err::FypmError, structs::TaskWarriorExported};
 
+/// Verify the selected tasks with the user.
+///
+/// This function asks the user to confirm if the selected tasks are correct.
+/// If the user confirms, it returns Ok(true), otherwise it returns Err(FypmError).
+///
 pub fn verify_selected_tasks(tasks_json: &Vec<TaskWarriorExported>) -> Result<bool, FypmError> {
     let mut tasks_descriptions = Vec::new();
     for task in tasks_json.clone() {

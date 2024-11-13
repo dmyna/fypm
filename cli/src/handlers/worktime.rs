@@ -13,6 +13,24 @@ use fypm_lib::values::err::FypmError;
 pub struct WorktimeHandler;
 
 impl WorktimeHandler {
+    /// Adds a new worktime entry to the database with the given parameters.
+    ///
+    /// This function prompts the user for a description, style, start and end times,
+    /// and polybar background and foreground colors for the worktime. It validates
+    /// the time inputs to ensure they are in the correct format and that the end time
+    /// is after the start time. It also validates the color inputs to ensure they are
+    /// valid hexadecimal color codes. The new worktime entry is then inserted into
+    /// the database.
+    ///
+    /// # Arguments
+    ///
+    /// * `conn` - A mutable reference to the SQLite connection.
+    /// * `name` - A reference to a string containing the name of the worktime.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<(), FypmError>` - Returns an Ok result if the worktime is successfully
+    ///   added, otherwise returns an error.
     pub fn add(conn: &mut SqliteConnection, name: &String) -> Result<(), FypmError> {
         let date_format = "%H:%M";
         let term = Term::stdout();
@@ -112,6 +130,12 @@ impl WorktimeHandler {
 
         Ok(())
     }
+    /// Removes a worktime from the database.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if it fails to connect to the database or if it fails to execute
+    /// the SQL query.
     pub fn remove(conn: &mut SqliteConnection, name: &String) -> Result<(), FypmError> {
         diesel::delete(worktimes::table.filter(worktimes::dsl::name.like(name)))
             .execute(conn)
@@ -119,6 +143,16 @@ impl WorktimeHandler {
 
         Ok(())
     }
+    /// Gets a worktime from the database by name.
+    ///
+    /// # Arguments
+    ///
+    /// * `conn` - A mutable reference to the SQLite connection.
+    /// * `name` - A reference to a string containing the name of the worktime.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<Worktime, FypmError>` - Returns the worktime struct if the worktime exists, otherwise returns an error.
     pub fn get(conn: &mut SqliteConnection, name: &String) -> Result<Worktime, FypmError> {
         let worktime: Worktime = worktimes::dsl::worktimes
             .filter(worktimes::dsl::name.like(name))
@@ -127,6 +161,20 @@ impl WorktimeHandler {
 
         Ok(worktime)
     }
+    /// Lists all worktime entries from the database.
+    ///
+    /// This function retrieves all worktime records from the database and prints
+    /// their names and descriptions. If no worktimes are found, it prints a message
+    /// indicating that no worktimes are available.
+    ///
+    /// # Arguments
+    ///
+    /// * `conn` - A mutable reference to the SQLite connection.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<(), FypmError>` - Returns an Ok result when the operation is successful,
+    ///   otherwise returns an error.
     pub fn list(conn: &mut SqliteConnection) -> Result<(), FypmError> {
         let worktimes: Vec<Worktime> = worktimes::dsl::worktimes.load(conn).unwrap();
 
