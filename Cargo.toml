@@ -29,7 +29,7 @@ itertools = "0.13.0"
 tmux_interface = "0.3.2"
 terminal_size = "0.3.0"
 strum_macros = "0.26.4"
-diesel = { version = "2.2.2", features = ["sqlite"] }
+diesel = { version = "2.2.3", features = ["sqlite"] }
 ratatui = "0.27.0"
 serde_ini = "0.2.0"
 strum = { version = "0.26.3", features = ["derive"] }
