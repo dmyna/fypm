@@ -1581,6 +1581,7 @@ dependencies = [
 name = "fypm_frontend"
 version = "0.3.0"
 dependencies = [
+ "chrono",
  "fypm_lib",
  "reqwest",
  "serde_json",
