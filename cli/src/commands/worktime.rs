@@ -17,6 +17,23 @@ use crate::DATABASE_URL;
 //#endregion
 //#endregion
 //#region           Implementation
+
+/// Writes the current worktime and associated polybar colors to temporary files.
+///
+/// This function creates or updates temporary files in the `/var/tmp` directory
+/// to store the current worktime and its corresponding polybar background and
+/// foreground colors. It also updates the `.last_work_time` file with the current worktime.
+///
+/// # Arguments
+///
+/// * `current_wt` - A reference to a string containing the name of the current worktime.
+/// * `bg_poly_color` - A reference to a string containing the polybar background color for the worktime.
+/// * `fg_poly_color` - A reference to a string containing the polybar foreground color for the worktime.
+///
+/// # Returns
+///
+/// * `Result<(), Error>` - Returns an `Ok` result if writing to the files is successful,
+///   otherwise returns an `Error`.
 fn write_values_on_temp_files(
     current_wt: &String,
     bg_poly_color: &String,
@@ -33,7 +50,17 @@ fn write_values_on_temp_files(
 
     Ok(())
 }
-
+/// Updates the filter for the worktime command in the `~/.taskrc` file.
+///
+/// The worktime filter is created by combining the essential and scheduled filters. The
+/// essential filter is defined by the `ESSENTIAL_FILTER` env variable and the scheduled
+/// filter is defined by the `SCHEDULED_FILTER` env variable. The worktime filter is then
+/// used to filter the tasks and update the `~/.taskrc` file.
+///
+/// # Arguments
+///
+/// * `current_wt` - The current worktime that is selected.
+/// * `cfg_line` - The line of the config file that needs to be updated.
 fn update_filter(current_wt: &String, cfg_line: &str) -> Result<(), Error> {
     let current_filter_path = Path::new("/var/tmp/.worktime_filter");
     let config_file_path = dirs::home_dir().unwrap().join(".taskrc");
@@ -73,6 +100,19 @@ fn update_filter(current_wt: &String, cfg_line: &str) -> Result<(), Error> {
 
     Ok(())
 }
+/// Updates the TaskWarrior session to use the specified viewer and quit key.
+///
+/// If the TaskWarrior session exists, it will quit the current viewer and open the specified one.
+/// If the TaskWarrior session does not exist, it will simply open the specified viewer.
+///
+/// # Arguments
+///
+/// * `viewer` - The viewer to be used.
+/// * `viewer_quit_key` - The quit key for the viewer.
+///
+/// # Returns
+///
+/// A Result containing either Ok(()) if the viewer was updated successfully, or an Error if an error occurred.
 fn update_viewer_session(viewer: &str, viewer_quit_key: &str) -> Result<(), Error> {
     //. DEV: switch to tmux interface
 
@@ -94,7 +134,17 @@ fn update_viewer_session(viewer: &str, viewer_quit_key: &str) -> Result<(), Erro
 
     Ok(())
 }
-
+/// Applies a worktime preset to the system.
+///
+/// The function works by setting the WORKTIME environment variable, writing the current worktime
+/// and its associated Polybar colors to temporary files, setting the next filter in the
+/// taskwarrior-tui configuration and restarting the Polybar instance.
+///
+/// If the preset is not found, the function prints a message and lists the available presets.
+///
+/// # Errors
+///
+/// The function will return an error if the preset is not found in the database.
 pub fn apply(name: &String) -> Result<(), FypmError> {
     let mut conn = SqliteConnection::establish(DATABASE_URL.as_str()).unwrap();
 

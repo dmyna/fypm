@@ -26,6 +26,13 @@ use crate::{
     utils::get,
 };
 
+/// Stop a task with the given filter. If no filter is given, the currently running task is stopped.
+///
+/// If `start_control_task` is `true`, the control task is started afterwards.
+///
+/// # Errors
+///
+/// This function will return an error if the task could not be stopped (e.g. because the task is not running).
 pub fn stop(filter_option: &Option<String>, start_control_task: bool) -> Result<(), FypmError> {
     let final_filter: String;
 
@@ -48,6 +55,26 @@ pub fn stop(filter_option: &Option<String>, start_control_task: bool) -> Result<
 
     Ok(())
 }
+/// Starts a task based on the provided filter.
+///
+/// The function resolves special aliases in the filter, retrieves the task's JSON
+/// representation, and verifies the task's conditions before starting it.
+/// If the task is part of a sequence, additional processing is performed to match
+/// it to the correct sequence task.
+///
+/// # Arguments
+///
+/// * `filter` - A string representing the filter criteria to identify the task.
+///
+/// # Returns
+///
+/// * `Result<(), FypmError>` - Returns an empty result if successful, or a
+///   `FypmError` if an error occurs during task retrieval or processing.
+///
+/// # Errors
+///
+/// * `FypmErrorKind::TooMuchTasks` - If there are multiple tasks currently active.
+/// * `FypmErrorKind::NoTasksFound` - If no tasks are currently active.
 pub fn start(filter: &String) -> Result<(), FypmError> {
     let mut filter = matchs::match_special_aliases(filter);
     let filter_json = if filter.starts_with("+ST_") {
@@ -104,6 +131,9 @@ pub fn start(filter: &String) -> Result<(), FypmError> {
         Ok(())
     }
 }
+/// Marks a task as done.
+///
+/// If you want to mark all tasks as done, pass `None` as the first argument.
 pub fn done(
     filter: &Option<String>,
     tastart_filter: &Option<String>,
@@ -236,6 +266,16 @@ pub fn done(
     Ok(())
 }
 
+/// Abandons a task. If the task is marked as Abandoned or NoControl, an annotation must be provided.
+///
+/// # Arguments
+/// * `tag`: The tag to be added to the task.
+/// * `filter`: The filter to select the task to be abandoned.
+/// * `annotation`: The annotation to be added to the task. If `None`, no annotation will be added.
+/// * `annotation_filter`: The filter to select the tasks to be annotated. If `None`, the `filter` argument will be used.
+///
+/// # Errors
+/// Returns `FypmError` if an error occurs while executing the command.
 pub fn abandon(
     tag: &commands::TaAbandonTags,
     filter: &String,
@@ -348,6 +388,32 @@ pub fn abandon(
 
     Ok(())
 }
+/// Schedules tasks by adding alarm, due date, and worktime attributes as specified.
+///
+/// This function modifies tasks filtered by the given criteria to add scheduling
+/// attributes such as alarms, due dates, and worktimes. It first verifies the selected
+/// tasks and confirms the operation before proceeding with the modifications.
+///
+/// # Arguments
+///
+/// * `filter` - A reference to a string that specifies the filter criteria for selecting the tasks.
+/// * `alarm_date` - A reference to a string that specifies the date and time for the alarm.
+/// * `due_date` - An optional reference to a string that specifies the due date for the tasks.
+/// * `worktime` - An optional reference to a string that specifies the worktime for the tasks.
+///
+/// # Returns
+///
+/// * `Result<(), FypmError>` - Returns an Ok result if the scheduling is successful, or a
+///   `FypmError` if an error occurs during task retrieval or processing.
+///
+/// # Errors
+///
+/// * `FypmErrorKind::TaskWarriorError` - If the command execution fails during task retrieval or modification.
+///
+/// # Output
+///
+/// The function outputs the tasks to the standard output with modified attributes,
+/// or prints a message indicating that the operation was aborted if confirmation fails.
 pub fn schedule(
     filter: &String,
     alarm_date: &String,
@@ -406,6 +472,33 @@ pub fn schedule(
 
     Ok(())
 }
+/// Unschedules tasks by removing alarm, due date, and worktime attributes as specified.
+///
+/// This function modifies the tasks filtered by the given criteria to remove
+/// scheduling attributes such as alarms, due dates, and worktimes based on the
+/// provided flags. It first verifies the selected tasks and confirms the operation
+/// before proceeding with the modifications.
+///
+/// # Arguments
+///
+/// * `filter` - A reference to a string that specifies the filter criteria for selecting the tasks.
+/// * `no_alarm` - A boolean flag indicating whether to remove the alarm attribute from the tasks.
+/// * `no_due` - A boolean flag indicating whether to remove the due date attribute from the tasks.
+/// * `no_worktime` - A boolean flag indicating whether to remove the worktime attribute from the tasks.
+///
+/// # Returns
+///
+/// * `Result<(), FypmError>` - Returns an Ok result if the unscheduling is successful, or a
+///   `FypmError` if an error occurs during task retrieval or processing.
+///
+/// # Errors
+///
+/// * `FypmErrorKind::TaskWarriorError` - If the command execution fails during task retrieval or modification.
+///
+/// # Output
+///
+/// The function outputs the tasks to the standard output with modified attributes,
+/// or prints a message indicating that the operation was aborted if confirmation fails.
 pub fn unschedule(
     filter: &String,
     no_alarm: &bool,
@@ -461,6 +554,19 @@ pub fn unschedule(
 
     Ok(())
 }
+/// Undoes the status of a task.
+///
+/// If the `unarchive` argument is set to `true`, it will filter for archived tasks and unarchive them.
+/// Otherwise, it will filter for tasks that are failed, abandoned or nocontrol and remove those tags.
+///
+/// # Errors
+///
+/// * `FypmErrorKind::TaskWarriorError` - If the command execution fails during task retrieval or modification.
+///
+/// # Output
+///
+/// The function outputs the tasks to the standard output with modified attributes,
+/// or prints a message indicating that the operation was aborted if confirmation fails.
 pub fn und(filter: &String, unarchive: &bool) -> Result<(), FypmError> {
     let tasks = if *unarchive {
         println!("Unarchive option is true! Filtering for archived tasks...");
@@ -504,6 +610,29 @@ pub fn und(filter: &String, unarchive: &bool) -> Result<(), FypmError> {
 
     Ok(())
 }
+/// Updates the time of a recurring task and its instances.
+///
+/// This function modifies the due time of a recurring task and its pending instances
+/// to the specified new time. It ensures that the task has a valid recurring status and
+/// a due date before proceeding with the update.
+///
+/// # Arguments
+///
+/// * `filter` - A reference to a string that specifies the filter criteria for selecting the task.
+/// * `new_time` - A reference to a string representing the new time in the format `%H:%M`.
+///
+/// # Returns
+///
+/// * `Result<(), FypmError>` - Returns an Ok result if the update is successful, or a `FypmError` if an error occurs.
+///
+/// # Errors
+///
+/// * `FypmErrorKind::InvalidInput` - If the specified time format is invalid, or if the task is not recurring,
+/// or if the due date format is invalid.
+///
+/// # Panics
+///
+/// The function will panic if an instance task lacks a due date.
 pub fn recur_time(filter: &String, new_time: &String) -> Result<(), FypmError> {
     let recur_without_due_msg = "What?? A recurring task must have a due! Is it a TaskWarrior bug?";
     let date_format = "%H:%M";

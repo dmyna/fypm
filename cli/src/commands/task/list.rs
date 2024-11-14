@@ -15,6 +15,28 @@ use crate::{
     utils::{get, term},
 };
 
+/// Displays detailed information about a specific task based on the given filter.
+///
+/// The function fetches task data using the provided filter and formats it into
+/// a structured table, displaying key task attributes such as project, style,
+/// work time, type, quadrant, effort, and tags. The first column contains
+/// task identifiers and attributes, while the second column contains their
+/// corresponding values. The table is styled for readability, with alternating
+/// row colors and emphasis on the task identifier.
+///
+/// # Arguments
+///
+/// * `filter` - A string representing the filter criteria for retrieving the task.
+///
+/// # Returns
+///
+/// * `Result<(), FypmError>` - Returns an empty result if successful, or a
+///   `FypmError` if an error occurs during data retrieval or processing.
+///
+/// # Errors
+///
+/// * `FypmErrorKind::ProblemWithStoredTask` - If there is a mismatch in the
+///   number of attributes and values, indicating an issue with task data.
 pub fn info(filter: &String) -> Result<(), FypmError> {
     let grid_separator_len = 1;
     let task = get::json_by_filter(filter, DEFAULT_GET_JSON_OPTIONS)?;
@@ -128,6 +150,36 @@ pub fn statistic(command: &commands::StatisticsCommands, no_parents: &bool) -> R
 
     Ok(())
 }
+/// Lists tasks by date within a specified range, applying sorting and filtering.
+///
+/// For each day in the range, tasks are retrieved and listed based on the
+/// specified property and modifier. The sorting is controlled by a format
+/// string, and the results are printed to standard output, with each day
+/// visually separated. Sundays are marked with an additional visual separator.
+///
+/// # Arguments
+///
+/// * `property` - A reference to a string that specifies which property to
+///   consider for task sorting and filtering.
+/// * `modifier` - A reference to a string that specifies additional filter
+///   criteria to apply when retrieving tasks.
+/// * `date_args` - A vector of strings representing the start and end dates
+///   for the range, formatted as `YYYY-MM-DD`.
+///
+/// # Returns
+///
+/// * `Result<(), FypmError>` - Returns an Ok result if successful, or a
+///   `FypmError` if an error occurs during task retrieval or processing.
+///
+/// # Errors
+///
+/// * `FypmErrorKind::TaskWarriorError` - If the command execution fails during
+///   task retrieval or counting.
+///
+/// # Output
+///
+/// The function outputs the tasks to the standard output, grouped by dates
+/// within the specified range, and prints them using a bold and white format.
 pub fn date(
     property: &String,
     modifier: &String,
@@ -171,6 +223,31 @@ pub fn date(
 
     Ok(())
 }
+
+/// Lists tasks with mother tasks and their subtasks grouped together.
+///
+/// This function filters tasks based on the provided modifier and filter criteria.
+/// It first retrieves the UUIDs of mother tasks and lists them with their
+/// subtasks, applying the specified modifier. It then lists additional tasks
+/// that match the filter but are not mother tasks.
+///
+/// # Arguments
+///
+/// * `modifier` - A reference to a string that specifies the modifier for listing tasks.
+/// * `filter` - A reference to a vector of strings that holds additional filter criteria.
+///
+/// # Returns
+///
+/// * `Result<(), FypmError>` - Returns an Ok result if successful, or a `FypmError` if an error occurs.
+///
+/// # Errors
+///
+/// * `FypmErrorKind::TaskWarriorError` - If the command execution fails during task retrieval or counting.
+///
+/// # Output
+///
+/// The function outputs the tasks to the standard output, grouped by mothers and subtasks,
+/// and prints the total number of tasks found.
 pub fn mother_and_subtasks(modifier: &String, filter: &Vec<String>) -> Result<(), FypmError> {
     let modifier_filter: String;
 
@@ -239,6 +316,19 @@ pub fn mother_and_subtasks(modifier: &String, filter: &Vec<String>) -> Result<()
 
     Ok(())
 }
+/// Prints a report of the completion score for each day in the given range.
+///
+/// The report will show the number of tasks completed, pending, and deleted for
+/// each day, as well as the total number of tasks. For each day, it will also
+/// show the percentage of tasks completed, pending, and deleted.
+///
+/// If the current date is within the given range, it will be highlighted in
+/// the report.
+///
+/// The report will also show a summary of the completion score for the week.
+/// The summary will show the total number of tasks completed, pending, and
+/// deleted for the week, as well as the percentage of tasks completed, pending,
+/// and deleted.
 pub fn completion_score(date_args: &Vec<String>) -> Result<(), FypmError> {
     let initial_date: NaiveDate;
     let final_date: NaiveDate;

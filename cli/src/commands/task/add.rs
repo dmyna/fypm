@@ -13,6 +13,18 @@ use fypm_lib::values::{
     structs::TaskWarriorExported,
 };
 
+/// Creates a new task and return its uuid.
+///
+/// # Arguments
+///
+/// * `description`: The description of the task.
+/// * `project`: The project of the task.
+/// * `style`: The style of the task.
+/// * `r#type`: The type of the task.
+/// * `other_args`: Any other argument to be passed to the `task` command.
+/// * `skip_confirmation`: If `true`, the function will not prompt the user for confirmation.
+///
+/// # Examples
 pub fn new(
     description: &String,
     project: &String,
@@ -88,6 +100,32 @@ pub fn new(
 
     Ok(uuid)
 }
+/// Adds a subtask to a specified mother task.
+///
+/// If the mother task is part of a sequence, the subtask will be added to the sequence
+/// and linked with the previous sequence subtask. If not, the subtask is simply linked
+/// to the mother task.
+///
+/// # Arguments
+///
+/// * `mother_task`: The UUID of the mother task to which the subtask will be added.
+/// * `other_args`: A vector containing the arguments for the subtask, including its
+///   description, style, type, and any additional parameters.
+/// * `skip_confirmation`: If `true`, skips the confirmation prompt before creating
+///   the subtask.
+///
+/// # Returns
+///
+/// * `Result<String, FypmError>` - The UUID of the created subtask if successful,
+///   or a `FypmError` if an error occurs.
+///
+/// # Errors
+///
+/// * `FypmErrorKind::InvalidInput` - If an incorrect number of arguments is provided.
+/// * `FypmErrorKind::WrongInitialization` - If the mother task is part of a sequence
+///   but lacks a sequence ID.
+/// * `FypmErrorKind::NoTasksFound` - If no previous sequence subtask is found.
+/// * Other error kinds may be returned depending on the underlying operations.
 pub fn subtask(
     mother_task: &String,
     other_args: &Vec<String>,
@@ -250,6 +288,17 @@ pub fn subtask(
 
     Ok(subtask)
 }
+    /// Create a sequence of tasks.
+    ///
+    /// The sequence type is defined by the field `seq_type`.
+    /// The sequence will have as many tasks as the difference between `initial_number` and `last_number`.
+    /// The sequence will have the tag `ST_<tag>` and `seq_type.to_string()`.
+    /// The sequence will be linked to the mother task.
+    /// The mother task will have the tag `Sequence`.
+    /// If `season` is `Some`, the mother task's description will be `description (Season <season>)`.
+    /// If `last_season_id` is `Some`, the first task of the sequence will have the tag `SEQ_PREVIOUS:<last_season_id>`.
+    /// The next task of each task will have the tag `SEQ_NEXT:<next_task_uuid>`.
+    /// The current task of the mother task will have the tag `SEQ_CURRENT:<first_task_uuid>`.
 pub fn sequence(
     seq_type: &TaSequenceTypes,
     style: &String,
@@ -379,6 +428,22 @@ pub fn sequence(
 
     Ok(())
 }
+/// Creates a new birthday task or event in the system.
+///
+/// This function calculates the next occurrence of a given birthday based on the current date.
+/// It constructs a task with specific attributes such as work time, recurrence, goal, and due date,
+/// then returns the UUID of the created task.
+///
+/// # Arguments
+///
+/// * `birthday_person` - A reference to a string representing the name of the person whose birthday
+///   event is being created.
+/// * `date` - A reference to a string representing the date of the birthday in "MM-DD" format.
+///
+/// # Returns
+///
+/// A `Result` containing a UUID string of the newly created birthday task or an `FypmError` if
+/// the task creation fails.
 pub fn birthday(birthday_person: &String, date: &String) -> Result<String, FypmError> {
     let current_year = Local::now().year().to_string();
 
@@ -418,6 +483,20 @@ pub fn birthday(birthday_person: &String, date: &String) -> Result<String, FypmE
     Ok(uuid)
     //Ok(uuid)
 }
+/// Creates a new playlist task with specified subtasks.
+///
+/// This function initializes a new playlist task using a specified style and project.
+/// It adds subtasks for a cover, description, and a number of songs to the playlist.
+///
+/// # Arguments
+///
+/// * `playlist_name` - A reference to a string representing the name of the playlist.
+/// * `length` - A reference to an unsigned 16-bit integer indicating the number of songs in the playlist.
+///
+/// # Returns
+///
+/// A `Result` containing a UUID string of the newly created playlist task or an `FypmError` if
+/// the task creation fails.
 pub fn playlist(playlist_name: &String, length: &u16) -> Result<String, FypmError> {
     let style = "Dionysian".to_string();
 

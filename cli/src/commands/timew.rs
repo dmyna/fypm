@@ -15,6 +15,28 @@ use fypm_lib::values::constants::DEFAULT_GET_JSON_OPTIONS;
 use fypm_lib::values::err::{FypmError, FypmErrorKind};
 //#endregion
 //#region           Functions
+
+/// Moves the start or end time of a timew log based on a reference log.
+///
+/// This function adjusts the specified timew log's start or end time by using either a reference log
+/// or by calculating a new time based on the manipulation ID and the given action.
+///
+/// # Arguments
+///
+/// * `action` - The action to perform on the log. Use `TimewAction::Start` to adjust the start time
+///   or `TimewAction::End` to adjust the end time.
+/// * `manipulation_id` - A string starting with "@" followed by the ID number of the log to be manipulated.
+/// * `reference_id` - An optional string starting with "@" that serves as the reference log for the time adjustment.
+///
+/// # Returns
+///
+/// * `Result<(), FypmError>` - Returns an `Ok` result if the log was successfully adjusted, or an `Err` result with
+///   a `FypmError` if an error occurred.
+///
+/// # Panics
+///
+/// * Panics if the manipulation ID or the reference ID does not start with "@".
+/// * Panics if the reference ID is omitted and the manipulation ID is less than 3 for an `End` action.
 pub fn move_log(
     action: &TimewAction,
     manipulation_id: &String,
@@ -67,6 +89,17 @@ pub fn move_log(
 
     set_log(&action, manipulation_id, &time)
 }
+/// Modifies the start or end time of a timew log.
+///
+/// # Arguments
+///
+/// * `received_action` - The action to be performed. Use `TimewAction::Start` to set the start time or `TimewAction::End` to set the end time.
+/// * `received_id` - The id of the log. Use a string starting with "@", followed by the id number.
+/// * `received_time` - The time to be set. If the string starts with "@", it will use the special timing properties (see `matchs::match_special_timing_properties`).
+///
+/// # Returns
+///
+/// * `Result` - If the command finished successfully, it will return an `Ok` result. If an error occurred, it will return an `Err` result with a `FypmError` containing the error message.
 pub fn set_log(
     received_action: &TimewAction,
     received_id: &String,
@@ -108,6 +141,24 @@ pub fn set_log(
         Err(e) => panic!("Failed to execute timew command, error: {}", e),
     }
 }
+/// Track time entries for a taskwarrior task.
+///
+/// This function processes the given time intervals and assigns them to the specified
+/// taskwarrior task. It supports special timing properties and aliases for IDs.
+///
+/// # Arguments
+///
+/// * `received_id` - A reference to a string representing the task ID.
+/// * `params` - A vector of strings representing pairs of start and end times.
+///
+/// # Returns
+///
+/// * `Result<(), FypmError>` - Returns an Ok result if successful, or a `FypmError` if
+///   an error occurs during time tracking.
+///
+/// # Errors
+///
+/// * `FypmErrorKind::InvalidInput` - If an invalid number of parameters is provided.
 pub fn track(received_id: &String, params: &Vec<String>) -> Result<(), FypmError> {
     let id = matchs::match_special_aliases(received_id);
 
@@ -229,6 +280,21 @@ pub fn replace(
 
     track(received_replacement_id, &vec![start_time, end_time])
 }
+/// Lists timewarrior entries between the given initial and final dates
+///
+/// If the final date is not provided, it will be considered as the initial date plus one day.
+///
+/// # Arguments
+///
+/// * `initial_date` - A string representing the initial date for the range to be listed.
+///                    It should be in a format that can be parsed by the `date` crate.
+/// * `final_date` - An optional string representing the final date for the range to be listed.
+///                  It should be in a format that can be parsed by the `date` crate.
+///
+/// # Errors
+///
+/// * `FypmError` - If the dates cannot be parsed, or if there is an error while retrieving the
+///                timewarrior entries or tasks.
 pub fn list(initial_date: &String, final_date: &Option<String>) -> Result<(), FypmError> {
     let start: NaiveDate;
     let end: NaiveDate;

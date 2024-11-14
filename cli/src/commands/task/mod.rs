@@ -17,6 +17,14 @@ pub mod add;
 pub mod list;
 pub mod update;
 
+/// Handles actions related to projects.
+///
+/// # Actions
+///
+/// * `list`: Lists all projects. If a project name is provided, it will filter the output.
+/// * `add`: Adds a new project. If a project name is not provided, it will return an error.
+/// * `archive`: Archives all completed tasks of a given project. If a project name is not provided, it will return an error.
+/// * `unarchive`: Unarchives all archived tasks of a given project. If a project name is not provided, it will return an error.
 pub fn task_project(action: &TaProjectActions, arg: &Option<String>) -> Result<(), FypmError> {
     let no_project_specified = FypmError {
         message: "Please provide a project name!".to_string(),
