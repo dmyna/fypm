@@ -4,5 +4,5 @@ mod request;
 mod components;
 
 fn main() {
-    yew::Renderer::<components::App>::new().render();
+    yew::Renderer::<components::app::App>::new().render();
 }
