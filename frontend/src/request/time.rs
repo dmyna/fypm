@@ -1,7 +1,9 @@
-use std::{collections::HashMap, error::Error};
+use chrono::NaiveDate;
+use std::{collections::HashMap, error::Error, str::FromStr};
 use yew::{prelude::*, virtual_dom::VNode};
 
 use fypm_lib::values::structs::{TaskWarriorExported, TimeWarriorExported};
+use fypm_lib::utils::date;
 
 use crate::API_PORT;
 
@@ -14,9 +16,25 @@ use crate::API_PORT;
 ///   the list of time entries fetched from the API. Each entry is represented as
 ///   an HTML list item displaying the task description or an error message if the
 ///   task UUID is not found in the task map.
-pub async fn get_time_list(time_list: UseStateHandle<VNode>) {
+pub async fn logs(
+    time_list: UseStateHandle<VNode>,
+    start: Option<&str>,
+    end: Option<&str>,
+) {
+    let start_date = if let Some(start) = start {
+        NaiveDate::from_str(date::match_aliases(&start.to_string()).as_str()).unwrap()
+    } else {
+        NaiveDate::from_str(date::match_aliases(&"today".to_string()).as_str()).unwrap()
+    };
+
+    let end_date = if let Some(end) = end {
+        NaiveDate::from_str(date::match_aliases(&end.to_string()).as_str()).unwrap()
+    } else {
+        start_date + chrono::Duration::days(1)
+    };
+
     let api_url = format!("http://localhost:{}/api", API_PORT.to_string());
-    let url = format!("{}/time/today/tomorrow", api_url);
+    let url = format!("{}/time/log?start_date={}&end_date={}", api_url, start_date, end_date);
 
     let get_time_list = reqwest::get(url.as_str()).await;
 
@@ -26,7 +44,7 @@ pub async fn get_time_list(time_list: UseStateHandle<VNode>) {
                 Vec<(String, TimeWarriorExported)>,
                 HashMap<String, TaskWarriorExported>,
             )>(response.text().await.unwrap().as_str())
-            .unwrap();
+            .expect("Failed to parse time logs to json!");
 
             let mut entries: Vec<Html> = Vec::new();
 
