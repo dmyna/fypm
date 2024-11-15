@@ -15,7 +15,7 @@ pub async fn rocket() -> Result<(), rocket::Error> {
 
     rocket::build()
         .attach(cors)
-        .mount("/api", routes![super::time::listing])
+        .mount("/api", routes![super::time::listing, super::task::get_task])
         .launch()
         .await?;
 
