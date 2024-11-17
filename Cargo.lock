@@ -1585,6 +1585,7 @@ dependencies = [
  "fypm_lib",
  "reqwest",
  "serde_json",
+ "url",
  "wasm-bindgen-futures",
  "web-sys",
  "yew",
