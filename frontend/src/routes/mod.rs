@@ -1,7 +1,11 @@
 use yew::prelude::*;
 use yew_router::{BrowserRouter, Routable, Switch};
 
-use crate::components::{summary::Summary, time::TimeList};
+pub mod logs;
+pub mod summary;
+
+use logs::Logs;
+use summary::Summary;
 
 #[derive(Clone, PartialEq, Routable)]
 pub enum Route {
@@ -9,8 +13,8 @@ pub enum Route {
     Home,
     #[at("/summary")]
     Summary,
-    #[at("/time")]
-    TimeList,
+    #[at("/logs")]
+    Logs,
     #[not_found]
     #[at("/404")]
     NotFound,
@@ -22,7 +26,7 @@ pub fn Router() -> Html {
         match routes {
             Route::Home => html! { <h1> {"Home"} </h1> },
             Route::Summary => html! { <Summary/> },
-            Route::TimeList => html! { <TimeList/> },
+            Route::Logs => html! { <Logs/> },
             Route::NotFound => html! { <h1> {"404"} </h1> },
         }
     }

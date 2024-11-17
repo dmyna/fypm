@@ -112,7 +112,7 @@ pub fn TimeList() -> Html {
     });
 
     html! {
-        <div id="time-list">
+        <div>
             <SelectDay on_date_changing={on_date_changing_callback} initial_date="today"></SelectDay>
             <div class="bg-gray-800 rounded-3xl p-5">
                 {(*time_list).clone()}
