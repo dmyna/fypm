@@ -10,5 +10,5 @@ su - fypm -c 'cd /app && \
     RUST_BACKTRACE=1 \
     CARGO_TERM_COLOR=always \
     CARGO_TARGET_DIR=/home/fypm/.cargo/target \
-        /home/fypm/.cargo/bin/cargo test --\
+        /home/fypm/.cargo/bin/cargo test -p fypm_cli --\
             --test-threads=1'
