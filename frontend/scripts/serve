@@ -1,3 +1,5 @@
 #!/bin/bash
+TRUNK_CMD="trunkrs"
 
-watchexec -w src -w index.html --shell bash -- 'tailwindcss -o public/tailwind.css' & trunk serve
+watchexec -w src -w index.html --shell bash -- 'tailwindcss -o public/tailwind.css' &
+$TRUNK_CMD serve
