@@ -12,7 +12,6 @@ pub struct TimeListingQuery {
     pub end_date: String,
 }
 
-
 /// Return a json array of timew entries between given start and end date.
 ///
 /// # Path
@@ -33,8 +32,8 @@ pub struct TimeListingQuery {
 /// * A json array of `TimeWarriorExported` structs, or an error message if there is an error while
 ///   running `timew export`.
 #[get("/time/log?<params..>")]
-pub fn listing(params: TimeListingQuery) -> String {
-    let start= NaiveDate::from_str(&date::match_aliases(&params.start_date)).unwrap();
+pub fn time_log(params: TimeListingQuery) -> String {
+    let start = NaiveDate::from_str(&date::match_aliases(&params.start_date)).unwrap();
     let end = NaiveDate::from_str(&date::match_aliases(&params.end_date)).unwrap();
 
     let data = get::timew_entries(start, end).unwrap();

@@ -1,14 +1,12 @@
 pub mod init_day;
+pub mod instance;
 pub mod task;
 pub mod timew;
 pub mod worktime;
-pub mod instance;
 
-
-use diesel::SqliteConnection;
 use diesel::Connection;
+use diesel::SqliteConnection;
 
-use crate::api;
 use crate::handlers::aliases;
 use crate::handlers::filters::FiltersHandler;
 use crate::handlers::worktime::WorktimeHandler;
@@ -16,7 +14,7 @@ use crate::{func, DATABASE_URL};
 
 use fypm_lib::values::err::FypmError;
 
-use clap::{Subcommand, ValueEnum, Parser};
+use clap::{Parser, Subcommand, ValueEnum};
 use clap_complete::ArgValueCompleter;
 
 use crate::func::completion;
@@ -158,7 +156,7 @@ pub enum Commands {
     /// Show task information
     TaInfo {
         /// Filter to the task (max: 1)
-        filter: String
+        filter: String,
     },
 
     /// Add a task to taskwarrior (taadd)
@@ -274,10 +272,7 @@ pub enum Commands {
     },
 
     /// Change a recurring task's time (tarecur-t)
-    TaRecurTime {
-        filter: String,
-        new_time: String,
-    },
+    TaRecurTime { filter: String, new_time: String },
 
     TaProject {
         #[arg(value_enum)]
@@ -358,10 +353,10 @@ pub fn matching(command: &Commands) -> Result<(), FypmError> {
         //#endregion
         //#region               Systems
         Commands::Daemon => {
-            api::index::rocket().unwrap();
+            unimplemented!("Daemon is not implemented yet!");
 
             Ok(())
-        },
+        }
         Commands::InitDay => todo!(),
 
         Commands::Verify { script } => func::matchs::match_verify_script(script),
@@ -385,7 +380,7 @@ pub fn matching(command: &Commands) -> Result<(), FypmError> {
                 FilterActions::Remove => FiltersHandler::remove(conn),
                 FilterActions::Edit => FiltersHandler::edit(conn),
             }
-        },
+        }
 
         Commands::WtAdd { worktime_name } => {
             WorktimeHandler::add(
@@ -419,9 +414,7 @@ pub fn matching(command: &Commands) -> Result<(), FypmError> {
         Commands::Instance { action, actionargs } => instance::match_action(action, actionargs),
         //#endregion
         //#region               Task Subcommands
-        Commands::TaInfo {
-            filter,
-        } => task::list::info(filter),
+        Commands::TaInfo { filter } => task::list::info(filter),
 
         Commands::TaAdd {
             description,
@@ -559,13 +552,14 @@ pub fn matching(command: &Commands) -> Result<(), FypmError> {
             no_worktime,
         } => task::update::unschedule(filter, no_alarm, no_due, no_worktime),
         Commands::TaUnd { filter, unarchive } => task::update::und(filter, unarchive),
-        Commands::TaRecurTime { filter, new_time } => {
-            task::update::recur_time(filter, new_time)
-        }
+        Commands::TaRecurTime { filter, new_time } => task::update::recur_time(filter, new_time),
         Commands::TaProject { action, arg } => task::task_project(action, arg),
         //#endregion
         //#region               Timew Subcommands
-        Commands::TiLs { initial_date, final_date } => {
+        Commands::TiLs {
+            initial_date,
+            final_date,
+        } => {
             timew::list(initial_date, final_date)?;
 
             Ok(())
@@ -580,10 +574,7 @@ pub fn matching(command: &Commands) -> Result<(), FypmError> {
         } => timew::move_log(&TimewAction::Start, manipulation_id, reference_id),
         Commands::TiStart { id, start_time } => timew::set_log(&TimewAction::Start, id, start_time),
         Commands::TiEnd { id, end_time } => timew::set_log(&TimewAction::End, id, end_time),
-        Commands::TiTrack {
-            id,
-            args
-        } => timew::track(id, args),
+        Commands::TiTrack { id, args } => timew::track(id, args),
         Commands::TiReplace {
             original_id,
             replacement_id,

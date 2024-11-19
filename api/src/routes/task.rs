@@ -6,7 +6,7 @@ pub struct TaskQuery {
 }
 
 #[get("/task?<params..>")]
-pub fn get_task(params: TaskQuery) -> String {
+pub fn task(params: TaskQuery) -> String {
     let filter = if let Some(filter) = params.filter {
         filter
     } else {

@@ -1,18 +1,15 @@
 //#region           Crates
-#[macro_use] extern crate rocket;
-
-use std::env;
-use lazy_static::lazy_static;
 use clap::Parser;
+use lazy_static::lazy_static;
+use std::env;
 //#endregion
 //#region           Modules
+mod commands;
+mod db;
 mod func;
 mod handlers;
-mod commands;
 mod tests;
 mod utils;
-mod db;
-mod api;
 //#endregion
 //#region           Constants
 lazy_static! {

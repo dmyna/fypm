@@ -1,0 +1,17 @@
+[package]
+name = "fypm_api"
+version = "0.3.0"
+description = "Four Years Productivity Manager: The productivity manager for Four Years Workflow."
+license = "MIT"
+edition = "2021"
+
+[features]
+fysm = []
+
+[dependencies]
+chrono = "0.4.38"
+rocket = "0.5.1"
+rocket_cors = "0.6.0"
+serde_json = "1.0.133"
+fypm_lib = { path = "../lib" }
+uuid = "1.11.0"
